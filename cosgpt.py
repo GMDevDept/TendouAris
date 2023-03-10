@@ -1,4 +1,4 @@
-# https://docs.telethon.dev/en/latest/
+# https://docs.telethon.dev/en/stable/
 # https://platform.openai.com/docs/guides/chat/introduction
 
 import os
@@ -59,6 +59,16 @@ async def private_message_handler(event):
 async def group_message_handler(event):
     gtp_output = await process_message(event, history)
     await event.reply(gtp_output)
+
+
+# Group chats direct reply
+@client.on(events.NewMessage(chats=whitelist, func=lambda e: e.is_group and e.is_reply))
+async def group_reply_handler(event):
+    replied_message = await event.get_reply_message()
+    sender = await replied_message.get_sender()
+    if sender.is_self:
+        gtp_output = await process_message(event, history, add_reply=replied_message)
+        await event.reply(gtp_output)
 
 
 # Reset chat history
