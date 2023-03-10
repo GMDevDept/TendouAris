@@ -1,0 +1,6 @@
+services:
+  cosgpt:
+    build: .
+    image: cosgpt
+    env_file:
+      - .env
