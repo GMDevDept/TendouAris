@@ -7,7 +7,7 @@ import logging
 from collections import deque
 from telethon import TelegramClient, events
 from util import process_message
-from prompts import no_auth
+from prompts import no_auth, history_cleared, last_message_cleared
 
 # Unmark if test on Windows
 # from dotenv import load_dotenv
@@ -59,6 +59,22 @@ async def private_message_handler(event):
 async def group_message_handler(event):
     gtp_output = await process_message(event, history)
     await event.reply(gtp_output)
+
+
+# Reset chat history
+@client.on(events.NewMessage(pattern=r"/reset"))
+async def history_handler1(event):
+    history.pop(event.chat_id, history)
+    await event.reply(history_cleared)
+
+
+# Reset chat history
+@client.on(events.NewMessage(pattern=r"/pop"))
+async def history_handler2(event):
+    if event.chat_id in history and len(history[event.chat_id]) >= 2:
+        history[event.chat_id].pop()
+        history[event.chat_id].pop()
+    await event.reply(last_message_cleared)
 
 
 def main():
