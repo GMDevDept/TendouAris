@@ -43,6 +43,12 @@ async def permission_handler(event):
     await event.reply(no_auth)
 
 
+# Get chat id
+@client.on(events.NewMessage(pattern=r"/chatid"))
+async def chatid_handler(event):
+    await event.reply(str(event.chat_id))
+
+
 # Private chats
 @client.on(events.NewMessage(pattern=r"(/aris)|([^/])", func=lambda e: e.is_private))
 async def private_message_handler(event):

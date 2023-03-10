@@ -10,3 +10,4 @@
 /prompts.sample.py
 /README.md
 *.session
+*.test.*
