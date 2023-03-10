@@ -12,7 +12,7 @@ def remove_command(text):
     return re.sub(r"^/\S*", "", text).strip()
 
 
-async def process_message(event, history):
+async def process_message(event, history, **kwargs):
     messages = [
         {
             "role": "system",
@@ -22,6 +22,14 @@ async def process_message(event, history):
 
     if event.chat_id not in history:
         history[event.chat_id] = deque(initial_prompts, maxlen=max_history)
+
+    if kwargs.get("add_reply") is not None:
+        history[event.chat_id].append(
+            {
+                "role": "assistant",
+                "content": kwargs.get("add_reply").raw_text,
+            }
+        )
 
     history[event.chat_id].append(
         {
