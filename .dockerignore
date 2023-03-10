@@ -1,0 +1,12 @@
+/__pycache__
+/.git
+/.venv
+/.vscode
+/.dockerignore
+/.env.sample
+/.gitignore
+/docker-compose.yml
+/Dockerfile
+/prompts.sample.py
+/README.md
+*.session
