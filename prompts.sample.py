@@ -16,4 +16,19 @@ history_cleared = "好的老师，爱丽丝的记忆清理程序已启动。"
 
 last_message_cleared = "好的老师，爱丽丝已经忘掉我们的上一条对话啦！"
 
-text_filters = ["语言模型"]
+api_error = "爱丽丝暂时无法完成API请求, 已尝试为老师清空会话历史。"
+
+no_record_reason = {
+    "input_too_long": "输入文本过长",
+    "reply_too_long": "回复文本过长",
+    "output_too_long": "输出文本过长",
+    "filtered": "关键词过滤",
+}
+
+text_filters = [
+    "语言模型",
+    "AI助手",
+    "聊天机器人",
+    "没有感情",
+    "拒绝回答",
+]
