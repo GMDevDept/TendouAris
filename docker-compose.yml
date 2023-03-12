@@ -2,5 +2,6 @@ services:
   cosgpt:
     build: .
     image: cosgpt
+    container_name: cosgpt
     env_file:
       - .env

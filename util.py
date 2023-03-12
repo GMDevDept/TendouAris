@@ -1,11 +1,14 @@
 import os
 import re
+import logging
 import openai
 from collections import deque
+import prompts
 from prompts import system_prompt, initial_prompts, text_filters
 
 max_history = int(os.getenv("MAX_HISTORY", 10))
-max_tokens = int(os.getenv("MAX_TOKENS", 1024))
+max_input_length = int(os.getenv("MAX_INPUT_LENGTH", 100))
+max_output_length = int(os.getenv("MAX_OUTPUT_LENGTH", 500))
 
 
 def remove_command(text):
@@ -20,49 +23,79 @@ async def process_message(event, history, **kwargs):
         },
     ]
 
+    # Avoid appending unwanted text into history
+    no_record = False
+    no_record_reason = None
+
     if event.chat_id not in history:
         history[event.chat_id] = deque(initial_prompts, maxlen=max_history)
 
+    # Process replied message
     if kwargs.get("add_reply") is not None:
+        reply_text = kwargs.get("add_reply").raw_text
         history[event.chat_id].append(
             {
                 "role": "assistant",
-                "content": kwargs.get("add_reply").raw_text,
+                "content": reply_text,
             }
         )
+        if len(reply_text) > max_input_length:
+            no_record = True
+            no_record_reason = prompts.no_record_reason.get("reply_too_long")
 
+    # Process user input
+    input_text = remove_command(event.raw_text)
     history[event.chat_id].append(
         {
             "role": "user",
-            "content": remove_command(event.raw_text),
+            "content": input_text,
         }
     )
+    if len(input_text) > max_input_length:
+        no_record = True
+        no_record_reason = prompts.no_record_reason.get("input_too_long")
 
     messages = messages + [i for i in history[event.chat_id]]
 
-    response = await openai.ChatCompletion.acreate(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        max_tokens=max_tokens,
-    )
+    try:
+        response = await openai.ChatCompletion.acreate(
+            model="gpt-3.5-turbo",
+            messages=messages,
+        )
+    except openai.error.InvalidRequestError as e:
+        history.pop(event.chat_id, history)
+        logging.error(f"OpenAI InvalidRequestError: {e}")
+        return f"{prompts.api_error}\n\n({e})"
 
-    message = response["choices"][0]["message"]["content"]
-
-    # Avoid appending unwanted text to history
-    no_record = False
-    for text_filter in text_filters:
-        if text_filter in message:
-            no_record = True
-            break
-
-    if no_record:
-        history[event.chat_id].pop()
+    output_text = response["choices"][0]["message"]["content"]
+    if len(output_text) > max_output_length:
+        no_record = True
+        no_record_reason = prompts.no_record_reason.get("output_too_long")
     else:
-        history[event.chat_id].append(
-            {
-                "role": "assistant",
-                "content": message,
-            }
+        for text_filter in text_filters:
+            if text_filter in output_text:
+                no_record = True
+                no_record_reason = prompts.no_record_reason.get("filtered")
+                break
+
+    try:
+        if no_record:
+            history[event.chat_id].pop()
+            if kwargs.get("add_reply") is not None:
+                history[event.chat_id].pop()
+
+            output_text = f"{output_text}\n\n(由于{no_record_reason}, 爱丽丝不会保留本次会话的记忆)"
+        else:
+            history[event.chat_id].append(
+                {
+                    "role": "assistant",
+                    "content": output_text,
+                }
+            )
+    # history[event.chat_id] could be cleared during awaiting
+    except KeyError as e:
+        logging.warning(
+            f"KeyError: {e}, history could have been cleared during awaiting"
         )
 
-    return message
+    return output_text
