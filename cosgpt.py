@@ -68,13 +68,25 @@ async def group_message_handler(event):
 
 
 # Group chats direct reply
-@client.on(events.NewMessage(chats=whitelist, func=lambda e: e.is_group and e.is_reply))
+@client.on(
+    events.NewMessage(
+        chats=whitelist,
+        pattern=r"^(?!/aris|爱丽丝)",  # Avoid duplicate replies
+        func=lambda e: e.is_group and e.is_reply,
+    )
+)
 async def group_reply_handler(event):
     replied_message = await event.get_reply_message()
     sender = await replied_message.get_sender()
-    if sender.is_self:
-        gtp_output = await process_message(event, history, add_reply=replied_message)
-        await event.reply(gtp_output)
+    try:
+        if sender.is_self:
+            gtp_output = await process_message(
+                event, history, add_reply=replied_message
+            )
+            await event.reply(gtp_output)
+    # Sender could be Channel object or NoneType object
+    except AttributeError as e:
+        logging.warning(f"AttributeError: {e}")
 
 
 # Reset chat history
