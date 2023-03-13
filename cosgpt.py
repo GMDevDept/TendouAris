@@ -22,12 +22,14 @@ api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
 whitelist = [int(i) for i in os.getenv("WHITELIST").split(",")]
 openai.api_key = os.getenv("OPENAI_API_KEY")
+auto_clear_count = int(os.getenv("AUTO_CLEAR_COUNT", 0))
 
 # Telegram bot client
 client = TelegramClient("CosGPT", api_id, api_hash)
 
 # Chat history by chat id
 history = {int: deque}
+auto_clear = {int: int}
 
 
 # Gate keeper
@@ -47,6 +49,22 @@ async def permission_handler(event):
 @client.on(events.NewMessage(pattern=r"/chatid"))
 async def chatid_handler(event):
     await event.reply(str(event.chat_id))
+
+
+# Reset chat history
+@client.on(events.NewMessage(pattern=r"/reset"))
+async def history_handler1(event):
+    history.pop(event.chat_id, history)
+    await event.reply(history_cleared)
+
+
+# Pop chat history
+@client.on(events.NewMessage(pattern=r"/pop"))
+async def history_handler2(event):
+    if event.chat_id in history and len(history[event.chat_id]) >= 2:
+        history[event.chat_id].pop()
+        history[event.chat_id].pop()
+    await event.reply(last_message_cleared)
 
 
 # Private chats
@@ -89,20 +107,29 @@ async def group_reply_handler(event):
         logging.warning(f"AttributeError: {e}")
 
 
-# Reset chat history
-@client.on(events.NewMessage(pattern=r"/reset"))
-async def history_handler1(event):
-    history.pop(event.chat_id, history)
-    await event.reply(history_cleared)
+# Auto clear chat history in group chats
+if auto_clear_count > 0:
 
+    @client.on(
+        events.NewMessage(chats=whitelist, incoming=True, func=lambda e: e.is_group)
+    )
+    async def group_message_counter(event):
+        if event.chat_id not in auto_clear:
+            auto_clear[event.chat_id] = 0
 
-# Reset chat history
-@client.on(events.NewMessage(pattern=r"/pop"))
-async def history_handler2(event):
-    if event.chat_id in history and len(history[event.chat_id]) >= 2:
-        history[event.chat_id].pop()
-        history[event.chat_id].pop()
-    await event.reply(last_message_cleared)
+        auto_clear[event.chat_id] += 1
+
+        if auto_clear[event.chat_id] == auto_clear_count:
+            history.pop(event.chat_id, history)
+            logging.info(
+                f"Chat history for group {event.chat_id} has been cleared due to inactivity"
+            )
+
+    @client.on(
+        events.NewMessage(chats=whitelist, outgoing=True, func=lambda e: e.is_group)
+    )
+    async def clear_group_message_counter(event):
+        auto_clear.pop(event.chat_id, auto_clear)
 
 
 def main():

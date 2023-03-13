@@ -18,6 +18,8 @@ last_message_cleared = "好的老师，爱丽丝已经忘掉我们的上一条�
 
 api_error = "爱丽丝暂时无法完成API请求, 已尝试为老师清空会话历史。"
 
+no_record = "{}\n\n(由于{}, 爱丽丝不会保留本次会话的记忆)"
+
 no_record_reason = {
     "input_too_long": "输入文本过长",
     "reply_too_long": "回复文本过长",
