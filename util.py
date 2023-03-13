@@ -84,7 +84,7 @@ async def process_message(event, history, **kwargs):
             if kwargs.get("add_reply") is not None:
                 history[event.chat_id].pop()
 
-            output_text = f"{output_text}\n\n(由于{no_record_reason}, 爱丽丝不会保留本次会话的记忆)"
+            output_text = prompts.no_record.format(output_text, no_record_reason)
         else:
             history[event.chat_id].append(
                 {
