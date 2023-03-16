@@ -16,6 +16,9 @@ def remove_command(text):
 
 
 async def process_message(event, history, **kwargs):
+    if kwargs.get("auto_clear") is not None:
+        kwargs.get("auto_clear").pop(event.chat_id, kwargs.get("auto_clear"))
+
     messages = [
         {
             "role": "system",
@@ -62,9 +65,8 @@ async def process_message(event, history, **kwargs):
             model="gpt-3.5-turbo",
             messages=messages,
         )
-    except openai.error.InvalidRequestError as e:
-        history.pop(event.chat_id, history)
-        logging.error(f"OpenAI InvalidRequestError: {e}")
+    except openai.error.OpenAIError as e:
+        logging.error(f"OpenAI Error: {e}")
         return f"{prompts.api_error}\n\n({e})"
 
     output_text = response["choices"][0]["message"]["content"]
