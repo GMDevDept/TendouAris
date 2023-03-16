@@ -68,7 +68,13 @@ async def history_handler2(event):
 
 
 # Private chats
-@client.on(events.NewMessage(pattern=r"(/aris)|([^/])", func=lambda e: e.is_private))
+@client.on(
+    events.NewMessage(
+        pattern=r"(/aris)|([^/])",
+        func=lambda e: e.is_private,
+        forwards=False,
+    )
+)
 async def private_message_handler(event):
     gtp_output = await process_message(event, history)
     await event.reply(gtp_output)
@@ -77,7 +83,10 @@ async def private_message_handler(event):
 # Group chats
 @client.on(
     events.NewMessage(
-        chats=whitelist, pattern=r"(/aris)|(爱丽丝)", func=lambda e: e.is_group
+        chats=whitelist,
+        pattern=r"(/aris)|(爱丽丝)",
+        func=lambda e: e.is_group,
+        forwards=False,
     )
 )
 async def group_message_handler(event):
@@ -91,6 +100,7 @@ async def group_message_handler(event):
         chats=whitelist,
         pattern=r"^(?!/aris|爱丽丝)",  # Avoid duplicate replies
         func=lambda e: e.is_group and e.is_reply,
+        forwards=False,
     )
 )
 async def group_reply_handler(event):
