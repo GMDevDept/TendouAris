@@ -16,7 +16,7 @@ history_cleared = "好的老师，爱丽丝的记忆清理程序已启动。"
 
 last_message_cleared = "好的老师，爱丽丝已经忘掉我们的上一条对话啦！"
 
-api_error = "爱丽丝暂时无法完成API请求, 已尝试为老师清空会话历史。"
+api_error = "抱歉老师, 爱丽丝暂时无法完成API请求🥺"
 
 no_record = "{}\n\n(由于{}, 爱丽丝不会保留本次会话的记忆)"
 
