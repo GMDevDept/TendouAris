@@ -76,7 +76,7 @@ async def history_handler2(event):
     )
 )
 async def private_message_handler(event):
-    gtp_output = await process_message(event, history)
+    gtp_output = await process_message(event, history, auto_clear=auto_clear)
     await event.reply(gtp_output)
 
 
@@ -90,7 +90,7 @@ async def private_message_handler(event):
     )
 )
 async def group_message_handler(event):
-    gtp_output = await process_message(event, history)
+    gtp_output = await process_message(event, history, auto_clear=auto_clear)
     await event.reply(gtp_output)
 
 
@@ -109,7 +109,7 @@ async def group_reply_handler(event):
     try:
         if sender.is_self:
             gtp_output = await process_message(
-                event, history, add_reply=replied_message
+                event, history, add_reply=replied_message, auto_clear=auto_clear
             )
             await event.reply(gtp_output)
     # Sender could be Channel object or NoneType object
@@ -134,12 +134,6 @@ if auto_clear_count > 0:
             logging.info(
                 f"Chat history for group {event.chat_id} has been cleared due to inactivity"
             )
-
-    @client.on(
-        events.NewMessage(chats=whitelist, outgoing=True, func=lambda e: e.is_group)
-    )
-    async def clear_group_message_counter(event):
-        auto_clear.pop(event.chat_id, auto_clear)
 
 
 def main():
