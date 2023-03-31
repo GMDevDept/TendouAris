@@ -1,8 +1,8 @@
-# CosGPT
+# TendouAris
 
 1. ``` bash
-    git clone https://github.com/ToffeeNeko/CosGPT.git
-    cd CosGPT 
+    git clone https://github.com/ToffeeNeko/TendouAris.git
+    cd TendouAris 
    ```
 
 2. rename .env.sample to .env and fill in the values
@@ -10,4 +10,5 @@
 
 4. ``` bash
     docker-compose up -d --build --force-recreate 
+    docker image prune
    ```

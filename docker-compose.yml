@@ -1,7 +1,20 @@
+version: '3.8'
 services:
-  cosgpt:
+  aris:
     build: .
-    image: cosgpt
-    container_name: cosgpt
+    image: aris
+    container_name: aris
+    restart: unless-stopped
     env_file:
       - .env
+    depends_on:
+      - arisdata
+  arisdata:
+    image: redis:alpine
+    container_name: arisdata
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - arisdata:/data
+volumes:
+  arisdata:
