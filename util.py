@@ -3,8 +3,8 @@ import re
 import logging
 import openai
 import prompts
+import arisbot
 from collections import deque
-from arisbot import db
 
 max_history = int(os.getenv("MAX_HISTORY", 10))
 max_input_length = int(os.getenv("MAX_INPUT_LENGTH", 100))
@@ -63,10 +63,14 @@ async def process_message(event, history, **kwargs):
 
     try:
         response = await openai.ChatCompletion.acreate(
-            api_key=db.get(event.chat_id),
+            api_key=arisbot.db.get(event.chat_id),
             model="gpt-3.5-turbo",
             messages=messages,
         )
+    except openai.error.AuthenticationError as e:
+        arisbot.db.delete(event.chat_id)
+        arisbot.userlist.remove(event.chat_id)
+        return f"{prompts.api_error}\n\n({e})"
     except openai.error.OpenAIError as e:
         logging.error(f"OpenAI Error: {e}")
         return f"{prompts.api_error}\n\n({e})"
