@@ -2,9 +2,9 @@ import os
 import re
 import logging
 import openai
-from collections import deque
 import prompts
-from prompts import system_prompt, initial_prompts, text_filters
+from collections import deque
+from arisbot import db
 
 max_history = int(os.getenv("MAX_HISTORY", 10))
 max_input_length = int(os.getenv("MAX_INPUT_LENGTH", 100))
@@ -16,13 +16,14 @@ def remove_command(text):
 
 
 async def process_message(event, history, **kwargs):
+    # Reset clearing chat history counter
     if kwargs.get("auto_clear") is not None:
         kwargs.get("auto_clear").pop(event.chat_id, kwargs.get("auto_clear"))
 
     messages = [
         {
             "role": "system",
-            "content": system_prompt,
+            "content": prompts.system_prompt,
         },
     ]
 
@@ -31,7 +32,7 @@ async def process_message(event, history, **kwargs):
     no_record_reason = None
 
     if event.chat_id not in history:
-        history[event.chat_id] = deque(initial_prompts, maxlen=max_history)
+        history[event.chat_id] = deque(prompts.initial_prompts, maxlen=max_history)
 
     # Process replied message
     if kwargs.get("add_reply") is not None:
@@ -62,6 +63,7 @@ async def process_message(event, history, **kwargs):
 
     try:
         response = await openai.ChatCompletion.acreate(
+            api_key=db.get(event.chat_id),
             model="gpt-3.5-turbo",
             messages=messages,
         )
@@ -74,7 +76,7 @@ async def process_message(event, history, **kwargs):
         no_record = True
         no_record_reason = prompts.no_record_reason.get("output_too_long")
     else:
-        for text_filter in text_filters:
+        for text_filter in prompts.text_filters:
             if text_filter in output_text:
                 no_record = True
                 no_record_reason = prompts.no_record_reason.get("filtered")
