@@ -26,8 +26,9 @@ client = TelegramClient("Aris", api_id, api_hash)
 
 # Redis database
 db = redis.Redis(host="arisdata", port=6379, db=0)
-for i in whitelist:
-    db.set(i, default_api_key)
+
+# Get users with custom API key provided
+userlist = [int(i) for i in db.keys()]
 
 # Chat history by chat id
 history = {int: deque}
@@ -59,7 +60,7 @@ async def history_handler2(event):
 # Gate keeper
 @client.on(
     events.NewMessage(
-        chats=whitelist,
+        chats=whitelist + userlist,
         blacklist_chats=True,
         pattern=r"(/start)|(/aris)",
     )
@@ -74,17 +75,20 @@ async def apikey_handler(event):
     apikey_input = remove_command(event.raw_text)
     if apikey_input.startswith("sk-"):
         try:
-            await openai.ChatCompletion.create(
+            await openai.ChatCompletion.acreate(
                 api_key=apikey_input,
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "user", "content": "Test message, please reply '1'"}
                 ],
             )
+
             db.set(event.chat_id, apikey_input)
+            if event.chat_id not in userlist:
+                userlist.append(event.chat_id)
             await event.reply(prompts.api_key_set)
         except openai.error.OpenAIError as e:
-            return f"{prompts.api_key_invalid}\n\n({e})"
+            event.reply(f"{prompts.api_key_invalid}\n\n({e})")
     else:
         await event.reply(prompts.api_key_invalid)
 
@@ -92,7 +96,7 @@ async def apikey_handler(event):
 # Private chats
 @client.on(
     events.NewMessage(
-        chats=whitelist,
+        chats=whitelist + userlist,
         pattern=r"(/start)|(/aris)|([^/])",
         func=lambda e: e.is_private,
         forwards=False,
@@ -106,7 +110,7 @@ async def private_message_handler(event):
 # Group chats
 @client.on(
     events.NewMessage(
-        chats=whitelist,
+        chats=whitelist + userlist,
         pattern=r"(/aris)|(爱丽丝)",
         func=lambda e: e.is_group,
         forwards=False,
@@ -120,7 +124,7 @@ async def group_message_handler(event):
 # Group chats direct reply
 @client.on(
     events.NewMessage(
-        chats=whitelist,
+        chats=whitelist + userlist,
         pattern=r"^(?!/aris|爱丽丝)",  # Avoid duplicate replies
         func=lambda e: e.is_group and e.is_reply,
         forwards=False,
@@ -143,7 +147,7 @@ async def group_reply_handler(event):
 # Auto clear chat history in group chats
 if auto_clear_count > 0:
 
-    @client.on(events.NewMessage(chats=whitelist, func=lambda e: e.is_group))
+    @client.on(events.NewMessage(chats=whitelist + userlist, func=lambda e: e.is_group))
     async def group_message_counter(event):
         if event.chat_id not in auto_clear:
             auto_clear[event.chat_id] = 0
