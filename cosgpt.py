@@ -76,7 +76,7 @@ async def history_handler2(event):
     )
 )
 async def private_message_handler(event):
-    gtp_output = await process_message(event, history, auto_clear=auto_clear)
+    gtp_output = await process_message(False, event, history, auto_clear=auto_clear)
     await event.reply(gtp_output)
 
 
@@ -90,7 +90,7 @@ async def private_message_handler(event):
     )
 )
 async def group_message_handler(event):
-    gtp_output = await process_message(event, history, auto_clear=auto_clear)
+    gtp_output = await process_message(False, event, history, auto_clear=auto_clear)
     await event.reply(gtp_output)
 
 
@@ -109,7 +109,7 @@ async def group_reply_handler(event):
     try:
         if sender.is_self:
             gtp_output = await process_message(
-                event, history, add_reply=replied_message, auto_clear=auto_clear
+                False, event, history, add_reply=replied_message, auto_clear=auto_clear
             )
             await event.reply(gtp_output)
     # Sender could be Channel object or NoneType object

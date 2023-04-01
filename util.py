@@ -4,7 +4,7 @@ import logging
 import openai
 from collections import deque
 import prompts
-from prompts import system_prompt, initial_prompts, text_filters
+from prompts import system_prompt, backup_prompt, initial_prompts, text_filters
 
 max_history = int(os.getenv("MAX_HISTORY", 10))
 max_input_length = int(os.getenv("MAX_INPUT_LENGTH", 100))
@@ -15,14 +15,18 @@ def remove_command(text):
     return re.sub(r"^/\S*", "", text).strip()
 
 
-async def process_message(event, history, **kwargs):
+async def process_message(retry, event, history, **kwargs):
     if kwargs.get("auto_clear") is not None:
         kwargs.get("auto_clear").pop(event.chat_id, kwargs.get("auto_clear"))
+
+    using_prompt = system_prompt
+    if retry:
+        using_prompt = backup_prompt
 
     messages = [
         {
             "role": "system",
-            "content": system_prompt,
+            "content": using_prompt,
         },
     ]
 
@@ -34,7 +38,7 @@ async def process_message(event, history, **kwargs):
         history[event.chat_id] = deque(initial_prompts, maxlen=max_history)
 
     # Process replied message
-    if kwargs.get("add_reply") is not None:
+    if not retry and kwargs.get("add_reply") is not None:
         reply_text = kwargs.get("add_reply").raw_text
         history[event.chat_id].append(
             {
@@ -47,16 +51,17 @@ async def process_message(event, history, **kwargs):
             no_record_reason = prompts.no_record_reason.get("reply_too_long")
 
     # Process user input
-    input_text = remove_command(event.raw_text)
-    history[event.chat_id].append(
-        {
-            "role": "user",
-            "content": input_text,
-        }
-    )
-    if len(input_text) > max_input_length:
-        no_record = True
-        no_record_reason = prompts.no_record_reason.get("input_too_long")
+    if not retry:
+        input_text = remove_command(event.raw_text)
+        history[event.chat_id].append(
+            {
+                "role": "user",
+                "content": input_text,
+            }
+        )
+        if len(input_text) > max_input_length:
+            no_record = True
+            no_record_reason = prompts.no_record_reason.get("input_too_long")
 
     messages = messages + [i for i in history[event.chat_id]]
 
@@ -76,9 +81,12 @@ async def process_message(event, history, **kwargs):
     else:
         for text_filter in text_filters:
             if text_filter in output_text:
-                no_record = True
-                no_record_reason = prompts.no_record_reason.get("filtered")
-                break
+                if not retry:
+                    return await process_message(True, event, history)
+                else:
+                    no_record = True
+                    no_record_reason = prompts.no_record_reason.get("filtered")
+                    break
 
     try:
         if no_record:
@@ -94,6 +102,9 @@ async def process_message(event, history, **kwargs):
                     "content": output_text,
                 }
             )
+
+            if retry:
+                output_text = prompts.profanity_warn.format(output_text)
     # history[event.chat_id] could be cleared during awaiting
     except KeyError as e:
         logging.warning(
