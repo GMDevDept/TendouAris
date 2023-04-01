@@ -9,6 +9,6 @@
 3. rename prompts.sample.py to prompts.py and fill in the values
 
 4. ``` bash
-    docker-compose up -d --build --force-recreate 
-    docker image prune
+    docker-compose up -d --build
+    docker image prune -f
    ```
