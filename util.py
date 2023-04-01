@@ -16,6 +16,7 @@ def remove_command(text):
 
 async def process_message(event, **kwargs):
     db = kwargs.get("db")
+    retry = kwargs.get("retry")
     history = kwargs.get("history")
     userlist = kwargs.get("userlist")
     whitelist = kwargs.get("whitelist")
@@ -27,10 +28,14 @@ async def process_message(event, **kwargs):
     if auto_clear:
         auto_clear.pop(event.chat_id, auto_clear)
 
+    using_prompt = prompts.system_prompt
+    if retry:
+        using_prompt = prompts.backup_prompt
+
     messages = [
         {
             "role": "system",
-            "content": prompts.system_prompt,
+            "content": using_prompt,
         },
     ]
 
@@ -42,7 +47,7 @@ async def process_message(event, **kwargs):
         history[event.chat_id] = deque(prompts.initial_prompts, maxlen=max_history)
 
     # Process replied message
-    if add_reply:
+    if not retry and add_reply:
         reply_text = add_reply.raw_text
         history[event.chat_id].append(
             {
@@ -55,16 +60,17 @@ async def process_message(event, **kwargs):
             no_record_reason = prompts.no_record_reason.get("reply_too_long")
 
     # Process user input
-    input_text = remove_command(event.raw_text)
-    history[event.chat_id].append(
-        {
-            "role": "user",
-            "content": input_text,
-        }
-    )
-    if len(input_text) > max_input_length:
-        no_record = True
-        no_record_reason = prompts.no_record_reason.get("input_too_long")
+    if not retry:
+        input_text = remove_command(event.raw_text)
+        history[event.chat_id].append(
+            {
+                "role": "user",
+                "content": input_text,
+            }
+        )
+        if len(input_text) > max_input_length:
+            no_record = True
+            no_record_reason = prompts.no_record_reason.get("input_too_long")
 
     messages = messages + [i for i in history[event.chat_id]]
 
@@ -75,7 +81,6 @@ async def process_message(event, **kwargs):
             and default_api_key
             or None
         )
-        logging.info(api_key)
         response = await openai.ChatCompletion.acreate(
             api_key=api_key,
             model="gpt-3.5-turbo",
@@ -96,9 +101,21 @@ async def process_message(event, **kwargs):
     else:
         for text_filter in prompts.text_filters:
             if text_filter in output_text:
-                no_record = True
-                no_record_reason = prompts.no_record_reason.get("filtered")
-                break
+                if not retry:
+                    return await process_message(
+                        event,
+                        history=history,
+                        add_reply=add_reply,
+                        db=db,
+                        userlist=userlist,
+                        whitelist=whitelist,
+                        default_api_key=default_api_key,
+                        retry=True,
+                    )
+                else:
+                    no_record = True
+                    no_record_reason = prompts.no_record_reason.get("filtered")
+                    break
 
     try:
         if no_record:
@@ -114,6 +131,9 @@ async def process_message(event, **kwargs):
                     "content": output_text,
                 }
             )
+
+            if retry:
+                output_text = prompts.profanity_warn.format(output_text)
     # history[event.chat_id] could be cleared during awaiting
     except KeyError as e:
         logging.warning(

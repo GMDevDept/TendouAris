@@ -191,4 +191,5 @@ pyrightconfig.json
 
 /prompts.py
 *.session
+*.session-journal
 *.test.*
