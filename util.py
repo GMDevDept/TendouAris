@@ -3,7 +3,6 @@ import re
 import logging
 import openai
 import prompts
-import arisbot
 from collections import deque
 
 max_history = int(os.getenv("MAX_HISTORY", 10))
@@ -15,10 +14,18 @@ def remove_command(text):
     return re.sub(r"^/\S*", "", text).strip()
 
 
-async def process_message(event, history, **kwargs):
+async def process_message(event, **kwargs):
+    db = kwargs.get("db")
+    history = kwargs.get("history")
+    userlist = kwargs.get("userlist")
+    whitelist = kwargs.get("whitelist")
+    add_reply = kwargs.get("add_reply")
+    auto_clear = kwargs.get("auto_clear")
+    default_api_key = kwargs.get("default_api_key")
+
     # Reset clearing chat history counter
-    if kwargs.get("auto_clear") is not None:
-        kwargs.get("auto_clear").pop(event.chat_id, kwargs.get("auto_clear"))
+    if auto_clear:
+        auto_clear.pop(event.chat_id, auto_clear)
 
     messages = [
         {
@@ -35,8 +42,8 @@ async def process_message(event, history, **kwargs):
         history[event.chat_id] = deque(prompts.initial_prompts, maxlen=max_history)
 
     # Process replied message
-    if kwargs.get("add_reply") is not None:
-        reply_text = kwargs.get("add_reply").raw_text
+    if add_reply:
+        reply_text = add_reply.raw_text
         history[event.chat_id].append(
             {
                 "role": "assistant",
@@ -62,14 +69,21 @@ async def process_message(event, history, **kwargs):
     messages = messages + [i for i in history[event.chat_id]]
 
     try:
+        api_key = (
+            db.get(event.chat_id)
+            or event.chat_id in whitelist
+            and default_api_key
+            or None
+        )
+        logging.info(api_key)
         response = await openai.ChatCompletion.acreate(
-            api_key=arisbot.db.get(event.chat_id),
+            api_key=api_key,
             model="gpt-3.5-turbo",
             messages=messages,
         )
     except openai.error.AuthenticationError as e:
-        arisbot.db.delete(event.chat_id)
-        arisbot.userlist.remove(event.chat_id)
+        db.delete(event.chat_id)
+        userlist.remove(event.chat_id)
         return f"{prompts.api_error}\n\n({e})"
     except openai.error.OpenAIError as e:
         logging.error(f"OpenAI Error: {e}")
@@ -89,7 +103,7 @@ async def process_message(event, history, **kwargs):
     try:
         if no_record:
             history[event.chat_id].pop()
-            if kwargs.get("add_reply") is not None:
+            if add_reply:
                 history[event.chat_id].pop()
 
             output_text = prompts.no_record.format(output_text, no_record_reason)

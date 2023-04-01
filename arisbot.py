@@ -19,13 +19,14 @@ api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
 default_api_key = os.getenv("OPENAI_API_KEY")
 auto_clear_count = int(os.getenv("AUTO_CLEAR_COUNT", 0))
+manager = [int(i) for i in os.getenv("MANAGER").split(",")]
 whitelist = [int(i) for i in os.getenv("WHITELIST").split(",")]
 
 # Telegram bot client
 client = TelegramClient("Aris", api_id, api_hash)
 
 # Redis database
-db = redis.Redis(host="arisdata", port=6379, db=0)
+db = redis.Redis(host="arisdata", port=6379, db=0, decode_responses=True)
 
 # Get users with custom API key provided
 userlist = [int(i) for i in db.keys()]
@@ -60,9 +61,8 @@ async def history_handler2(event):
 # Gate keeper
 @client.on(
     events.NewMessage(
-        chats=whitelist + userlist,
-        blacklist_chats=True,
         pattern=r"(/start)|(/aris)",
+        func=lambda e: e.chat_id not in whitelist + userlist,
     )
 )
 async def whitelist_handler(event):
@@ -88,45 +88,70 @@ async def apikey_handler(event):
                 userlist.append(event.chat_id)
             await event.reply(prompts.api_key_set)
         except openai.error.OpenAIError as e:
-            event.reply(f"{prompts.api_key_invalid}\n\n({e})")
+            await event.reply(f"{prompts.api_key_invalid}\n\n({e})")
     else:
         await event.reply(prompts.api_key_invalid)
+
+
+# Set API key for other user (manager only)
+@client.on(events.NewMessage(chats=manager, pattern=r"/fapikey"))
+async def fapikey_handler(event):
+    chatid_input, apikey_input = remove_command(event.raw_text).split()
+    try:
+        db.set(chatid_input, apikey_input)
+        if chatid_input not in userlist:
+            userlist.append(chatid_input)
+        await event.reply(prompts.api_key_set)
+    except Exception as e:
+        await event.reply(e)
 
 
 # Private chats
 @client.on(
     events.NewMessage(
-        chats=whitelist + userlist,
         pattern=r"(/start)|(/aris)|([^/])",
-        func=lambda e: e.is_private,
+        func=lambda e: e.is_private and e.chat_id in whitelist + userlist,
         forwards=False,
     )
 )
 async def private_message_handler(event):
-    gtp_output = await process_message(event, history)
+    gtp_output = await process_message(
+        event,
+        history=history,
+        db=db,
+        userlist=userlist,
+        whitelist=whitelist,
+        default_api_key=default_api_key,
+    )
     await event.reply(gtp_output)
 
 
 # Group chats
 @client.on(
     events.NewMessage(
-        chats=whitelist + userlist,
         pattern=r"(/aris)|(爱丽丝)",
-        func=lambda e: e.is_group,
+        func=lambda e: e.is_group and e.chat_id in whitelist + userlist,
         forwards=False,
     )
 )
 async def group_message_handler(event):
-    gtp_output = await process_message(event, history, auto_clear=auto_clear)
+    gtp_output = await process_message(
+        event,
+        history=history,
+        auto_clear=auto_clear,
+        db=db,
+        userlist=userlist,
+        whitelist=whitelist,
+        default_api_key=default_api_key,
+    )
     await event.reply(gtp_output)
 
 
 # Group chats direct reply
 @client.on(
     events.NewMessage(
-        chats=whitelist + userlist,
         pattern=r"^(?!/aris|爱丽丝)",  # Avoid duplicate replies
-        func=lambda e: e.is_group and e.is_reply,
+        func=lambda e: e.is_group and e.is_reply and e.chat_id in whitelist + userlist,
         forwards=False,
     )
 )
@@ -136,7 +161,14 @@ async def group_reply_handler(event):
     try:
         if sender.is_self:
             gtp_output = await process_message(
-                event, history, add_reply=replied_message, auto_clear=auto_clear
+                event,
+                history=history,
+                add_reply=replied_message,
+                auto_clear=auto_clear,
+                db=db,
+                userlist=userlist,
+                whitelist=whitelist,
+                default_api_key=default_api_key,
             )
             await event.reply(gtp_output)
     # Sender could be Channel object or NoneType object
@@ -147,7 +179,11 @@ async def group_reply_handler(event):
 # Auto clear chat history in group chats
 if auto_clear_count > 0:
 
-    @client.on(events.NewMessage(chats=whitelist + userlist, func=lambda e: e.is_group))
+    @client.on(
+        events.NewMessage(
+            func=lambda e: e.is_group and e.chat_id in whitelist + userlist
+        )
+    )
     async def group_message_counter(event):
         if event.chat_id not in auto_clear:
             auto_clear[event.chat_id] = 0

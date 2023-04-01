@@ -10,7 +10,13 @@ initial_prompts = [
     },
 ]
 
-no_auth = "接触权限确认失败，爱丽丝无法回应对象的会话请求。"
+no_auth = "接触权限确认失败，爱丽丝无法回应对象的会话请求。\n\n请使用 `/apikey` 命令设置OpenAI API key或参与 (还没搞好, 在搞了的🤡)爱丽丝赞助计划, 输入的密钥将仅用于当前对话"
+
+api_key_set = "パンパカパーン! 爱丽丝的API Key已更新😎"
+
+api_key_invalid = (
+    "抱歉老师, 爱丽丝无法验证您提供的API key。\n\n请按照正确格式输入自己的OpenAI API key: \n`/apikey sk-xxxxxxxxx`"
+)
 
 history_cleared = "好的老师，爱丽丝的记忆清理程序已启动。"
 
