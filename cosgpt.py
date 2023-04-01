@@ -53,8 +53,8 @@ async def chatid_handler(event):
 
 # Get version
 @client.on(events.NewMessage(pattern=r"/version"))
-async def chatid_handler(event):
-    await event.reply("TendouArisBot 1.2-dev")
+async def version_handler(event):
+    await event.reply("TendouArisBot v1.2")
 
 
 # Reset chat history
