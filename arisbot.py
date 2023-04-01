@@ -36,6 +36,12 @@ history = {int: deque}
 auto_clear = {int: int}
 
 
+# Get version
+@client.on(events.NewMessage(pattern=r"/version"))
+async def version_handler(event):
+    await event.reply("TendouArisBot v1.2")
+
+
 # Get chat id
 @client.on(events.NewMessage(pattern=r"/chatid"))
 async def chatid_handler(event):
@@ -122,6 +128,7 @@ async def private_message_handler(event):
         userlist=userlist,
         whitelist=whitelist,
         default_api_key=default_api_key,
+        retry=False,
     )
     await event.reply(gtp_output)
 
@@ -143,6 +150,7 @@ async def group_message_handler(event):
         userlist=userlist,
         whitelist=whitelist,
         default_api_key=default_api_key,
+        retry=False,
     )
     await event.reply(gtp_output)
 
@@ -169,6 +177,7 @@ async def group_reply_handler(event):
                 userlist=userlist,
                 whitelist=whitelist,
                 default_api_key=default_api_key,
+                retry=False,
             )
             await event.reply(gtp_output)
     # Sender could be Channel object or NoneType object
