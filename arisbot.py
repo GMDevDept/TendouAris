@@ -2,13 +2,14 @@
 # https://platform.openai.com/docs/guides/chat/introduction
 
 import os
+import re
 import redis
 import openai
 import logging
 import prompts
 from collections import deque
 from telethon import TelegramClient, events
-from util import remove_command, process_message
+from util import remove_command, history_clear_handler, process_message
 
 logging.basicConfig(
     format="[ %(levelname)s / %(asctime)s] %(name)s: %(message)s", level=logging.INFO
@@ -17,8 +18,6 @@ logging.basicConfig(
 api_id = os.getenv("API_ID")
 api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
-default_api_key = os.getenv("OPENAI_API_KEY")
-auto_clear_count = int(os.getenv("AUTO_CLEAR_COUNT", 0))
 manager = [int(i) for i in os.getenv("MANAGER").split(",")]
 whitelist = [int(i) for i in os.getenv("WHITELIST").split(",")]
 
@@ -39,7 +38,7 @@ auto_clear = {int: int}
 # Get version
 @client.on(events.NewMessage(pattern=r"/version"))
 async def version_handler(event):
-    await event.reply("TendouArisBot v1.2")
+    await event.reply("TendouArisBot v1.3")
 
 
 # Get chat id
@@ -62,17 +61,6 @@ async def history_handler2(event):
         history[event.chat_id].pop()
         history[event.chat_id].pop()
     await event.reply(prompts.last_message_cleared)
-
-
-# Gate keeper
-@client.on(
-    events.NewMessage(
-        pattern=r"(/start)|(/aris)",
-        func=lambda e: e.chat_id not in whitelist + userlist,
-    )
-)
-async def whitelist_handler(event):
-    await event.reply(prompts.no_auth)
 
 
 # Provide own API key
@@ -112,98 +100,86 @@ async def fapikey_handler(event):
         await event.reply(e)
 
 
-# Private chats
+# Private chat
 @client.on(
     events.NewMessage(
         pattern=r"(/start)|(/aris)|([^/])",
-        func=lambda e: e.is_private and e.chat_id in whitelist + userlist,
+        func=lambda event: event.is_private,
         forwards=False,
     )
 )
 async def private_message_handler(event):
-    gtp_output = await process_message(
-        event,
-        history=history,
-        db=db,
-        userlist=userlist,
-        whitelist=whitelist,
-        default_api_key=default_api_key,
-        retry=False,
-    )
-    await event.reply(gtp_output)
+    if event.chat_id not in whitelist + userlist:
+        output_message = prompts.no_auth
+    else:
+        output_message = await process_message(
+            event,
+            db=db,
+            retry=False,
+            history=history,
+            userlist=userlist,
+            whitelist=whitelist,
+        )
+
+    await event.reply(output_message)
 
 
-# Group chats
+# Group chat
 @client.on(
     events.NewMessage(
-        pattern=r"(/aris)|(爱丽丝)",
-        func=lambda e: e.is_group and e.chat_id in whitelist + userlist,
+        func=lambda event: event.is_group,
         forwards=False,
     )
 )
 async def group_message_handler(event):
-    gtp_output = await process_message(
-        event,
-        history=history,
-        auto_clear=auto_clear,
-        db=db,
-        userlist=userlist,
-        whitelist=whitelist,
-        default_api_key=default_api_key,
-        retry=False,
-    )
-    await event.reply(gtp_output)
+    if event.chat_id not in whitelist + userlist:
+        if re.match(r"^(/aris)|(爱丽丝)", event.raw_text):
+            output_message = prompts.no_auth
+        else:
+            return
+    else:
+        if event.is_reply:
+            reply_message = await event.get_reply_message()
+            # Direct reply
+            if reply_message.sender_id == (await client.get_me()).id:
+                if re.match(r"^(?!/)", event.raw_text):
+                    add_reply = {
+                        "role": "assistant",
+                        "content": reply_message.raw_text,
+                    }
+                # Messages start with command should be handled elsewhere (direct reply with /aris is alse ignored)
+                else:
+                    return
+            # Reply to other user's message, handle as quote
+            else:
+                if re.match(r"^(/aris)|(爱丽丝)", event.raw_text):
+                    add_reply = {
+                        "role": "user",
+                        "content": remove_command(reply_message.raw_text),
+                    }
+                else:
+                    history_clear_handler(event, auto_clear, history)
+                    return
+        # Not a reply
+        else:
+            if re.match(r"^(/aris)|(爱丽丝)", event.raw_text):
+                add_reply = False
+            else:
+                history_clear_handler(event, auto_clear, history)
+                return
 
-
-# Group chats direct reply
-@client.on(
-    events.NewMessage(
-        pattern=r"^(?!/aris|爱丽丝)",  # Avoid duplicate replies
-        func=lambda e: e.is_group and e.is_reply and e.chat_id in whitelist + userlist,
-        forwards=False,
-    )
-)
-async def group_reply_handler(event):
-    replied_message = await event.get_reply_message()
-    sender = await replied_message.get_sender()
-    try:
-        if sender.is_self:
-            gtp_output = await process_message(
-                event,
-                history=history,
-                add_reply=replied_message,
-                auto_clear=auto_clear,
-                db=db,
-                userlist=userlist,
-                whitelist=whitelist,
-                default_api_key=default_api_key,
-                retry=False,
-            )
-            await event.reply(gtp_output)
-    # Sender could be Channel object or NoneType object
-    except AttributeError as e:
-        logging.warning(f"AttributeError: {e}")
-
-
-# Auto clear chat history in group chats
-if auto_clear_count > 0:
-
-    @client.on(
-        events.NewMessage(
-            func=lambda e: e.is_group and e.chat_id in whitelist + userlist
+        output_message = await process_message(
+            event,
+            db=db,
+            retry=False,
+            history=history,
+            userlist=userlist,
+            whitelist=whitelist,
+            add_reply=add_reply,
+            auto_clear=auto_clear,
         )
-    )
-    async def group_message_counter(event):
-        if event.chat_id not in auto_clear:
-            auto_clear[event.chat_id] = 0
 
-        auto_clear[event.chat_id] += 1
-
-        if auto_clear[event.chat_id] == auto_clear_count:
-            history.pop(event.chat_id, history)
-            logging.info(
-                f"Chat history for group {event.chat_id} has been cleared due to inactivity"
-            )
+    await event.reply(output_message)
 
 
 def main():
