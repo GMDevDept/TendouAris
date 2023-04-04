@@ -5,13 +5,29 @@ import openai
 import prompts
 from collections import deque
 
+default_api_key = os.getenv("OPENAI_API_KEY")
 max_history = int(os.getenv("MAX_HISTORY", 10))
 max_input_length = int(os.getenv("MAX_INPUT_LENGTH", 100))
 max_output_length = int(os.getenv("MAX_OUTPUT_LENGTH", 500))
+auto_clear_count = int(os.getenv("AUTO_CLEAR_COUNT", 0))
 
 
 def remove_command(text):
     return re.sub(r"^/\S*", "", text).strip()
+
+
+def history_clear_handler(event, auto_clear, history):
+    if auto_clear_count > 0:
+        if event.chat_id not in auto_clear:
+            auto_clear[event.chat_id] = 0
+
+        auto_clear[event.chat_id] += 1
+
+        if auto_clear[event.chat_id] == auto_clear_count:
+            history.pop(event.chat_id, history)
+            logging.info(
+                f"Chat history for group {event.chat_id} has been cleared due to inactivity"
+            )
 
 
 async def process_message(event, **kwargs):
@@ -22,7 +38,6 @@ async def process_message(event, **kwargs):
     whitelist = kwargs.get("whitelist")
     add_reply = kwargs.get("add_reply")
     auto_clear = kwargs.get("auto_clear")
-    default_api_key = kwargs.get("default_api_key")
 
     # Reset clearing chat history counter
     if auto_clear:
@@ -48,14 +63,8 @@ async def process_message(event, **kwargs):
 
     # Process replied message
     if not retry and add_reply:
-        reply_text = add_reply.raw_text
-        history[event.chat_id].append(
-            {
-                "role": "assistant",
-                "content": reply_text,
-            }
-        )
-        if len(reply_text) > max_input_length:
+        history[event.chat_id].append(add_reply)
+        if len(add_reply.get("content")) > max_input_length:
             no_record = True
             no_record_reason = prompts.no_record_reason.get("reply_too_long")
 
@@ -109,7 +118,6 @@ async def process_message(event, **kwargs):
                         db=db,
                         userlist=userlist,
                         whitelist=whitelist,
-                        default_api_key=default_api_key,
                         retry=True,
                     )
                 else:
