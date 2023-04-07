@@ -18,6 +18,8 @@ logging.basicConfig(
 api_id = os.getenv("API_ID")
 api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
+flood_control_count = int(os.getenv("FLOOD_CONTROL_COUNT"))
+flood_control_delay = int(os.getenv("FLOOD_CONTROL_DELAY"))
 manager = [int(i) for i in os.getenv("MANAGER").split(",")]
 whitelist = [int(i) for i in os.getenv("WHITELIST").split(",")]
 
@@ -33,6 +35,9 @@ userlist = [int(i) for i in db.keys()]
 # Chat history by chat id
 history = {int: deque}
 auto_clear = {int: int}
+
+# Flood control by user in groups
+flood_ctrl = {int: {int: int}}  # {chatid: {user_id: token counter}}
 
 
 # Get version
@@ -57,7 +62,7 @@ async def history_handler1(event):
 # Pop chat history
 @client.on(events.NewMessage(pattern=r"/pop"))
 async def history_handler2(event):
-    if event.chat_id in history and len(history[event.chat_id]) >= 2:
+    if event.chat_id in history and len(history[event.chat_id]) > 2:
         history[event.chat_id].pop()
         history[event.chat_id].pop()
     await event.reply(prompts.last_message_cleared)
@@ -100,6 +105,18 @@ async def fapikey_handler(event):
         await event.reply(e)
 
 
+# Activate/deactivate flood control in a group chat (manager only)
+@client.on(events.NewMessage(chats=manager, pattern=r"/fctrl"))
+async def flood_control_handler(event):
+    chatid_input = int(remove_command(event.raw_text))
+    if chatid_input in flood_ctrl:
+        flood_ctrl.pop(chatid_input)
+        await event.reply(f"Flood control deactivated for chat {chatid_input}")
+    else:
+        flood_ctrl[chatid_input] = {}
+        await event.reply(f"Flood control activated for chat {chatid_input}")
+
+
 # Private chat
 @client.on(
     events.NewMessage(
@@ -138,15 +155,27 @@ async def group_message_handler(event):
         else:
             return
     else:
+        # Filter cases where API request is not needed
+        # When message is a reply, generate add_reply before processing
         if event.is_reply:
             reply_message = await event.get_reply_message()
             # Direct reply
             if reply_message.sender_id == (await client.get_me()).id:
+                # Match all messages which don't start with command
                 if re.match(r"^(?!/)", event.raw_text):
-                    add_reply = {
-                        "role": "assistant",
-                        "content": reply_message.raw_text,
-                    }
+                    # No need to add reply if the last message is the same
+                    if (
+                        event.chat_id in history
+                        and len(history[event.chat_id]) > 0
+                        and history[event.chat_id][-1].get("content")
+                        == reply_message.raw_text
+                    ):
+                        add_reply = False
+                    else:
+                        add_reply = {
+                            "role": "assistant",
+                            "content": reply_message.raw_text,
+                        }
                 # Messages start with command should be handled elsewhere (direct reply with /aris is alse ignored)
                 else:
                     return
@@ -168,16 +197,44 @@ async def group_message_handler(event):
                 history_clear_handler(event, auto_clear, history)
                 return
 
-        output_message = await process_message(
-            event,
-            db=db,
-            retry=False,
-            history=history,
-            userlist=userlist,
-            whitelist=whitelist,
-            add_reply=add_reply,
-            auto_clear=auto_clear,
-        )
+        # Check if flood control is active before sending API request
+        if (
+            event.chat_id in flood_ctrl
+            and event.sender_id is not None  # Anonymous group admin
+            and event.sender_id in flood_ctrl[event.chat_id]
+            and flood_ctrl[event.chat_id][event.sender_id] > flood_control_count
+            and db.get(event.sender_id) is None
+        ):
+            output_message = prompts.flood_control_activated.format(
+                flood_control_delay,
+                flood_ctrl[event.chat_id][event.sender_id],
+                flood_control_count,
+            )
+        else:
+            # Bypass if user has provided API key
+            if (
+                event.chat_id in flood_ctrl
+                and event.sender_id is not None  # Anonymous group admin
+                and event.sender_id in flood_ctrl[event.chat_id]
+                and flood_ctrl[event.chat_id][event.sender_id] > flood_control_count
+                and db.get(event.sender_id) is not None
+            ):
+                backup_key = db.get(event.sender_id)
+            else:
+                backup_key = None
+
+            output_message = await process_message(
+                event,
+                db=db,
+                retry=False,
+                history=history,
+                userlist=userlist,
+                whitelist=whitelist,
+                add_reply=add_reply,
+                auto_clear=auto_clear,
+                backup_key=backup_key,
+                flood_ctrl=event.chat_id in flood_ctrl and flood_ctrl,
+            )
 
     await event.reply(output_message)
 
