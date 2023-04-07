@@ -3,6 +3,7 @@ import re
 import logging
 import openai
 import prompts
+import asyncio
 from collections import deque
 
 default_api_key = os.getenv("OPENAI_API_KEY")
@@ -10,6 +11,7 @@ max_history = int(os.getenv("MAX_HISTORY", 10))
 max_input_length = int(os.getenv("MAX_INPUT_LENGTH", 100))
 max_output_length = int(os.getenv("MAX_OUTPUT_LENGTH", 500))
 auto_clear_count = int(os.getenv("AUTO_CLEAR_COUNT", 0))
+flood_control_delay = int(os.getenv("FLOOD_CONTROL_DELAY"))
 
 
 def remove_command(text):
@@ -38,6 +40,8 @@ async def process_message(event, **kwargs):
     whitelist = kwargs.get("whitelist")
     add_reply = kwargs.get("add_reply")
     auto_clear = kwargs.get("auto_clear")
+    backup_key = kwargs.get("backup_key")
+    flood_ctrl = kwargs.get("flood_ctrl")
 
     # Reset clearing chat history counter
     if auto_clear:
@@ -83,9 +87,11 @@ async def process_message(event, **kwargs):
 
     messages = messages + [i for i in history[event.chat_id]]
 
+    # Send API request
     try:
         api_key = (
-            db.get(event.chat_id)
+            backup_key
+            or db.get(event.chat_id)
             or event.chat_id in whitelist
             and default_api_key
             or None
@@ -96,14 +102,42 @@ async def process_message(event, **kwargs):
             messages=messages,
         )
     except openai.error.AuthenticationError as e:
-        db.delete(event.chat_id)
-        userlist.remove(event.chat_id)
+        db_id = backup_key and event.sender_id or event.chat_id
+        db.delete(db_id)
+        userlist.remove(db_id)
         return f"{prompts.api_error}\n\n({e})"
     except openai.error.OpenAIError as e:
         logging.error(f"OpenAI Error: {e}")
         return f"{prompts.api_error}\n\n({e})"
 
     output_text = response["choices"][0]["message"]["content"]
+
+    # Flood control
+    if flood_ctrl and event.sender_id is not None:
+        try:
+            token_used = response["usage"]["completion_tokens"]
+            if event.sender_id not in flood_ctrl[event.chat_id]:
+                flood_ctrl[event.chat_id][event.sender_id] = 0
+            flood_ctrl[event.chat_id][event.sender_id] += token_used
+
+            async def clear_flood_control_counter():
+                await asyncio.sleep(flood_control_delay)
+                try:
+                    flood_ctrl[event.chat_id][event.sender_id] = max(
+                        0, flood_ctrl[event.chat_id][event.sender_id] - token_used
+                    )
+                except KeyError as e:
+                    logging.warning(
+                        f"KeyError: {e}, flood_ctrl might be deactivated during sleeping"
+                    )
+
+            asyncio.create_task(clear_flood_control_counter())
+        except KeyError as e:
+            logging.warning(
+                f"KeyError: {e}, flood_ctrl might be deactivated during awaiting"
+            )
+
+    # Post-process
     if len(output_text) > max_output_length:
         no_record = True
         no_record_reason = prompts.no_record_reason.get("output_too_long")
@@ -113,18 +147,22 @@ async def process_message(event, **kwargs):
                 if not retry:
                     return await process_message(
                         event,
-                        history=history,
-                        add_reply=add_reply,
                         db=db,
+                        retry=True,
+                        history=history,
                         userlist=userlist,
                         whitelist=whitelist,
-                        retry=True,
+                        add_reply=add_reply,
+                        auto_clear=auto_clear,
+                        backup_key=backup_key,
+                        flood_ctrl=flood_ctrl,
                     )
                 else:
                     no_record = True
                     no_record_reason = prompts.no_record_reason.get("filtered")
                     break
 
+    # Output
     try:
         if no_record:
             history[event.chat_id].pop()
@@ -142,10 +180,10 @@ async def process_message(event, **kwargs):
 
             if retry:
                 output_text = prompts.profanity_warn.format(output_text)
-    # history[event.chat_id] could be cleared during awaiting
+
+        if backup_key:
+            output_text = prompts.backup_key_used.format(output_text)
     except KeyError as e:
-        logging.warning(
-            f"KeyError: {e}, history could have been cleared during awaiting"
-        )
+        logging.warning(f"KeyError: {e}, history might be cleared during awaiting")
 
     return output_text
