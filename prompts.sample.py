@@ -14,13 +14,19 @@ initial_prompts = [
     },
 ]
 
-no_auth = "接触权限确认失败，爱丽丝无法回应对象的会话请求。\n\n请使用 `/apikey` 命令设置OpenAI API key或参与 (还没搞好, 在搞了的🤡)爱丽丝赞助计划, 输入的密钥将仅用于当前对话"
+no_auth = (
+    "接触权限确认失败，爱丽丝无法回应对象的会话请求。\n\n请使用 `/apikey` 命令设置老师自己的OpenAI API key, 输入的密钥将仅供您一个人使用"
+)
 
 api_key_set = "パンパカパーン! 爱丽丝的API Key已更新😎"
 
 api_key_invalid = (
     "抱歉老师, 爱丽丝无法验证您提供的API key。\n\n请按照正确格式输入自己的OpenAI API key: \n`/apikey sk-xxxxxxxxx`"
 )
+
+flood_control_activated = "爱丽丝对话机能冷却中，机娘也是需要休息的！🥺\n\n(您在过去{}秒内的token用量 `[{}]` 已超过群内防刷屏阈值 `[{}]`，请稍候再试或私聊爱丽丝提供自己的API密钥)"
+
+backup_key_used = "{}\n\n(爱丽丝对话机能冷却中，本条消息由老师的私人API key生成，请注意用量哦)"
 
 history_cleared = "好的老师，爱丽丝的记忆清理程序已启动。"
 
