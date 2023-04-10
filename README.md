@@ -1,5 +1,5 @@
 <h1 align="center">
-    <img width="600" src="resources/tendouaris.png" alt="Aris">
+    <img width="500" src="resources/tendouaris.png" alt="Aris">
     <p align="left">TendouAris</p>
 </h1>
 
