@@ -27,23 +27,34 @@ whitelist = [int(i) for i in os.getenv("WHITELIST").split(",")]
 client = TelegramClient("Aris", api_id, api_hash)
 
 # Redis database
-db = redis.Redis(host="arisdata", port=6379, db=0, decode_responses=True)
+db_apikey = redis.Redis(host="arisdata", port=6379, db=0, decode_responses=True)
+db_floodctrl = redis.Redis(host="arisdata", port=6379, db=1, decode_responses=True)
 
 # Get users with custom API key provided
-userlist = [int(i) for i in db.keys()]
+userlist = [int(i) for i in db_apikey.keys()]
+
+# Flood control by user in groups
+flood_ctrl = {
+    int(i): {} for i in db_floodctrl.keys()
+}  # {chatid: {user_id: token counter}}
 
 # Chat history by chat id
 history = {int: deque}
 auto_clear = {int: int}
 
-# Flood control by user in groups
-flood_ctrl = {int: {int: int}}  # {chatid: {user_id: token counter}}
-
 
 # Get version
 @client.on(events.NewMessage(pattern=r"/version"))
 async def version_handler(event):
-    await event.reply("TendouArisBot v1.3")
+    await event.reply("TendouArisBot v1.3.1")
+
+
+# Welcome/help message
+@client.on(events.NewMessage(pattern=r"(/start)|(/help)"))
+async def help_handler(event):
+    sender = await event.get_sender()
+    name = f"{sender.first_name and sender.first_name or ''} {sender.last_name and sender.last_name or ''}".strip()
+    await event.reply(prompts.manual.format(name), parse_mode="html")
 
 
 # Get chat id
@@ -82,25 +93,35 @@ async def apikey_handler(event):
                 ],
             )
 
-            db.set(event.chat_id, apikey_input)
+            db_apikey.set(event.chat_id, apikey_input)
             if event.chat_id not in userlist:
                 userlist.append(event.chat_id)
             await event.reply(prompts.api_key_set)
         except openai.error.OpenAIError as e:
-            await event.reply(f"{prompts.api_key_invalid}\n\n({e})")
+            await event.reply(f"{prompts.api_key_invalid}\n\n({e})", parse_mode="html")
     else:
-        await event.reply(prompts.api_key_invalid)
+        await event.reply(prompts.api_key_invalid, parse_mode="html")
 
 
 # Set API key for other user (manager only)
 @client.on(events.NewMessage(chats=manager, pattern=r"/fapikey"))
 async def fapikey_handler(event):
-    chatid_input, apikey_input = remove_command(event.raw_text).split()
+    inputs = remove_command(event.raw_text).split()
     try:
-        db.set(chatid_input, apikey_input)
+        chatid_input, apikey_input = inputs
+        db_apikey.set(chatid_input, apikey_input)
         if chatid_input not in userlist:
             userlist.append(chatid_input)
         await event.reply(prompts.api_key_set)
+    except ValueError as e:
+        if len(inputs) == 1:
+            chatid_input = inputs[0]
+            db_apikey.delete(chatid_input)
+            if chatid_input in userlist:
+                userlist.remove(chatid_input)
+            await event.reply(prompts.api_key_set)
+        else:
+            await event.reply(e)
     except Exception as e:
         await event.reply(e)
 
@@ -108,19 +129,24 @@ async def fapikey_handler(event):
 # Activate/deactivate flood control in a group chat (manager only)
 @client.on(events.NewMessage(chats=manager, pattern=r"/fctrl"))
 async def flood_control_handler(event):
-    chatid_input = int(remove_command(event.raw_text))
-    if chatid_input in flood_ctrl:
-        flood_ctrl.pop(chatid_input)
-        await event.reply(f"Flood control deactivated for chat {chatid_input}")
-    else:
-        flood_ctrl[chatid_input] = {}
-        await event.reply(f"Flood control activated for chat {chatid_input}")
+    try:
+        chatid_input = int(remove_command(event.raw_text))
+        if chatid_input not in flood_ctrl:
+            flood_ctrl[chatid_input] = {}
+            db_floodctrl.set(chatid_input, 1)
+            await event.reply(f"Flood control activated for chat {chatid_input}")
+        else:
+            flood_ctrl.pop(chatid_input)
+            db_floodctrl.delete(chatid_input)
+            await event.reply(f"Flood control deactivated for chat {chatid_input}")
+    except Exception as e:
+        await event.reply(e)
 
 
 # Private chat
 @client.on(
     events.NewMessage(
-        pattern=r"(/start)|(/aris)|([^/])",
+        pattern=r"(/aris)|([^/])",
         func=lambda event: event.is_private,
         forwards=False,
     )
@@ -131,11 +157,11 @@ async def private_message_handler(event):
     else:
         output_message = await process_message(
             event,
-            db=db,
             retry=False,
             history=history,
             userlist=userlist,
             whitelist=whitelist,
+            db_apikey=db_apikey,
         )
 
     await event.reply(output_message)
@@ -203,7 +229,7 @@ async def group_message_handler(event):
             and event.sender_id is not None  # Anonymous group admin
             and event.sender_id in flood_ctrl[event.chat_id]
             and flood_ctrl[event.chat_id][event.sender_id] > flood_control_count
-            and db.get(event.sender_id) is None
+            and db_apikey.get(event.sender_id) is None
         ):
             output_message = prompts.flood_control_activated.format(
                 flood_control_delay,
@@ -217,20 +243,20 @@ async def group_message_handler(event):
                 and event.sender_id is not None  # Anonymous group admin
                 and event.sender_id in flood_ctrl[event.chat_id]
                 and flood_ctrl[event.chat_id][event.sender_id] > flood_control_count
-                and db.get(event.sender_id) is not None
+                and db_apikey.get(event.sender_id) is not None
             ):
-                backup_key = db.get(event.sender_id)
+                backup_key = db_apikey.get(event.sender_id)
             else:
                 backup_key = None
 
             output_message = await process_message(
                 event,
-                db=db,
                 retry=False,
                 history=history,
                 userlist=userlist,
                 whitelist=whitelist,
                 add_reply=add_reply,
+                db_apikey=db_apikey,
                 auto_clear=auto_clear,
                 backup_key=backup_key,
                 flood_ctrl=event.chat_id in flood_ctrl and flood_ctrl,

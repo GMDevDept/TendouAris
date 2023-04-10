@@ -33,12 +33,12 @@ def history_clear_handler(event, auto_clear, history):
 
 
 async def process_message(event, **kwargs):
-    db = kwargs.get("db")
     retry = kwargs.get("retry")
     history = kwargs.get("history")
     userlist = kwargs.get("userlist")
     whitelist = kwargs.get("whitelist")
     add_reply = kwargs.get("add_reply")
+    db_apikey = kwargs.get("db_apikey")
     auto_clear = kwargs.get("auto_clear")
     backup_key = kwargs.get("backup_key")
     flood_ctrl = kwargs.get("flood_ctrl")
@@ -91,9 +91,11 @@ async def process_message(event, **kwargs):
     try:
         api_key = (
             backup_key
-            or db.get(event.chat_id)
+            or db_apikey.get(event.chat_id)
             or event.chat_id in whitelist
             and default_api_key
+            or event.sender_id
+            and db_apikey.get(event.sender_id)
             or None
         )
         response = await openai.ChatCompletion.acreate(
@@ -102,9 +104,9 @@ async def process_message(event, **kwargs):
             messages=messages,
         )
     except openai.error.AuthenticationError as e:
-        db_id = backup_key and event.sender_id or event.chat_id
-        db.delete(db_id)
-        userlist.remove(db_id)
+        apikey_owner = backup_key and event.sender_id or event.chat_id
+        db_apikey.delete(apikey_owner)
+        userlist.remove(apikey_owner)
         return f"{prompts.api_error}\n\n({e})"
     except openai.error.OpenAIError as e:
         logging.error(f"OpenAI Error: {e}")
@@ -147,12 +149,12 @@ async def process_message(event, **kwargs):
                 if not retry:
                     return await process_message(
                         event,
-                        db=db,
                         retry=True,
                         history=history,
                         userlist=userlist,
                         whitelist=whitelist,
                         add_reply=add_reply,
+                        db_apikey=db_apikey,
                         auto_clear=auto_clear,
                         backup_key=backup_key,
                         flood_ctrl=flood_ctrl,

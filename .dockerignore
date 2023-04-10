@@ -1,6 +1,7 @@
 /__pycache__
 /.git
 /.venv
+/resources
 /.vscode
 /.dockerignore
 /.env.sample
