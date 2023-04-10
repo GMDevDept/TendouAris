@@ -1,8 +1,9 @@
-<p align="center"><img width="400" src="resources/tendouaris.png" alt="Aris"></p>
+<h1 align="center">
+    <img width="600" src="resources/tendouaris.png" alt="Aris">
+    <p align="left">TendouAris</p>
+</h1>
 
-# TendouAris
-
-[![Telegram bot](https://img.shields.io/badge/bot-%40TendouArisBot-229ed9?logo=telegram&?style=for-the-badge)](https://t.me/TendouArisBot)
+[![Telegram bot](https://img.shields.io/badge/bot-%40TendouArisBot-229ed9?logo=telegram&style=for-the-badge)](https://t.me/TendouArisBot)
 
 ## Deployment
 
