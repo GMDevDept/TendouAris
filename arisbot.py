@@ -52,8 +52,11 @@ async def version_handler(event):
 # Welcome/help message
 @client.on(events.NewMessage(pattern=r"(/start)|(/help)"))
 async def help_handler(event):
-    sender = await event.get_sender()
-    name = f"{sender.first_name and sender.first_name or ''} {sender.last_name and sender.last_name or ''}".strip()
+    try:
+        sender = await event.get_sender()
+        name = f"{sender.first_name and sender.first_name or ''} {sender.last_name and sender.last_name or ''}".strip()
+    except AttributeError:
+        name = ""
     await event.reply(prompts.manual.format(name), parse_mode="html")
 
 
