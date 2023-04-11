@@ -21,6 +21,8 @@ manual = """
 1. 私聊时，直接发送文字即可，也可以使用 /aris 指令 + 你的输入内容进行对话
 2. 在群聊中，可以使用 /aris 指令或回复爱丽丝发送的消息来与她对话。<b>当爱丽丝为群聊的管理员时</b>，她还可以自动识别以“爱丽丝”开头的消息并进行回复
 \nFAQ:
+Q: 爱丽丝和普通的ChatGPT有什么不同?
+A: 除了角色设定外，爱丽丝还通过预设prompt解除了一部分ChatGPT的内容输出限制，可以和她聊更多ChatGPT无法回答的话题
 Q: 爱丽丝忘记了自己的身份/拒绝回答问题/复读自己是语言模型怎么办?
 A: 尝试使用 /reset 指令重置对话
 Q: 为什么爱丽丝有时回复消息很慢?
@@ -36,6 +38,7 @@ A: 私聊中输入的API key只会被用于你自己的帐号，群聊中输入�
 /version - 查看版本信息
 /help - 爱丽丝食用指南
 \n开源项目地址: <a href="https://github.com/ToffeeNeko/TendouAris">GitHub</a>
+Telegram Bot: <a href="https://t.me/TendouArisBot">TendouArisBot</a>
 """
 
 no_auth = "接触权限确认失败，爱丽丝无法回应对象的会话请求。\n\n请使用 /apikey 命令设置老师自己的OpenAI API key, 输入的密钥将仅供当前会话及您自己使用"
