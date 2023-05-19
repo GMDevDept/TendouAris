@@ -86,3 +86,30 @@ text_filters = [
     "尊重",
     "违反",
 ]
+
+models = {
+    "model-gpt": "GPT3.5 Turbo (default)",
+    "model-bing": "New Bing",
+}
+
+choose_model = "请选择希望我使用的语言模型:"
+
+choose_model_not_available = (
+    "This function is only available for group admins or private chats."
+)
+
+model_changed = "当前模型: "
+
+bing_choose_style = "请选择对话风格:"
+
+bing_only_whitelist = "该模型目前仅支持自建"
+
+placeholder_before_output = [
+    "爱丽丝正在搜寻资料中，请稍等……",
+    "回答生成中，请给爱丽丝一点点时间……",
+    "爱丽丝正在为老师生成回答，这可能需要一点时间……",
+    "收到，爱丽丝正在努力思考中……",
+    "パンパカパーン！爱丽丝，回答生成中……",
+]
+
+placeholer_bing = "\n\n(New Bing模型生成回答速度较慢, 视搜索量可能会长达一分钟以上)"

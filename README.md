@@ -17,7 +17,9 @@
 2. Rename .env.sample to .env and fill in the values
 3. Rename prompts.sample.py to prompts.py and fill in the values
 
-4. Build docker container
+4. (Optional) To enable New Bing language model, export cookie from bing.com to /srv/bing/cookies.json (sample provided from format reference)
+
+5. Build docker container
 
     ``` bash
     docker-compose up -d --build
@@ -34,6 +36,7 @@ You can copy the following commands and provide them to BotFather when building 
     aris - パンパカパーン！
     pop - 清除上次问答记忆，继续当前对话
     reset - 清除全部问答记忆，开始新的对话
+    model - 选择语言模型
     apikey - 为当前会话添加OpenAI API key
     chatid - 获取当前会话的chat ID
     version - 查看版本信息
