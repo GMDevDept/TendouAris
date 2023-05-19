@@ -3,12 +3,14 @@
 
 import os
 import re
+import json
 import redis
 import openai
 import logging
 import prompts
+from EdgeGPT import Chatbot
 from collections import deque
-from telethon import TelegramClient, events
+from telethon import TelegramClient, events, Button, errors
 from util import remove_command, history_clear_handler, process_message
 
 logging.basicConfig(
@@ -29,6 +31,7 @@ client = TelegramClient("Aris", api_id, api_hash)
 # Redis database
 db_apikey = redis.Redis(host="arisdata", port=6379, db=0, decode_responses=True)
 db_floodctrl = redis.Redis(host="arisdata", port=6379, db=1, decode_responses=True)
+db_model = redis.Redis(host="arisdata", port=6379, db=2, decode_responses=True)
 
 # Get users with custom API key provided
 userlist = [int(i) for i in db_apikey.keys()]
@@ -38,15 +41,19 @@ flood_ctrl = {
     int(i): {} for i in db_floodctrl.keys()
 }  # {chatid: {user_id: token counter}}
 
+# Model selection by chat id
+model = {int(i): json.loads(db_model.get(i)) for i in db_model.keys()}
+
 # Chat history by chat id
 history = {int: deque}
 auto_clear = {int: int}
+bing_chatbot = {int: [Chatbot, int]}  # {chatid: [Chatbot, activity counter]}
 
 
 # Get version
 @client.on(events.NewMessage(pattern=r"/version"))
 async def version_handler(event):
-    await event.reply("TendouArisBot v1.3.1")
+    await event.reply("TendouArisBot v1.4.0")
 
 
 # Welcome/help message
@@ -70,6 +77,10 @@ async def chatid_handler(event):
 @client.on(events.NewMessage(pattern=r"/reset"))
 async def history_handler1(event):
     history.pop(event.chat_id, history)
+    if event.chat_id in bing_chatbot:
+        await bing_chatbot[event.chat_id][0].close()
+        bing_chatbot.pop(event.chat_id)
+
     await event.reply(prompts.history_cleared)
 
 
@@ -80,6 +91,93 @@ async def history_handler2(event):
         history[event.chat_id].pop()
         history[event.chat_id].pop()
     await event.reply(prompts.last_message_cleared)
+
+
+# Choose which model to use
+@client.on(events.NewMessage(pattern=r"/model"))
+async def choose_model(event):
+    if event.is_private:
+        pass
+    elif event.is_group:
+        # Bypass anonymous admin (sender_id = None)
+        if event.sender_id:
+            perm = await client.get_permissions(event.chat_id, event.sender_id)
+            if not perm.is_admin:
+                await event.reply(prompts.choose_model_not_available)
+                return
+    else:
+        return
+
+    await event.respond(
+        prompts.choose_model,
+        buttons=[
+            [Button.inline(prompts.models.get("model-gpt"), data="model-gpt")],
+            [Button.inline(prompts.models.get("model-bing"), data="model-bing")],
+        ],
+    )
+
+
+# Model selection event handler
+@client.on(events.CallbackQuery(pattern=r"model-"))
+async def model_handler(event):
+    if event.is_private:
+        pass
+    elif event.is_group:
+        # Different from NewMessage event, anonymous admin's sender_id can be get in CallbackQuery event, but cannot be checked by get_permissions
+        try:
+            perm = await client.get_permissions(event.chat_id, event.sender_id)
+            if not perm.is_admin:
+                return
+        except errors.rpcerrorlist.UserNotParticipantError:
+            pass
+    else:
+        return
+
+    modelname = event.data.decode()
+    if modelname == "model-gpt":
+        model.pop(event.chat_id, model)
+        db_model.delete(event.chat_id)
+        await event.edit(prompts.model_changed + prompts.models.get(modelname))
+    elif modelname == "model-bing":
+        if event.chat_id not in whitelist:
+            await event.edit(prompts.bing_only_whitelist)
+        else:
+            await event.edit(
+                prompts.bing_choose_style,
+                buttons=[
+                    Button.inline("creative", data="bingstyle-creative"),
+                    Button.inline("balanced", data="bingstyle-balanced"),
+                    Button.inline("precise", data="bingstyle-precise"),
+                ],
+            )
+
+
+# Bing chatbot style selection event handler
+@client.on(events.CallbackQuery(pattern=r"bingstyle-"))
+async def bingstyle_handler(event):
+    if event.is_private:
+        pass
+    elif event.is_group:
+        # Different from NewMessage event, anonymous admin's sender_id can be get in CallbackQuery event, but cannot be checked by get_permissions
+        try:
+            perm = await client.get_permissions(event.chat_id, event.sender_id)
+            if not perm.is_admin:
+                return
+        except errors.rpcerrorlist.UserNotParticipantError:
+            pass
+    else:
+        return
+
+    style = event.data.decode().replace("bingstyle-", "")
+    model[event.chat_id] = {
+        "name": "model-bing",
+        "bingstyle": style,
+    }
+    db_model.set(event.chat_id, json.dumps(model[event.chat_id]))
+
+    await event.edit(
+        prompts.model_changed + prompts.models.get("model-bing") + f" ({style})"
+    )
 
 
 # Provide own API key
@@ -112,13 +210,14 @@ async def fapikey_handler(event):
     inputs = remove_command(event.raw_text).split()
     try:
         chatid_input, apikey_input = inputs
+        chatid_input = int(chatid_input)
         db_apikey.set(chatid_input, apikey_input)
         if chatid_input not in userlist:
             userlist.append(chatid_input)
         await event.reply(prompts.api_key_set)
     except ValueError as e:
         if len(inputs) == 1:
-            chatid_input = inputs[0]
+            chatid_input = int(inputs[0])
             db_apikey.delete(chatid_input)
             if chatid_input in userlist:
                 userlist.remove(chatid_input)
@@ -158,16 +257,21 @@ async def private_message_handler(event):
     if event.chat_id not in whitelist + userlist:
         output_message = prompts.no_auth
     else:
-        output_message = await process_message(
+        output_message, placeholder_reply = await process_message(
             event,
+            model=model,
             retry=False,
             history=history,
             userlist=userlist,
             whitelist=whitelist,
             db_apikey=db_apikey,
+            bing_chatbot=bing_chatbot,
         )
 
-    await event.reply(output_message)
+    try:
+        await placeholder_reply.edit(output_message)
+    except NameError:
+        await event.reply(output_message)
 
 
 # Group chat
@@ -252,8 +356,9 @@ async def group_message_handler(event):
             else:
                 backup_key = None
 
-            output_message = await process_message(
+            output_message, placeholder_reply = await process_message(
                 event,
+                model=model,
                 retry=False,
                 history=history,
                 userlist=userlist,
@@ -263,9 +368,13 @@ async def group_message_handler(event):
                 auto_clear=auto_clear,
                 backup_key=backup_key,
                 flood_ctrl=event.chat_id in flood_ctrl and flood_ctrl,
+                bing_chatbot=bing_chatbot,
             )
 
-    await event.reply(output_message)
+    try:
+        await placeholder_reply.edit(output_message)
+    except NameError:
+        await event.reply(output_message)
 
 
 def main():
