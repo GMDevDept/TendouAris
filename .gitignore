@@ -189,7 +189,9 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
 
-/prompts.py
+cookies.json
+prompts.py
 *.session
 *.session-journal
-*.test.*
+*test*
+.DS_Store
