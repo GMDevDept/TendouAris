@@ -30,7 +30,6 @@ async def process_message_bing(event, **kwargs):
             0,
             False,
         ]
-        bot = bing_chatbot[event.chat_id][0]
     # Block new requests if the bot is being used
     elif bing_chatbot[event.chat_id][2]:
         return f"{prompts.api_error}\n\n({prompts.bing_concurrent_blocked})"
@@ -38,6 +37,7 @@ async def process_message_bing(event, **kwargs):
     bing_chatbot[event.chat_id][2] = True
 
     try:
+        bot = bing_chatbot[event.chat_id][0]
         response = await bot.ask(
             prompt=re.sub(r"^/\S*", "", event.raw_text).strip().replace("爱丽丝", "Bing"),
             conversation_style=conversation_style,
