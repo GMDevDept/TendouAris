@@ -4,6 +4,7 @@ import os
 import re
 import asyncio
 import logging
+import prompts
 from EdgeGPT import Chatbot, ConversationStyle
 
 bing_chatbot_close_delay = int(os.getenv("BING_CHATBOT_CLOSE_DELAY", 600))
@@ -27,14 +28,26 @@ async def process_message_bing(event, **kwargs):
         bing_chatbot[event.chat_id] = [
             await Chatbot.create(cookie_path="./srv/bing/cookies.json"),
             0,
+            False,
         ]
+        bot = bing_chatbot[event.chat_id][0]
+    # Block new requests if the bot is being used
+    elif bing_chatbot[event.chat_id][2]:
+        return f"{prompts.api_error}\n\n({prompts.bing_concurrent_blocked})"
 
-    bot = bing_chatbot[event.chat_id][0]
+    bing_chatbot[event.chat_id][2] = True
 
-    response = await bot.ask(
-        prompt=re.sub(r"^/\S*", "", event.raw_text).strip().replace("爱丽丝", "Bing"),
-        conversation_style=conversation_style,
-    )
+    try:
+        response = await bot.ask(
+            prompt=re.sub(r"^/\S*", "", event.raw_text).strip().replace("爱丽丝", "Bing"),
+            conversation_style=conversation_style,
+        )
+    except Exception as e:
+        bing_chatbot[event.chat_id][2] = False
+        logging.error(f"Error happened when calling bot.ask: {e}")
+        return f"{prompts.api_error}\n\n({e})"
+
+    bing_chatbot[event.chat_id][2] = False
 
     output_text = response["item"]["messages"][1]["text"]
     log = response["item"]["result"]

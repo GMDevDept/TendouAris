@@ -102,6 +102,8 @@ model_changed = "当前模型: "
 
 bing_choose_style = "请选择对话风格:"
 
+bing_concurrent_blocked = "Please wait for the last conversation to finish"
+
 bing_only_whitelist = "该模型目前仅支持自建"
 
 placeholder_before_output = [
