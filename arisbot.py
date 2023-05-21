@@ -47,13 +47,15 @@ model = {int(i): json.loads(db_model.get(i)) for i in db_model.keys()}
 # Chat history by chat id
 history = {int: deque}
 auto_clear = {int: int}
-bing_chatbot = {int: [Chatbot, int]}  # {chatid: [Chatbot, activity counter]}
+bing_chatbot = {
+    int: [Chatbot, int, bool]
+}  # {chatid: [Chatbot, activity counter, processing block]}
 
 
 # Get version
 @client.on(events.NewMessage(pattern=r"/version"))
 async def version_handler(event):
-    await event.reply("TendouArisBot v1.4.0")
+    await event.reply("TendouArisBot v1.4.1")
 
 
 # Welcome/help message
@@ -257,16 +259,20 @@ async def private_message_handler(event):
     if event.chat_id not in whitelist + userlist:
         output_message = prompts.no_auth
     else:
-        output_message, placeholder_reply = await process_message(
-            event,
-            model=model,
-            retry=False,
-            history=history,
-            userlist=userlist,
-            whitelist=whitelist,
-            db_apikey=db_apikey,
-            bing_chatbot=bing_chatbot,
-        )
+        try:
+            output_message, placeholder_reply = await process_message(
+                event,
+                model=model,
+                retry=False,
+                history=history,
+                userlist=userlist,
+                whitelist=whitelist,
+                db_apikey=db_apikey,
+                bing_chatbot=bing_chatbot,
+            )
+        except Exception as e:
+            logging.error(f"Error happened when calling process_message: {e}")
+            output_message = f"{prompts.api_error}\n\n({e})"
 
     try:
         await placeholder_reply.edit(output_message)
@@ -356,20 +362,24 @@ async def group_message_handler(event):
             else:
                 backup_key = None
 
-            output_message, placeholder_reply = await process_message(
-                event,
-                model=model,
-                retry=False,
-                history=history,
-                userlist=userlist,
-                whitelist=whitelist,
-                add_reply=add_reply,
-                db_apikey=db_apikey,
-                auto_clear=auto_clear,
-                backup_key=backup_key,
-                flood_ctrl=event.chat_id in flood_ctrl and flood_ctrl,
-                bing_chatbot=bing_chatbot,
-            )
+            try:
+                output_message, placeholder_reply = await process_message(
+                    event,
+                    model=model,
+                    retry=False,
+                    history=history,
+                    userlist=userlist,
+                    whitelist=whitelist,
+                    add_reply=add_reply,
+                    db_apikey=db_apikey,
+                    auto_clear=auto_clear,
+                    backup_key=backup_key,
+                    flood_ctrl=event.chat_id in flood_ctrl and flood_ctrl,
+                    bing_chatbot=bing_chatbot,
+                )
+            except Exception as e:
+                logging.error(f"Error happened when calling process_message: {e}")
+                output_message = f"{prompts.api_error}\n\n({e})"
 
     try:
         await placeholder_reply.edit(output_message)
