@@ -7,7 +7,7 @@
 
 ## Introduction
 
-Aris is telegram chatbot based on OpenAI API with customized system prompt. In the future will add support for more models.
+Aris is a telegram chatbot based on OpenAI API with customized system prompt. In the future will add support for more language models.
 
 | Model Name | Support |
 |----------|----------|
