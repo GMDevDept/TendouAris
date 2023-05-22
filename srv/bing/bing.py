@@ -50,8 +50,19 @@ async def process_message_bing(event, **kwargs):
     bing_chatbot[event.chat_id][2] = False
 
     output_text = response["item"]["messages"][1]["text"]
-    log = response["item"]["result"]
+    sourceAttributions = response["item"]["messages"][1]["sourceAttributions"]
+    if len(sourceAttributions) > 0:
+        output_text = re.sub(r"\[\^(\d+)\^\]", r"[\1]", output_text)
+        reference_links = "\n".join(
+            [
+                f"[{i+1}] [{sourceAttributions[i]['providerDisplayName']}]({sourceAttributions[i]['seeMoreUrl']})"
+                for i in range(len(sourceAttributions))
+            ]
+        )
+        reference_text = f"\n\nReferences:\n{reference_links}"
+        output_text = output_text + reference_text
 
+    log = response["item"]["result"]
     logging.info(f"Request result from bing.com: {log}")
 
     bing_chatbot[event.chat_id][1] += 1

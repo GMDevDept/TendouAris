@@ -17,7 +17,7 @@
 2. Rename .env.sample to .env and fill in the values
 3. Rename prompts.sample.py to prompts.py and fill in the values
 
-4. (Optional) To enable New Bing language model, export cookie from bing.com to /srv/bing/cookies.json (sample provided from format reference)
+4. (Optional) To enable New Bing language model, export cookie from bing.com to /srv/bing/cookies.json (sample provided for format reference)
 
 5. Build docker container
 
