@@ -5,6 +5,15 @@
 
 [![Telegram bot](https://img.shields.io/badge/bot-%40TendouArisBot-229ed9?logo=telegram&style=for-the-badge)](https://t.me/TendouArisBot)
 
+## Introduction
+
+Aris is telegram chatbot based on OpenAI API with customized system prompt. In the future will add support for more models.
+
+| Model Name | Support |
+|----------|----------|
+| gpt-3.5-turbo | ✅ |
+| New Bing | Currently only supports self-hosted instances |
+
 ## Deployment
 
 1. Download source code and go to project root directory

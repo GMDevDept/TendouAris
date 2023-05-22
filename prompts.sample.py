@@ -35,6 +35,7 @@ A: 私聊中输入的API key只会被用于你自己的帐号，群聊中输入�
 /aris - パンパカパーン！
 /pop - 清除上次问答记忆，继续当前对话
 /reset - 清除全部问答记忆，开始新的对话
+/model - 选择语言模型
 /apikey - 为当前会话添加OpenAI API key
 /chatid - 获取当前会话的chat ID
 /version - 查看版本信息

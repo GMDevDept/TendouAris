@@ -55,7 +55,7 @@ bing_chatbot = {
 # Get version
 @client.on(events.NewMessage(pattern=r"/version"))
 async def version_handler(event):
-    await event.reply("TendouArisBot v1.4.1")
+    await event.reply("TendouArisBot v1.4.2")
 
 
 # Welcome/help message
