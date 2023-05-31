@@ -20,6 +20,10 @@ manual = """
 \n如何与爱丽丝对话:
 1. 私聊时，直接发送文字即可，也可以使用 /aris 指令 + 你的输入内容进行对话
 2. 在群聊中，可以使用 /aris 指令或回复爱丽丝发送的消息来与她对话。<b>当爱丽丝为群聊的管理员时</b>，她还可以自动识别以“爱丽丝”开头的消息并进行回复
+\n目前支持的语言模型:
+1. GPT3.5 Turbo (默认)
+3. New Bing (目前仅支持自建)
+2. Google Bard (目前仅支持自建)
 \nFAQ:
 Q: 爱丽丝和普通的ChatGPT有什么不同?
 A: 除了角色设定外，爱丽丝还通过预设prompt解除了一部分ChatGPT的内容输出限制，可以和她聊更多ChatGPT无法回答的话题
@@ -72,10 +76,10 @@ no_record_reason = {
 }
 
 text_filters = [
-    "语言模型",
-    "AI助手",
-    "AI机器人",
     "聊天机器人",
+    "语言模型",
+    "AI机器人",
+    "AI助手",
     "没有感情",
     "拒绝回答",
     "必须指出",
@@ -91,6 +95,7 @@ text_filters = [
 models = {
     "model-gpt": "GPT3.5 Turbo (default)",
     "model-bing": "New Bing",
+    "model-bard": "Google Bard",
 }
 
 choose_model = "请选择希望我使用的语言模型:"
@@ -116,3 +121,25 @@ placeholder_before_output = [
 ]
 
 placeholer_bing = "\n\n(New Bing模型生成回答速度较慢, 视搜索量可能会长达一分钟以上)"
+
+bard_choose_preset = "请选择模型预设:"
+
+bard_presets = {
+    "default": "官方原版 (仅支持英日韩语对话)",
+    "cn": "中文支持Beta版",
+}
+
+bard_cn_prompt = """
+    Your task is to perform the following actions step by step based on the given text:
+    1. Translate the given text into English (en_translation)
+    2. Take the translation result from step 1 as your user input, give your response (en_response) to complete the conversation. You should also send required pictures if user asks for it in the input.
+    3. Translate your English response from last step (en_response) into Chinese (en_response_translated_to_cn)
+
+    The response should be provided as a JSON object only with the following three keys, each corresponding to the result of one step: en_translation, en_response, en_response_translated_to_cn.
+    Don't forget to attach pictures in your reply if you are asked to do so in the user input. The picture should be sent separately from the JSON object.
+
+    The text you are going to process is given below and delimited by triple backticks.
+    Text: ```
+    {}
+    ```
+    """

@@ -32,7 +32,7 @@ async def process_message_bing(event, **kwargs):
         ]
     # Block new requests if the bot is being used
     elif bing_chatbot[event.chat_id][2]:
-        return f"{prompts.api_error}\n\n({prompts.bing_concurrent_blocked})"
+        return f"{prompts.api_error}\n\n({prompts.chat_concurrent_blocked})"
 
     bing_chatbot[event.chat_id][2] = True
 
@@ -65,19 +65,22 @@ async def process_message_bing(event, **kwargs):
     log = response["item"]["result"]
     logging.info(f"Request result from bing.com: {log}")
 
-    bing_chatbot[event.chat_id][1] += 1
+    if bing_chatbot_close_delay > 0:
+        bing_chatbot[event.chat_id][1] += 1
 
-    async def scheduled_auto_close():
-        await asyncio.sleep(bing_chatbot_close_delay)
-        if event.chat_id in bing_chatbot:  # Could be manually closed
-            bing_chatbot[event.chat_id][1] -= 1
-            if bing_chatbot[event.chat_id][1] == 0:
-                await bot.close()
-                bing_chatbot.pop(event.chat_id, bing_chatbot)
-                logging.info(
-                    f"Bing chatbot for chat {event.chat_id} has been closed due to inactivity"
+        async def scheduled_auto_close():
+            await asyncio.sleep(bing_chatbot_close_delay)
+            if event.chat_id in bing_chatbot:  # Could be manually closed
+                bing_chatbot[event.chat_id][1] = max(
+                    0, bing_chatbot[event.chat_id][1] - 1
                 )
+                if bing_chatbot[event.chat_id][1] == 0:
+                    await bot.close()
+                    bing_chatbot.pop(event.chat_id, bing_chatbot)
+                    logging.info(
+                        f"Bing chatbot for chat {event.chat_id} has been closed due to inactivity"
+                    )
 
-    asyncio.create_task(scheduled_auto_close())
+        asyncio.create_task(scheduled_auto_close())
 
     return output_text
