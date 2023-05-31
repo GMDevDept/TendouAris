@@ -5,6 +5,7 @@ import logging
 import prompts
 from srv.gpt.gpt import process_message_gpt
 from srv.bing.bing import process_message_bing
+from srv.bard.bard import process_message_bard
 
 auto_clear_count = int(os.getenv("AUTO_CLEAR_COUNT", 0))
 
@@ -33,6 +34,9 @@ async def process_message(event, **kwargs):
     placeholder_text = random.choice(prompts.placeholder_before_output)
     placeholder_reply = await event.reply(placeholder_text)
 
+    output_text = ""
+    output_file = None
+
     if not model:
         output_text = await process_message_gpt(event, **kwargs)
     elif model.get("name") == "model-bing":
@@ -40,7 +44,17 @@ async def process_message(event, **kwargs):
         output_text = await process_message_bing(
             event, style=model.get("bingstyle"), **kwargs
         )
+    elif model.get("name") == "model-bard":
+        model_output = await process_message_bard(
+            event, preset=model.get("bardpreset"), **kwargs
+        )
+        output_text = model_output.get("output_text")
+        output_file = model_output.get("output_file")
     else:
         output_text = f"Invalid model: {model}"
 
-    return output_text, placeholder_reply
+    return {
+        "placeholder_reply": placeholder_reply,
+        "output_text": output_text,
+        "output_file": output_file,
+    }
