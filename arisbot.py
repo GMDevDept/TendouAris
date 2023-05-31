@@ -50,12 +50,15 @@ auto_clear = {int: int}
 bing_chatbot = {
     int: [Chatbot, int, bool]
 }  # {chatid: [Chatbot, activity counter, processing block]}
+bard_chatbot = {
+    int: [Chatbot, int, bool]
+}  # {chatid: [Chatbot, activity counter, processing block]}
 
 
 # Get version
 @client.on(events.NewMessage(pattern=r"/version"))
 async def version_handler(event):
-    await event.reply("TendouArisBot v1.4.2")
+    await event.reply("TendouArisBot v1.5.0")
 
 
 # Welcome/help message
@@ -82,6 +85,12 @@ async def history_handler1(event):
     if event.chat_id in bing_chatbot:
         await bing_chatbot[event.chat_id][0].close()
         bing_chatbot.pop(event.chat_id)
+    if event.chat_id in bard_chatbot:
+        chatbot = bard_chatbot[event.chat_id][0]
+        chatbot.conversation_id = ""
+        chatbot.response_id = ""
+        chatbot.choice_id = ""
+        bard_chatbot.pop(event.chat_id)
 
     await event.reply(prompts.history_cleared)
 
@@ -115,6 +124,7 @@ async def choose_model(event):
         buttons=[
             [Button.inline(prompts.models.get("model-gpt"), data="model-gpt")],
             [Button.inline(prompts.models.get("model-bing"), data="model-bing")],
+            [Button.inline(prompts.models.get("model-bard"), data="model-bard")],
         ],
     )
 
@@ -152,6 +162,57 @@ async def model_handler(event):
                     Button.inline("precise", data="bingstyle-precise"),
                 ],
             )
+    elif modelname == "model-bard":
+        if event.chat_id not in whitelist:
+            await event.edit(prompts.bing_only_whitelist)
+        else:
+            await event.edit(
+                prompts.bard_choose_preset,
+                buttons=[
+                    [
+                        Button.inline(
+                            prompts.bard_presets.get("default"),
+                            data="bardpreset-default",
+                        )
+                    ],
+                    [
+                        Button.inline(
+                            prompts.bard_presets.get("cn"),
+                            data="bardpreset-cn",
+                        )
+                    ],
+                ],
+            )
+
+
+# Bard preset selection event handler
+@client.on(events.CallbackQuery(pattern=r"bardpreset-"))
+async def bardpreset_handler(event):
+    if event.is_private:
+        pass
+    elif event.is_group:
+        # Different from NewMessage event, anonymous admin's sender_id can be get in CallbackQuery event, but cannot be checked by get_permissions
+        try:
+            perm = await client.get_permissions(event.chat_id, event.sender_id)
+            if not perm.is_admin:
+                return
+        except errors.rpcerrorlist.UserNotParticipantError:
+            pass
+    else:
+        return
+
+    preset = event.data.decode().replace("bardpreset-", "")
+    model[event.chat_id] = {
+        "name": "model-bard",
+        "bardpreset": preset,
+    }
+    db_model.set(event.chat_id, json.dumps(model[event.chat_id]))
+
+    await event.edit(
+        prompts.model_changed
+        + prompts.models.get("model-bard")
+        + f" ({prompts.bard_presets.get(preset).split(' ')[0]})"
+    )
 
 
 # Bing chatbot style selection event handler
@@ -257,10 +318,10 @@ async def flood_control_handler(event):
 )
 async def private_message_handler(event):
     if event.chat_id not in whitelist + userlist:
-        output_message = prompts.no_auth
+        output_text = prompts.no_auth
     else:
         try:
-            output_message, placeholder_reply = await process_message(
+            model_output = await process_message(
                 event,
                 model=model,
                 retry=False,
@@ -269,15 +330,23 @@ async def private_message_handler(event):
                 whitelist=whitelist,
                 db_apikey=db_apikey,
                 bing_chatbot=bing_chatbot,
+                bard_chatbot=bard_chatbot,
             )
+            placeholder_reply = model_output.get("placeholder_reply")
+            output_text = model_output.get("output_text")
+            output_file = model_output.get("output_file")
         except Exception as e:
             logging.error(f"Error happened when calling process_message: {e}")
-            output_message = f"{prompts.api_error}\n\n({e})"
+            output_text = f"{prompts.api_error}\n\n({e})"
 
     try:
-        await placeholder_reply.edit(output_message)
-    except NameError:
-        await event.reply(output_message)
+        if output_file:
+            await placeholder_reply.delete()
+            await event.reply(output_text, file=output_file)
+        else:
+            await placeholder_reply.edit(output_text)
+    except (NameError, AttributeError):
+        await event.reply(output_text)
 
 
 # Group chat
@@ -290,7 +359,7 @@ async def private_message_handler(event):
 async def group_message_handler(event):
     if event.chat_id not in whitelist + userlist:
         if re.match(r"^(/aris)|(爱丽丝)", event.raw_text):
-            output_message = prompts.no_auth
+            output_text = prompts.no_auth
         else:
             return
     else:
@@ -344,7 +413,7 @@ async def group_message_handler(event):
             and flood_ctrl[event.chat_id][event.sender_id] > flood_control_count
             and db_apikey.get(event.sender_id) is None
         ):
-            output_message = prompts.flood_control_activated.format(
+            output_text = prompts.flood_control_activated.format(
                 flood_control_delay,
                 flood_ctrl[event.chat_id][event.sender_id],
                 flood_control_count,
@@ -363,7 +432,7 @@ async def group_message_handler(event):
                 backup_key = None
 
             try:
-                output_message, placeholder_reply = await process_message(
+                model_output = await process_message(
                     event,
                     model=model,
                     retry=False,
@@ -376,15 +445,23 @@ async def group_message_handler(event):
                     backup_key=backup_key,
                     flood_ctrl=event.chat_id in flood_ctrl and flood_ctrl,
                     bing_chatbot=bing_chatbot,
+                    bard_chatbot=bard_chatbot,
                 )
+                placeholder_reply = model_output.get("placeholder_reply")
+                output_text = model_output.get("output_text")
+                output_file = model_output.get("output_file")
             except Exception as e:
                 logging.error(f"Error happened when calling process_message: {e}")
-                output_message = f"{prompts.api_error}\n\n({e})"
+                output_text = f"{prompts.api_error}\n\n({e})"
 
     try:
-        await placeholder_reply.edit(output_message)
-    except NameError:
-        await event.reply(output_message)
+        if output_file:
+            await placeholder_reply.delete()
+            await event.reply(output_text, file=output_file)
+        else:
+            await placeholder_reply.edit(output_text)
+    except (NameError, AttributeError):
+        await event.reply(output_text)
 
 
 def main():
