@@ -50,14 +50,19 @@ async def process_message_bard(event, **kwargs):
 
     output_text = response["content"]
     if preset == "cn":
-        # Match json object in the output text
-        output_json = re.match(r".*?({.*}).*", output_text, re.DOTALL).group(1)
-        output_dict = json.loads(output_json)
-        output_text = (
-            output_dict["en_response"]
-            + "\n\n"
-            + output_dict["en_response_translated_to_cn"]
-        )
+        try:
+            # Match json object in the output text
+            output_json = re.match(r".*?({.*}).*", output_text, re.DOTALL).group(1)
+            output_dict = json.loads(output_json)
+            output_text = (
+                output_dict["en_response"]
+                + "\n\n"
+                + output_dict["en_response_translated_to_cn"]
+            )
+        except (AttributeError, json.JSONDecodeError):
+            # Handle cases where the regular expression pattern does not match anything
+            # or the resulting substring is not a valid JSON object
+            pass  # Return raw text
 
     output_file = None
     images = response["images"]  # set, {link1, link2}

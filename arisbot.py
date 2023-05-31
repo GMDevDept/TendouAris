@@ -11,6 +11,7 @@ import prompts
 from EdgeGPT import Chatbot
 from collections import deque
 from telethon import TelegramClient, events, Button, errors
+from telethon.tl.types import InputMediaPhotoExternal, InputMediaDocumentExternal
 from util import remove_command, history_clear_handler, process_message
 
 logging.basicConfig(
@@ -341,8 +342,26 @@ async def private_message_handler(event):
 
     try:
         if output_file:
-            await placeholder_reply.delete()
-            await event.reply(output_text, file=output_file)
+            try:
+                output_file_processed = [
+                    InputMediaPhotoExternal(url) for url in output_file
+                ]
+                await event.reply(output_text, file=output_file_processed)
+            except Exception:
+                try:
+                    output_file_processed = [
+                        InputMediaDocumentExternal(url) for url in output_file
+                    ]
+                    await event.reply(
+                        output_text, file=output_file_processed, force_document=True
+                    )
+                except Exception as e:
+                    output_text = (
+                        output_text + "\n\n" + str(e) + "\n\n" + str(output_file)
+                    )
+                    await event.reply(output_text)
+            finally:
+                await placeholder_reply.delete()
         else:
             await placeholder_reply.edit(output_text)
     except (NameError, AttributeError):
@@ -456,8 +475,26 @@ async def group_message_handler(event):
 
     try:
         if output_file:
-            await placeholder_reply.delete()
-            await event.reply(output_text, file=output_file)
+            try:
+                output_file_processed = [
+                    InputMediaPhotoExternal(url) for url in output_file
+                ]
+                await event.reply(output_text, file=output_file_processed)
+            except Exception:
+                try:
+                    output_file_processed = [
+                        InputMediaDocumentExternal(url) for url in output_file
+                    ]
+                    await event.reply(
+                        output_text, file=output_file_processed, force_document=True
+                    )
+                except Exception as e:
+                    output_text = (
+                        output_text + "\n\n" + str(e) + "\n\n" + str(output_file)
+                    )
+                    await event.reply(output_text)
+            finally:
+                await placeholder_reply.delete()
         else:
             await placeholder_reply.edit(output_text)
     except (NameError, AttributeError):
