@@ -37,7 +37,9 @@ async def process_message_bard(event, **kwargs):
 
     try:
         bot = bard_chatbot[event.chat_id][0]
-        input_text = re.sub(r"^/\S*", "", event.raw_text).strip().replace("爱丽丝", "Bard")
+        input_text = re.sub(r"^/\S*", "", event.raw_text).strip()
+        if input_text.startswith("爱丽丝"):
+            input_text = input_text.replace("爱丽丝", "Bard", 1)
         if preset == "cn":
             input_text = prompts.bard_cn_prompt.format(input_text)
         response = bot.ask(input_text)
