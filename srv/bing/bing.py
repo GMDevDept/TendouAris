@@ -38,8 +38,11 @@ async def process_message_bing(event, **kwargs):
 
     try:
         bot = bing_chatbot[event.chat_id][0]
+        input_text = re.sub(r"^/\S*", "", event.raw_text).strip()
+        if input_text.startswith("爱丽丝"):
+            input_text = input_text.replace("爱丽丝", "Bing", 1)
         response = await bot.ask(
-            prompt=re.sub(r"^/\S*", "", event.raw_text).strip().replace("爱丽丝", "Bing"),
+            prompt=input_text,
             conversation_style=conversation_style,
         )
     except Exception as e:

@@ -11,7 +11,7 @@ import prompts
 from EdgeGPT import Chatbot
 from collections import deque
 from telethon import TelegramClient, events, Button, errors
-from telethon.tl.types import InputMediaPhotoExternal, InputMediaDocumentExternal
+from telethon.tl.types import InputMediaPhotoExternal
 from util import remove_command, history_clear_handler, process_message
 
 logging.basicConfig(
@@ -59,7 +59,7 @@ bard_chatbot = {
 # Get version
 @client.on(events.NewMessage(pattern=r"/version"))
 async def version_handler(event):
-    await event.reply("TendouArisBot v1.5.0")
+    await event.reply("TendouArisBot v1.5.1")
 
 
 # Welcome/help message
@@ -347,19 +347,12 @@ async def private_message_handler(event):
                     InputMediaPhotoExternal(url) for url in output_file
                 ]
                 await event.reply(output_text, file=output_file_processed)
-            except Exception:
-                try:
-                    output_file_processed = [
-                        InputMediaDocumentExternal(url) for url in output_file
-                    ]
-                    await event.reply(
-                        output_text, file=output_file_processed, force_document=True
-                    )
-                except Exception as e:
-                    output_text = (
-                        output_text + "\n\n" + str(e) + "\n\n" + str(output_file)
-                    )
-                    await event.reply(output_text)
+            except Exception as e:
+                output_links = " ".join(
+                    [f"[{i+1}]({url})" for i, url in enumerate(output_file)]
+                )
+                output_text = output_text + "\n\n" + str(e) + "\n" + output_links
+                await event.reply(output_text)
             finally:
                 await placeholder_reply.delete()
         else:
@@ -480,19 +473,12 @@ async def group_message_handler(event):
                     InputMediaPhotoExternal(url) for url in output_file
                 ]
                 await event.reply(output_text, file=output_file_processed)
-            except Exception:
-                try:
-                    output_file_processed = [
-                        InputMediaDocumentExternal(url) for url in output_file
-                    ]
-                    await event.reply(
-                        output_text, file=output_file_processed, force_document=True
-                    )
-                except Exception as e:
-                    output_text = (
-                        output_text + "\n\n" + str(e) + "\n\n" + str(output_file)
-                    )
-                    await event.reply(output_text)
+            except Exception as e:
+                output_links = " ".join(
+                    [f"[{i+1}]({url})" for i, url in enumerate(output_file)]
+                )
+                output_text = output_text + "\n\n" + str(e) + "\n" + output_links
+                await event.reply(output_text)
             finally:
                 await placeholder_reply.delete()
         else:
