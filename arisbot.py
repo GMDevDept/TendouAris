@@ -55,6 +55,24 @@ async def model_selection_callback_handler(_, query):
     await handlers.model_selection_callback_handler(query)
 
 
+# GPT-3.5 preset selection callback
+@app.on_callback_query(filters.regex(r"^gpt35preset-"))
+async def gpt35_preset_selection_callback_handler(_, query):
+    await handlers.gpt35_preset_selection_callback_handler(query)
+
+
+# Bing style selection callback
+@app.on_callback_query(filters.regex(r"^bingstyle-"))
+async def bing_style_selection_callback_handler(_, query):
+    await handlers.bing_style_selection_callback_handler(query)
+
+
+# Bard preset selection callback
+@app.on_callback_query(filters.regex(r"^bardpreset-"))
+async def bard_preset_selection_callback_handler(_, query):
+    await handlers.bard_preset_selection_callback_handler(query)
+
+
 # Set OpenAI API key
 @app.on_message(filters.command("apikey") & filters.text)
 async def api_key_handler(_, message):

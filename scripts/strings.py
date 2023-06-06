@@ -1,4 +1,9 @@
 version = """
+**TendouArisBot v2.0.0**
+
+Latest update: 2023/06/06
+
+Update log:
 """
 
 manual = """
@@ -122,6 +127,10 @@ model_changed = "当前模型:"
 bing_choose_style = "请选择New Bing模型的对话风格:"
 
 chat_concurrent_blocked = "Please wait for the last conversation to finish"
+
+bing_login_failed = (
+    "Bing chat is currently blocking our server from loggin in, please try again later"
+)
 
 bing_only_whitelist = "该模型目前仅支持自建"
 
