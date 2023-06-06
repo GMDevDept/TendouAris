@@ -58,7 +58,7 @@ async def set_bot_commands(app: Client):
         BotCommand("version", "查看版本信息"),
         BotCommand("manage", "进入管理模式"),
     ]
-    manager = os.getenv("MANAGER").split(",")
+    manager = [int(i) for i in os.getenv("MANAGER").split(",")]
     for chat_id in manager:
         await app.set_bot_commands(commands_manager, scope=BotCommandScopeChat(chat_id))
 
