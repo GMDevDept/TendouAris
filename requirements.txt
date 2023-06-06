@@ -2,4 +2,6 @@ EdgeGPT==0.6.10
 GoogleBard==1.2.0
 openai==0.27.7
 redis==4.5.5
-Telethon==1.28.5
+Pyrogram==2.0.106
+TgCrypto==1.2.5
+uvloop==0.17.0
