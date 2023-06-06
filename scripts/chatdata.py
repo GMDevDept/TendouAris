@@ -1,11 +1,14 @@
 import json
 from typing import Optional
+from asyncio import Task
 from EdgeGPT import Chatbot as BingChatbot
 from Bard import Chatbot as BardChatbot
 from scripts import globals
-from srv.gpt import process_message_gpt
+
+# from srv.gpt import process_message_gpt
 from srv.bing import process_message_bing
-from srv.bard import process_message_bard
+
+# from srv.bard import process_message_bard
 
 
 class ChatData:
@@ -20,9 +23,12 @@ class ChatData:
         self.chat_id: int = chat_id
         self.model: dict = model  # {"name": str, "args": dict}
         self.openai_api_key: Optional[str] = kwargs.get("openai_api_key")
+        self.openai_history = None
         self.bing_chatbot: Optional[BingChatbot] = None
+        self.bing_blocked: Optional[bool] = None
+        self.bing_clear_task: Optional[Task] = None
         self.bard_chatbot: Optional[BardChatbot] = None
-        self.history = None
+        self.bard_clear_task: Optional[Task] = None
 
         ChatData.total_chats += 1
 
@@ -60,21 +66,21 @@ class ChatData:
 
     async def process_message(self, input_text: str) -> Optional[dict]:
         model_name, model_args = self.model["name"], self.model["args"]
-        model_input = {"input_text": input_text}
+        model_input = {"text": input_text}
         model_output = None
         match model_name:
-            case "gpt35":
-                model_output = await process_message_gpt(
-                    chatdata=self, model_args=model_args, model_input=model_input
-                )
+            # case "gpt35":
+            #     model_output = await process_message_gpt(
+            #         chatdata=self, model_args=model_args, model_input=model_input
+            #     )
             case "bing":
                 model_output = await process_message_bing(
                     chatdata=self, model_args=model_args, model_input=model_input
                 )
-            case "bard":
-                model_output = await process_message_bard(
-                    chatdata=self, model_args=model_args, model_input=model_input
-                )
+            # case "bard":
+            #     model_output = await process_message_bard(
+            #         chatdata=self, model_args=model_args, model_input=model_input
+            #     )
         return model_output
 
 

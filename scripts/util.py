@@ -8,8 +8,8 @@ from pyrogram.types import Chat, Message
 def load_chat(
     chat_id: int, create_new: bool = False, is_group: bool = False
 ) -> Optional[ChatData]:
-    if chat_id in globals.allchats:
-        return globals.allchats[chat_id]
+    if chat_id in globals.all_chats:
+        return globals.all_chats[chat_id]
     elif globals.db_chatdata.exists(chat_id):
         data = globals.db_chatdata.get(chat_id)
         return ChatData.load(data)
