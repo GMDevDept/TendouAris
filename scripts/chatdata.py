@@ -48,12 +48,11 @@ class ChatData:
     @classmethod
     def load(cls, data_json: str) -> "ChatData":
         data = json.loads(data_json)
-        chat_id = data["chat_id"]
         if data.get("is_group"):
-            chatdata = GroupChatData(chat_id, **data)
+            chatdata = GroupChatData(**data)
         else:
-            chatdata = ChatData(chat_id, **data)
-        globals.all_chats.update({chat_id: chatdata})
+            chatdata = ChatData(**data)
+        globals.all_chats.update({data["chat_id"]: chatdata})
         return chatdata
 
     def set_api_key(self, api_key: str):

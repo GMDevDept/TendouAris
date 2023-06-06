@@ -1,5 +1,6 @@
 import re
 import openai
+import random
 from scripts import strings
 from scripts.util import load_chat, is_group, get_raw_text
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -215,10 +216,27 @@ async def conversation_handler(message):
             context = await get_raw_text(message.reply_to_message)
             input_text = f'Context: "{context}";\n{input_text}'
 
+        model_name = chatdata.model.get("name")
+        if model_name == "bing":
+            placeholder = await message.reply(
+                random.choice(strings.placeholder_before_output)
+                + strings.placeholer_bing,
+                disable_notification=True,
+            )
+
         model_output = await chatdata.process_message(input_text)
-        await message.reply(
-            model_output and model_output.get("text") or "`No output text available`"
-        )
+
+        try:
+            await placeholder.delete()
+        except NameError:
+            pass
+        finally:
+            await message.reply(
+                model_output
+                and model_output.get("text")
+                or "`No output text available`",
+                quote=True,
+            )
 
 
 # Manage mode
