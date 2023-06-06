@@ -119,7 +119,7 @@ model_choose_preset = "请选择模型预设:"
 
 model_changed = "当前模型:"
 
-bing_choose_style = "请选择对话风格:"
+bing_choose_style = "请选择New Bing模型的对话风格:"
 
 chat_concurrent_blocked = "Please wait for the last conversation to finish"
 

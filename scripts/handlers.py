@@ -53,7 +53,7 @@ async def model_selection_handler(message):
 
 # Model selection callback
 async def model_selection_callback_handler(query):
-    modelname = query.data.decode().replace("model-", "")
+    modelname = query.data.replace("model-", "")
     if modelname == "gpt35":
         chatdata = load_chat(query.message.chat.id)
         if chatdata and chatdata.openai_api_key:
@@ -61,14 +61,18 @@ async def model_selection_callback_handler(query):
                 strings.model_choose_preset,
                 reply_markup=InlineKeyboardMarkup(
                     [
-                        InlineKeyboardButton(
-                            strings.gpt35_presets.get("aris"),
-                            callback_data="gpt35preset-aris",
-                        ),
-                        InlineKeyboardButton(
-                            strings.gpt35_presets.get("default"),
-                            callback_data="gpt35preset-default",
-                        ),
+                        [
+                            InlineKeyboardButton(
+                                strings.gpt35_presets.get("aris"),
+                                callback_data="gpt35preset-aris",
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                strings.gpt35_presets.get("default"),
+                                callback_data="gpt35preset-default",
+                            )
+                        ],
                     ]
                 ),
             )
@@ -79,18 +83,24 @@ async def model_selection_callback_handler(query):
             strings.bing_choose_style,
             reply_markup=InlineKeyboardMarkup(
                 [
-                    InlineKeyboardButton(
-                        "creative",
-                        callback_data="bingstyle-creative",
-                    ),
-                    InlineKeyboardButton(
-                        "balanced",
-                        callback_data="bingstyle-balanced",
-                    ),
-                    InlineKeyboardButton(
-                        "precise",
-                        callback_data="bingstyle-precise",
-                    ),
+                    [
+                        InlineKeyboardButton(
+                            "creative",
+                            callback_data="bingstyle-creative",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "balanced",
+                            callback_data="bingstyle-balanced",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "precise",
+                            callback_data="bingstyle-precise",
+                        )
+                    ],
                 ]
             ),
         )
@@ -99,14 +109,18 @@ async def model_selection_callback_handler(query):
             strings.model_choose_preset,
             reply_markup=InlineKeyboardMarkup(
                 [
-                    InlineKeyboardButton(
-                        strings.bard_presets.get("default"),
-                        callback_data="bardpreset-default",
-                    ),
-                    InlineKeyboardButton(
-                        strings.bard_presets.get("cn"),
-                        callback_data="bardpreset-cn",
-                    ),
+                    [
+                        InlineKeyboardButton(
+                            strings.bard_presets.get("default"),
+                            callback_data="bardpreset-default",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            strings.bard_presets.get("cn"),
+                            callback_data="bardpreset-cn",
+                        )
+                    ],
                 ]
             ),
         )
@@ -114,7 +128,7 @@ async def model_selection_callback_handler(query):
 
 # GPT-3.5 preset selection callback
 async def gpt35_preset_selection_callback_handler(query):
-    preset = query.data.decode().replace("gpt35preset-", "")
+    preset = query.data.replace("gpt35preset-", "")
     chatdata = load_chat(query.message.chat.id)
     chatdata.set_model(
         {
@@ -132,7 +146,7 @@ async def gpt35_preset_selection_callback_handler(query):
 
 # Bing style selection callback
 async def bing_style_selection_callback_handler(query):
-    style = query.data.decode().replace("bingstyle-", "")
+    style = query.data.replace("bingstyle-", "")
     chatdata = load_chat(
         query.message.chat.id,
         create_new=True,
@@ -147,7 +161,7 @@ async def bing_style_selection_callback_handler(query):
 
 # Bard preset selection callback
 async def bard_preset_selection_callback_handler(query):
-    preset = query.data.decode().replace("bardpreset-", "")
+    preset = query.data.replace("bardpreset-", "")
     chatdata = load_chat(
         query.message.chat.id,
         create_new=True,
@@ -202,7 +216,9 @@ async def conversation_handler(message):
             input_text = f'Context: "{context}";\n{input_text}'
 
         model_output = await chatdata.process_message(input_text)
-        await message.reply(model_output.get("text", "`No output text available`"))
+        await message.reply(
+            model_output and model_output.get("text") or "`No output text available`"
+        )
 
 
 # Manage mode

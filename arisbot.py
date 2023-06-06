@@ -18,7 +18,7 @@ logging.basicConfig(
 api_id = os.getenv("API_ID")
 api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
-manager = os.getenv("MANAGER").split(",")
+manager = [int(i) for i in os.getenv("MANAGER").split(",")]
 
 # Telegram bot client
 uvloop.install()  # Needs to be placed before creating a Client instance to take effect

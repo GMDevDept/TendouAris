@@ -4,16 +4,18 @@ import os
 import re
 import asyncio
 import logging
-import prompts
+from scripts import strings
 from EdgeGPT import Chatbot, ConversationStyle
 
 bing_chatbot_close_delay = int(os.getenv("BING_CHATBOT_CLOSE_DELAY", 600))
 
 
-async def process_message_bing(event, **kwargs):
-    style = kwargs.get("style", "creative")
-    bing_chatbot = kwargs.get("bing_chatbot")
-
+async def process_message_bing(
+    chatdata,  # ChatData
+    model_args: dict,
+    model_input: dict,
+) -> dict:
+    style = model_args.get("style", "creative")
     match style:
         case "creative":
             conversation_style = ConversationStyle.creative
@@ -22,35 +24,34 @@ async def process_message_bing(event, **kwargs):
         case "precise":
             conversation_style = ConversationStyle.precise
         case _:
-            return f"Invalid conversation style: {style}"
+            return {"text": f"Unknown style: {style}"}
 
-    if event.chat_id not in bing_chatbot:
-        bing_chatbot[event.chat_id] = [
-            await Chatbot.create(cookie_path="./srv/bing/cookies.json"),
-            0,
-            False,
-        ]
-    # Block new requests if the bot is being used
-    elif bing_chatbot[event.chat_id][2]:
-        return f"{prompts.api_error}\n\n({prompts.chat_concurrent_blocked})"
+    if not chatdata.bing_chatbot:
+        chatdata.bing_chatbot = await Chatbot.create()
+    elif chatdata.bing_blocked:
+        return {"text": f"{strings.api_error}\n\n({strings.chat_concurrent_blocked})"}
+    elif chatdata.bing_clear_task is not None:
+        chatdata.bing_clear_task.cancel()
+        chatdata.bing_clear_task = None
 
-    bing_chatbot[event.chat_id][2] = True
+    input_text = model_input.get("text")
+    if input_text.startswith("爱丽丝"):
+        input_text = input_text.replace("爱丽丝", "Bing", 1)
 
+    chatdata.bing_blocked = True
     try:
-        bot = bing_chatbot[event.chat_id][0]
-        input_text = re.sub(r"^/\S*", "", event.raw_text).strip()
-        if input_text.startswith("爱丽丝"):
-            input_text = input_text.replace("爱丽丝", "Bing", 1)
-        response = await bot.ask(
+        response = await chatdata.bing_chatbot.ask(
             prompt=input_text,
             conversation_style=conversation_style,
         )
     except Exception as e:
-        bing_chatbot[event.chat_id][2] = False
-        logging.error(f"Error happened when calling bot.ask: {e}")
-        return f"{prompts.api_error}\n\n({e})"
+        logging.error(f"Error happened when calling bing_chatbot.ask: {e}")
+        return {"text": f"{strings.api_error}\n\n({e})"}
+    finally:
+        chatdata.bing_blocked = None
 
-    bing_chatbot[event.chat_id][2] = False
+    log = response["item"]["result"]
+    logging.info(f"Request result from bing.com: {log}")
 
     output_text = response["item"]["messages"][1]["text"]
     sourceAttributions = response["item"]["messages"][1]["sourceAttributions"]
@@ -65,25 +66,17 @@ async def process_message_bing(event, **kwargs):
         reference_text = f"\n\nReferences:\n{reference_links}"
         output_text = output_text + reference_text
 
-    log = response["item"]["result"]
-    logging.info(f"Request result from bing.com: {log}")
-
     if bing_chatbot_close_delay > 0:
-        bing_chatbot[event.chat_id][1] += 1
 
         async def scheduled_auto_close():
             await asyncio.sleep(bing_chatbot_close_delay)
-            if event.chat_id in bing_chatbot:  # Could be manually closed
-                bing_chatbot[event.chat_id][1] = max(
-                    0, bing_chatbot[event.chat_id][1] - 1
+            if chatdata.bing_chatbot is not None:
+                await chatdata.bing_chatbot.close()
+                chatdata.bing_chatbot = None
+                logging.info(
+                    f"Bing chatbot for chat {chatdata.chat_id} has been closed due to inactivity"
                 )
-                if bing_chatbot[event.chat_id][1] == 0:
-                    await bot.close()
-                    bing_chatbot.pop(event.chat_id, bing_chatbot)
-                    logging.info(
-                        f"Bing chatbot for chat {event.chat_id} has been closed due to inactivity"
-                    )
 
-        asyncio.create_task(scheduled_auto_close())
+        chatdata.bing_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return output_text
+    return {"text": output_text}
