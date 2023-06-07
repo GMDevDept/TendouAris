@@ -1,9 +1,12 @@
 import re
 import openai
 import random
-from scripts import strings
+import logging
+import traceback
+from scripts import gvars, strings
 from scripts.util import load_chat, is_group, get_raw_text
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.errors import RPCError
 
 
 # Welcome/help message
@@ -106,25 +109,28 @@ async def model_selection_callback_handler(query):
             ),
         )
     elif modelname == "bard":
-        await query.message.edit(
-            strings.model_choose_preset,
-            reply_markup=InlineKeyboardMarkup(
-                [
+        if not gvars.google_bard_cookie:
+            await query.message.edit(strings.bard_cookie_unavailable)
+        else:
+            await query.message.edit(
+                strings.model_choose_preset,
+                reply_markup=InlineKeyboardMarkup(
                     [
-                        InlineKeyboardButton(
-                            strings.bard_presets.get("default"),
-                            callback_data="bardpreset-default",
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            strings.bard_presets.get("cn"),
-                            callback_data="bardpreset-cn",
-                        )
-                    ],
-                ]
-            ),
-        )
+                        [
+                            InlineKeyboardButton(
+                                strings.bard_presets.get("default"),
+                                callback_data="bardpreset-default",
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                strings.bard_presets.get("cn"),
+                                callback_data="bardpreset-cn",
+                            )
+                        ],
+                    ]
+                ),
+            )
 
 
 # GPT-3.5 preset selection callback
@@ -224,21 +230,63 @@ async def conversation_handler(message):
                 disable_notification=True,
             )
 
-        model_output = await chatdata.process_message(input_text)
-
         try:
-            await placeholder.delete()
-        except NameError:
-            pass
-        finally:
+            model_output = await chatdata.process_message(input_text)
+            text = model_output.get("text")
+            photo = model_output.get("photo")
+            send_text_seperately = model_output.get("send_text_seperately")
+
+            try:
+                await placeholder.delete()
+            except NameError:
+                pass
+
+            if not photo or send_text_seperately:
+                await message.reply(
+                    text,
+                    quote=True,
+                )
+
+            if photo:
+                if len(photo) == 1:
+                    await message.reply_photo(photo[0], quote=True)
+                else:
+                    # media group length limit: 2-10
+                    for i in range(0, len(photo), 10):
+                        photo_group = photo[i : i + 10]
+                        if len(photo_group) == 1 and i > 0:
+                            photo_group.insert(0, photo[i - 1])
+                        await message.reply_media_group(photo_group, quote=True)
+        except RPCError as e:
+            error_message = f"{e}: " + "".join(traceback.format_tb(e.__traceback__))
+            logging.error(error_message)
             await message.reply(
-                model_output
-                and model_output.get("text")
-                or "`No output text available`",
-                quote=True,
+                f"{strings.rpc_error}\n\nError message:\n`{error_message}`"
             )
+        except Exception as e:
+            error_message = f"{e}: " + "".join(traceback.format_tb(e.__traceback__))
+            logging.error(error_message)
+            await message.reply(
+                f"{strings.internal_error}\n\nError message:\n`{error_message}`\n\n{strings.feedback}",
+                quote=False,
+            )
+
+
+# Reset chat history
+async def reset_handler(message):
+    chatdata = load_chat(message.chat.id)
+    if chatdata:
+        if chatdata.openai_history:
+            chatdata.openai_history = None
+        if chatdata.bing_chatbot:
+            await chatdata.bing_chatbot.close()
+            chatdata.bing_chatbot = None
+        if chatdata.bard_chatbot:
+            chatdata.bard_chatbot = None
+
+    await message.reply(strings.history_cleared)
 
 
 # Manage mode
 async def manage_mode_handler(message):
-    message.reply("under development")
+    await message.reply("under development")

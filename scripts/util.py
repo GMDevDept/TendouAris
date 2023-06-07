@@ -1,5 +1,5 @@
 from typing import Optional
-from scripts import globals
+from scripts import gvars
 from scripts.chatdata import ChatData, GroupChatData
 from pyrogram import enums
 from pyrogram.types import Chat, Message
@@ -8,10 +8,10 @@ from pyrogram.types import Chat, Message
 def load_chat(
     chat_id: int, create_new: bool = False, is_group: bool = False
 ) -> Optional[ChatData]:
-    if chat_id in globals.all_chats:
-        return globals.all_chats[chat_id]
-    elif globals.db_chatdata.exists(chat_id):
-        data = globals.db_chatdata.get(chat_id)
+    if chat_id in gvars.all_chats:
+        return gvars.all_chats[chat_id]
+    elif gvars.db_chatdata.exists(chat_id):
+        data = gvars.db_chatdata.get(chat_id)
         return ChatData.load(data)
     elif create_new:
         if is_group:
