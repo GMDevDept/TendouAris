@@ -1,13 +1,10 @@
 # https://github.com/acheong08/EdgeGPT
 
-import os
 import re
 import asyncio
 import logging
-from scripts import strings
+from scripts import gvars, strings
 from EdgeGPT import Chatbot, ConversationStyle, NotAllowedToAccess
-
-bing_chatbot_close_delay = int(os.getenv("BING_CHATBOT_CLOSE_DELAY", 600))
 
 
 async def process_message_bing(
@@ -30,9 +27,13 @@ async def process_message_bing(
         try:
             chatdata.bing_chatbot = await Chatbot.create()
         except NotAllowedToAccess:
-            return {"text": f"{strings.api_error}\n\n({strings.bing_login_failed})"}
+            return {
+                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_chat_creation_failed}`"
+            }
     elif chatdata.bing_blocked:
-        return {"text": f"{strings.api_error}\n\n({strings.chat_concurrent_blocked})"}
+        return {
+            "text": f"{strings.api_error}\n\nError Message:\n`{strings.chat_concurrent_blocked}`"
+        }
     elif chatdata.bing_clear_task is not None:
         chatdata.bing_clear_task.cancel()
         chatdata.bing_clear_task = None
@@ -49,7 +50,9 @@ async def process_message_bing(
         )
     except Exception as e:
         logging.error(f"Error happened when calling bing_chatbot.ask: {e}")
-        return {"text": f"{strings.api_error}\n\n({e})"}
+        return {
+            "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
+        }
     finally:
         chatdata.bing_blocked = None
 
@@ -66,10 +69,10 @@ async def process_message_bing(
         reference_text = f"\n\nReferences:\n{reference_links}"
         output_text = output_text + reference_text
 
-    if bing_chatbot_close_delay > 0:
+    if gvars.bing_chatbot_close_delay > 0:
 
         async def scheduled_auto_close():
-            await asyncio.sleep(bing_chatbot_close_delay)
+            await asyncio.sleep(gvars.bing_chatbot_close_delay)
             if chatdata.bing_chatbot is not None:
                 await chatdata.bing_chatbot.close()
                 chatdata.bing_chatbot = None

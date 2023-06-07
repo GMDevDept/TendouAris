@@ -1,4 +1,4 @@
-import os
+from scripts import gvars
 from pyrogram import Client, errors
 from pyrogram.types import (
     ChatPrivileges,
@@ -58,8 +58,7 @@ async def set_bot_commands(app: Client):
         BotCommand("version", "查看版本信息"),
         BotCommand("manage", "进入管理模式"),
     ]
-    manager = [int(i) for i in os.getenv("MANAGER").split(",")]
-    for chat_id in manager:
+    for chat_id in gvars.manager:
         await app.set_bot_commands(commands_manager, scope=BotCommandScopeChat(chat_id))
 
 

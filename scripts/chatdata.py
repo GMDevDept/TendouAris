@@ -2,13 +2,12 @@ import json
 from typing import Optional
 from asyncio import Task
 from EdgeGPT import Chatbot as BingChatbot
-from Bard import Chatbot as BardChatbot
-from scripts import globals
+from Bard import AsyncChatbot as BardChatbot
+from scripts import gvars
 
 # from srv.gpt import process_message_gpt
 from srv.bing import process_message_bing
-
-# from srv.bard import process_message_bard
+from srv.bard import process_message_bard
 
 
 class ChatData:
@@ -28,6 +27,7 @@ class ChatData:
         self.bing_blocked: Optional[bool] = None
         self.bing_clear_task: Optional[Task] = None
         self.bard_chatbot: Optional[BardChatbot] = None
+        self.bard_blocked: Optional[bool] = None
         self.bard_clear_task: Optional[Task] = None
 
         ChatData.total_chats += 1
@@ -41,9 +41,9 @@ class ChatData:
         }
 
     def save(self):
-        globals.all_chats.update({self.chat_id: self})
+        gvars.all_chats.update({self.chat_id: self})
         data_json = json.dumps(self.persistent_data)
-        globals.db_chatdata.set(self.chat_id, data_json)
+        gvars.db_chatdata.set(self.chat_id, data_json)
 
     @classmethod
     def load(cls, data_json: str) -> "ChatData":
@@ -52,7 +52,7 @@ class ChatData:
             chatdata = GroupChatData(**data)
         else:
             chatdata = ChatData(**data)
-        globals.all_chats.update({data["chat_id"]: chatdata})
+        gvars.all_chats.update({data["chat_id"]: chatdata})
         return chatdata
 
     def set_api_key(self, api_key: str):
@@ -76,10 +76,10 @@ class ChatData:
                 model_output = await process_message_bing(
                     chatdata=self, model_args=model_args, model_input=model_input
                 )
-            # case "bard":
-            #     model_output = await process_message_bard(
-            #         chatdata=self, model_args=model_args, model_input=model_input
-            #     )
+            case "bard":
+                model_output = await process_message_bard(
+                    chatdata=self, model_args=model_args, model_input=model_input
+                )
         return model_output
 
 
