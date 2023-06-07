@@ -2,10 +2,9 @@
 # https://python.langchain.com/en/latest/
 # https://platform.openai.com/docs/guides/chat/introduction
 
-import os
 import uvloop
 import logging
-from scripts import handlers
+from scripts import gvars, handlers
 from scripts.initiate import initiate_bot
 from scripts.filters import group_conv_trigger
 from pyrogram import Client, filters, idle
@@ -14,15 +13,9 @@ logging.basicConfig(
     format="[ %(levelname)s / %(asctime)s]: %(message)s", level=logging.INFO
 )
 
-# Load env variables
-api_id = os.getenv("API_ID")
-api_hash = os.getenv("API_HASH")
-bot_token = os.getenv("BOT_TOKEN")
-manager = [int(i) for i in os.getenv("MANAGER").split(",")]
-
 # Telegram bot client
 uvloop.install()  # Needs to be placed before creating a Client instance to take effect
-app = Client("Aris", api_id, api_hash, bot_token=bot_token)
+app = Client("Aris", gvars.api_id, gvars.api_hash, bot_token=gvars.bot_token)
 
 
 # Welcome/help message
@@ -93,8 +86,14 @@ async def conversation_handler(_, message):
     await handlers.conversation_handler(message)
 
 
+# Reset chat history
+@app.on_message(filters.command("reset"))
+async def reset_handler(_, message):
+    await handlers.reset_handler(message)
+
+
 # Manage mode
-@app.on_message(filters.command("manage") & filters.user(manager))
+@app.on_message(filters.command("manage") & filters.user(gvars.manager))
 async def manage_mode_handler(_, message):
     await handlers.manage_mode_handler(message)
 

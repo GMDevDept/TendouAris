@@ -69,6 +69,14 @@ last_message_cleared = "好的老师, 爱丽丝已经忘掉我们的上一条对
 
 api_error = "抱歉老师, 爱丽丝暂时无法完成API请求🥲"
 
+internal_error = "抱歉老师, 爱丽丝遭遇bug了!😫"
+
+rpc_error = "抱歉老师, 爱丽丝与Telegram的连接丢失了!😵‍💫"
+
+feedback = "👉 你可以选择[前往GitHub反馈](https://github.com/ToffeeNeko/TendouAris/issues)"
+
+try_reset = "👉 你可以选择尝试使用 /reset 指令重置当前会话"
+
 no_record = "{}\n\n(由于{}, 爱丽丝不会保留本次会话的记忆)"
 
 profanity_warn = "{}\n\n(检测到该请求由特殊模式处理, 如在群聊中会话, 请注意他者观感)"
@@ -128,11 +136,17 @@ bing_choose_style = "请选择New Bing模型的对话风格:"
 
 chat_concurrent_blocked = "Please wait for the last conversation to finish"
 
-bing_login_failed = (
-    "Bing chat is currently blocking our server from loggin in, please try again later"
+bing_session_creation_failed = (
+    "bing.com is currently blocking our access, please try again later"
 )
 
-bing_only_whitelist = "该模型目前仅支持自建"
+bard_cookie_unavailable = (
+    "GOOGLE_BARD_COOKIE environment variable is not set for the bot"
+)
+
+bard_session_creation_failed = "Bard chatbot creation failed"
+
+model_only_whitelist = "该模型目前仅支持自建"
 
 placeholder_before_output = [
     "爱丽丝正在搜寻资料中, 请稍等……",

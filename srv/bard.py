@@ -1,56 +1,57 @@
 # https://github.com/acheong08/Bard
 
-import os
 import re
 import json
 import asyncio
 import logging
 import prompts
-from Bard import Chatbot
+from typing import Optional, Union
+from scripts import gvars, strings
+from Bard import AsyncChatbot
+from pyrogram.types import InputMediaPhoto, InputMediaDocument
+from pyrogram.errors import RPCError
 
-google_bard_cookie = os.getenv("GOOGLE_BARD_COOKIE", None)
-bard_chatbot_close_delay = int(os.getenv("BARD_CHATBOT_CLOSE_DELAY", 600))
 
+async def process_message_bard(
+    chatdata,  # ChatData
+    model_args: dict,
+    model_input: dict,
+) -> dict:
+    preset = model_args.get("preset", "default")
 
-async def process_message_bard(event, **kwargs):
-    if not google_bard_cookie:
+    if not chatdata.bard_chatbot:
+        try:
+            chatdata.bard_chatbot = await AsyncChatbot.create(gvars.google_bard_cookie)
+        except Exception as e:
+            return {
+                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bard_session_creation_failed}: {e}`"
+            }
+    elif chatdata.bard_blocked:
         return {
-            "output_text": "Please set the GOOGLE_BARD_COOKIE environment variable to use this feature."
+            "text": f"{strings.api_error}\n\nError Message:\n`{strings.chat_concurrent_blocked}`"
         }
+    elif chatdata.bard_clear_task is not None:
+        chatdata.bard_clear_task.cancel()
+        chatdata.bard_clear_task = None
 
-    preset = kwargs.get("preset", "default")
-    bard_chatbot = kwargs.get("bard_chatbot")
+    input_text = model_input.get("text")
+    if input_text.startswith("爱丽丝"):
+        input_text = input_text.replace("爱丽丝", "Bard", 1)
+    if preset == "cn":
+        input_text = prompts.bard_cn_prompt.format(input_text)
 
-    if event.chat_id not in bard_chatbot:
-        bard_chatbot[event.chat_id] = [
-            Chatbot(google_bard_cookie),
-            0,
-            False,
-        ]
-    # Block new requests if the bot is being used
-    elif bard_chatbot[event.chat_id][2]:
-        return {
-            "output_text": f"{prompts.api_error}\n\n({prompts.chat_concurrent_blocked})"
-        }
-
-    bard_chatbot[event.chat_id][2] = True
-
+    chatdata.bard_blocked = True
     try:
-        bot = bard_chatbot[event.chat_id][0]
-        input_text = re.sub(r"^/\S*", "", event.raw_text).strip()
-        if input_text.startswith("爱丽丝"):
-            input_text = input_text.replace("爱丽丝", "Bard", 1)
-        if preset == "cn":
-            input_text = prompts.bard_cn_prompt.format(input_text)
-        response = bot.ask(input_text)
+        response = await chatdata.bard_chatbot.ask(message=input_text)
     except Exception as e:
-        bard_chatbot[event.chat_id][2] = False
-        logging.error(f"Error happened when calling bot.ask: {e}")
-        return {"output_text": f"{prompts.api_error}\n\n({e})"}
+        logging.error(f"Error happened when calling bard_chatbot.ask: {e}")
+        return {
+            "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
+        }
+    finally:
+        chatdata.bard_blocked = None
 
-    bard_chatbot[event.chat_id][2] = False
-
-    output_text = response["content"]
+    output_text = response["content"] or None
     if preset == "cn":
         try:
             # Match json object in the output text
@@ -66,34 +67,57 @@ async def process_message_bard(event, **kwargs):
             # or the resulting substring is not a valid JSON object
             pass  # Return raw text
 
-    output_file = None
-    images = response["images"]  # set, {link1, link2}
-    if len(images) > 0:
-        output_file = list(images)
+    output_photo: Optional[list(Union[InputMediaPhoto, InputMediaDocument])] = None
+    send_text_seperately = None
+    raw_photos = response["images"]  # set, {link1, link2}
+    if len(raw_photos) > 0:
         output_text = re.sub(r"\n\[.*\]", "", output_text)
+        if len(output_text) >= 1024:  # Max caption length limit set by Telegram
+            send_text_seperately = True
 
-    log = response["conversation_id"]
-    logging.info(f"Requesting bard.google.com succeeded: conversation_id={log}")
+        try:
+            output_photo = [
+                InputMediaPhoto(
+                    photo,
+                    caption=len(output_text) < 1024
+                    and i == len(raw_photos) - 1
+                    and output_text
+                    or "",
+                )
+                for i, photo in enumerate(raw_photos)
+            ]
+        except RPCError:
+            output_photo = [
+                InputMediaDocument(
+                    photo,
+                    caption=len(output_text) < 1024
+                    and i == len(raw_photos) - 1
+                    and output_text
+                    or "",
+                )
+                for i, photo in enumerate(raw_photos)
+            ]
+        except Exception as e:
+            output_photo = None
+            link_to_raw_photos = " ".join(
+                [f"[{i+1}]({url})" for i, url in enumerate(raw_photos)]
+            )
+            output_text = output_text + "\n\n" + {e} + "\n" + link_to_raw_photos
 
-    if bard_chatbot_close_delay > 0:
-        bard_chatbot[event.chat_id][1] += 1
+    if gvars.bard_chatbot_close_delay > 0:
 
         async def scheduled_auto_close():
-            await asyncio.sleep(bard_chatbot_close_delay)
-            if event.chat_id in bard_chatbot:  # Could be manually closed
-                bard_chatbot[event.chat_id][1] = max(
-                    0, bard_chatbot[event.chat_id][1] - 1
+            await asyncio.sleep(gvars.bard_chatbot_close_delay)
+            if chatdata.bard_chatbot is not None:
+                chatdata.bard_chatbot = None
+                logging.info(
+                    f"Bard chatbot for chat {chatdata.chat_id} has been reset due to inactivity"
                 )
-                if bard_chatbot[event.chat_id][1] == 0:
-                    chatbot = bard_chatbot[event.chat_id][0]
-                    chatbot.conversation_id = ""
-                    chatbot.response_id = ""
-                    chatbot.choice_id = ""
-                    bard_chatbot.pop(event.chat_id, bard_chatbot)
-                    logging.info(
-                        f"Bard chatbot for chat {event.chat_id} has been closed due to inactivity"
-                    )
 
-        asyncio.create_task(scheduled_auto_close())
+        chatdata.bard_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return {"output_text": output_text, "output_file": output_file}
+    return {
+        "text": output_text,
+        "photo": output_photo,
+        "send_text_seperately": send_text_seperately,
+    }
