@@ -6,7 +6,7 @@ import asyncio
 import logging
 import prompts
 from typing import Optional, Union
-from scripts import gvars, strings
+from scripts import gvars, strings, util
 from Bard import AsyncChatbot
 from pyrogram.types import InputMediaPhoto, InputMediaDocument
 from pyrogram.errors import RPCError
@@ -17,6 +17,12 @@ async def process_message_bard(
     model_args: dict,
     model_input: dict,
 ) -> dict:
+    access_check = util.access_scope_filter(gvars.scope_bard, chatdata.chat_id)
+    if not access_check:
+        return {
+            "text": f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
+        }
+
     preset = model_args.get("preset", "default")
 
     if not chatdata.bard_chatbot:
@@ -42,7 +48,9 @@ async def process_message_bard(
 
     chatdata.bard_blocked = True
     try:
-        response = await chatdata.bard_chatbot.ask(message=input_text)
+        response = await chatdata.bard_chatbot.ask(
+            message=input_text or " "
+        )  # Bard does not accept empty string
     except Exception as e:
         logging.error(f"Error happened when calling bard_chatbot.ask: {e}")
         return {
@@ -69,40 +77,41 @@ async def process_message_bard(
 
     output_photo: Optional[list(Union[InputMediaPhoto, InputMediaDocument])] = None
     send_text_seperately = None
-    raw_photos = response["images"]  # set, {link1, link2}
-    if len(raw_photos) > 0:
-        output_text = re.sub(r"\n\[.*\]", "", output_text)
-        if len(output_text) >= 1024:  # Max caption length limit set by Telegram
-            send_text_seperately = True
+    raw_photos = response.get("images")  # set, {link1, link2}
+    if raw_photos:
+        if len(raw_photos) > 0:
+            output_text = re.sub(r"\n\[.*\]", "", output_text)
+            if len(output_text) >= 1024:  # Max caption length limit set by Telegram
+                send_text_seperately = True
 
-        try:
-            output_photo = [
-                InputMediaPhoto(
-                    photo,
-                    caption=len(output_text) < 1024
-                    and i == len(raw_photos) - 1
-                    and output_text
-                    or "",
+            try:
+                output_photo = [
+                    InputMediaPhoto(
+                        photo,
+                        caption=len(output_text) < 1024
+                        and i == len(raw_photos) - 1
+                        and output_text
+                        or "",
+                    )
+                    for i, photo in enumerate(raw_photos)
+                ]
+            except RPCError:
+                output_photo = [
+                    InputMediaDocument(
+                        photo,
+                        caption=len(output_text) < 1024
+                        and i == len(raw_photos) - 1
+                        and output_text
+                        or "",
+                    )
+                    for i, photo in enumerate(raw_photos)
+                ]
+            except Exception as e:
+                output_photo = None
+                link_to_raw_photos = " ".join(
+                    [f"[{i+1}]({url})" for i, url in enumerate(raw_photos)]
                 )
-                for i, photo in enumerate(raw_photos)
-            ]
-        except RPCError:
-            output_photo = [
-                InputMediaDocument(
-                    photo,
-                    caption=len(output_text) < 1024
-                    and i == len(raw_photos) - 1
-                    and output_text
-                    or "",
-                )
-                for i, photo in enumerate(raw_photos)
-            ]
-        except Exception as e:
-            output_photo = None
-            link_to_raw_photos = " ".join(
-                [f"[{i+1}]({url})" for i, url in enumerate(raw_photos)]
-            )
-            output_text = output_text + "\n\n" + {e} + "\n" + link_to_raw_photos
+                output_text = output_text + "\n\n" + {e} + "\n" + link_to_raw_photos
 
     if gvars.bard_chatbot_close_delay > 0:
 

@@ -4,8 +4,7 @@ import random
 import logging
 import traceback
 from typing import Union
-from scripts import gvars, strings
-from scripts.util import load_chat, is_group, get_raw_text
+from scripts import gvars, strings, util
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -24,7 +23,9 @@ async def global_access_filter_handler(update: Union[Message, CallbackQuery]):
         and update.message
     )
     if message:
-        await message.reply(strings.no_auth)
+        await message.reply(
+            f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
+        )
 
 
 # Welcome/help message
@@ -76,85 +77,94 @@ async def model_selection_handler(message):
 # Model selection callback
 async def model_selection_callback_handler(query):
     modelname = query.data.replace("model-", "")
-    if modelname == "gpt35":
-        chatdata = load_chat(query.message.chat.id)
-        if chatdata and chatdata.openai_api_key:
-            await query.message.edit(
-                strings.model_choose_preset,
-                reply_markup=InlineKeyboardMarkup(
-                    [
-                        [
-                            InlineKeyboardButton(
-                                strings.gpt35_presets.get("aris"),
-                                callback_data="gpt35preset-aris",
-                            )
-                        ],
-                        [
-                            InlineKeyboardButton(
-                                strings.gpt35_presets.get("default"),
-                                callback_data="gpt35preset-default",
-                            )
-                        ],
-                    ]
-                ),
-            )
-        else:
-            await query.message.edit(f"{strings.no_auth}\n\n{strings.api_key_required}")
-    elif modelname == "bing":
+    scope = getattr(gvars, "scope_" + modelname)
+    access_check = util.access_scope_filter(scope, query.message.chat.id)
+    if not access_check:
         await query.message.edit(
-            strings.bing_choose_style,
-            reply_markup=InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(
-                            "creative",
-                            callback_data="bingstyle-creative",
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            "balanced",
-                            callback_data="bingstyle-balanced",
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            "precise",
-                            callback_data="bingstyle-precise",
-                        )
-                    ],
-                ]
-            ),
+            f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
         )
-    elif modelname == "bard":
-        if not gvars.google_bard_cookie:
-            await query.message.edit(strings.bard_cookie_unavailable)
-        else:
+    else:
+        if modelname == "gpt35":
+            chatdata = util.load_chat(query.message.chat.id)
+            if chatdata and chatdata.openai_api_key:
+                await query.message.edit(
+                    strings.model_choose_preset,
+                    reply_markup=InlineKeyboardMarkup(
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    strings.gpt35_presets.get("aris"),
+                                    callback_data="gpt35preset-aris",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    strings.gpt35_presets.get("default"),
+                                    callback_data="gpt35preset-default",
+                                )
+                            ],
+                        ]
+                    ),
+                )
+            else:
+                await query.message.edit(
+                    f"{strings.no_auth}\n\n{strings.api_key_required}"
+                )
+        elif modelname == "bing":
             await query.message.edit(
-                strings.model_choose_preset,
+                strings.bing_choose_style,
                 reply_markup=InlineKeyboardMarkup(
                     [
                         [
                             InlineKeyboardButton(
-                                strings.bard_presets.get("default"),
-                                callback_data="bardpreset-default",
+                                "creative",
+                                callback_data="bingstyle-creative",
                             )
                         ],
                         [
                             InlineKeyboardButton(
-                                strings.bard_presets.get("cn"),
-                                callback_data="bardpreset-cn",
+                                "balanced",
+                                callback_data="bingstyle-balanced",
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                "precise",
+                                callback_data="bingstyle-precise",
                             )
                         ],
                     ]
                 ),
             )
+        elif modelname == "bard":
+            if not gvars.google_bard_cookie:
+                await query.message.edit(strings.bard_cookie_unavailable)
+            else:
+                await query.message.edit(
+                    strings.model_choose_preset,
+                    reply_markup=InlineKeyboardMarkup(
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    strings.bard_presets.get("default"),
+                                    callback_data="bardpreset-default",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    strings.bard_presets.get("cn"),
+                                    callback_data="bardpreset-cn",
+                                )
+                            ],
+                        ]
+                    ),
+                )
 
 
 # GPT-3.5 preset selection callback
 async def gpt35_preset_selection_callback_handler(query):
     preset = query.data.replace("gpt35preset-", "")
-    chatdata = load_chat(query.message.chat.id)
+    chatdata = util.load_chat(query.message.chat.id)
     chatdata.set_model(
         {
             "name": "gpt35",
@@ -172,10 +182,10 @@ async def gpt35_preset_selection_callback_handler(query):
 # Bing style selection callback
 async def bing_style_selection_callback_handler(query):
     style = query.data.replace("bingstyle-", "")
-    chatdata = load_chat(
+    chatdata = util.load_chat(
         query.message.chat.id,
         create_new=True,
-        is_group=await is_group(query.message.chat),
+        is_group=await util.is_group(query.message.chat),
     )
     chatdata.set_model({"name": "bing", "args": {"style": style}})
 
@@ -187,10 +197,10 @@ async def bing_style_selection_callback_handler(query):
 # Bard preset selection callback
 async def bard_preset_selection_callback_handler(query):
     preset = query.data.replace("bardpreset-", "")
-    chatdata = load_chat(
+    chatdata = util.load_chat(
         query.message.chat.id,
         create_new=True,
-        is_group=await is_group(query.message.chat),
+        is_group=await util.is_group(query.message.chat),
     )
     chatdata.set_model({"name": "bard", "args": {"preset": preset}})
 
@@ -214,14 +224,16 @@ async def api_key_handler(message):
                 ],
             )
 
-            chatdata = load_chat(
-                message.chat.id, create_new=True, is_group=await is_group(message.chat)
+            chatdata = util.load_chat(
+                message.chat.id,
+                create_new=True,
+                is_group=await util.is_group(message.chat),
             )
             chatdata.set_api_key(api_key_input)
             await message.reply(strings.api_key_set)
         except openai.error.OpenAIError as e:
             await message.reply(
-                f"{strings.api_key_invalid}\n\nError message:`{e}`\n\n{strings.api_key_common_errors}"
+                f"{strings.api_key_invalid}\n\nError message: `{e}`\n\n{strings.api_key_common_errors}"
             )
     else:
         await message.reply(strings.api_key_invalid)
@@ -229,15 +241,15 @@ async def api_key_handler(message):
 
 # Conversation
 async def conversation_handler(message):
-    chatdata = load_chat(message.chat.id)
+    chatdata = util.load_chat(message.chat.id)
     if not chatdata:
         await message.reply(f"{strings.no_auth}\n\n{strings.api_key_required}")
     else:
-        raw_text = await get_raw_text(message)
+        raw_text = await util.get_raw_text(message)
         input_text = re.sub(r"^/\S*\s*", "", raw_text)
 
         if message.reply_to_message:
-            context = await get_raw_text(message.reply_to_message)
+            context = await util.get_raw_text(message.reply_to_message)
             input_text = f'Context: "{context}";\n{input_text}'
 
         model_name = chatdata.model.get("name")
@@ -292,7 +304,7 @@ async def conversation_handler(message):
 
 # Reset chat history
 async def reset_handler(message):
-    chatdata = load_chat(message.chat.id)
+    chatdata = util.load_chat(message.chat.id)
     if chatdata:
         if chatdata.openai_history:
             chatdata.openai_history = None
