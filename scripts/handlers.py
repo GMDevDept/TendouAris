@@ -3,10 +3,28 @@ import openai
 import random
 import logging
 import traceback
+from typing import Union
 from scripts import gvars, strings
 from scripts.util import load_chat, is_group, get_raw_text
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    Message,
+    CallbackQuery,
+)
 from pyrogram.errors import RPCError
+
+
+# Global access filter
+async def global_access_filter_handler(update: Union[Message, CallbackQuery]):
+    message = (
+        isinstance(update, Message)
+        and update
+        or isinstance(update, CallbackQuery)
+        and update.message
+    )
+    if message:
+        await message.reply(strings.no_auth)
 
 
 # Welcome/help message
@@ -81,7 +99,7 @@ async def model_selection_callback_handler(query):
                 ),
             )
         else:
-            await query.message.edit(strings.no_auth)
+            await query.message.edit(f"{strings.no_auth}\n\n{strings.api_key_required}")
     elif modelname == "bing":
         await query.message.edit(
             strings.bing_choose_style,
@@ -213,7 +231,7 @@ async def api_key_handler(message):
 async def conversation_handler(message):
     chatdata = load_chat(message.chat.id)
     if not chatdata:
-        await message.reply(strings.no_auth)
+        await message.reply(f"{strings.no_auth}\n\n{strings.api_key_required}")
     else:
         raw_text = await get_raw_text(message)
         input_text = re.sub(r"^/\S*\s*", "", raw_text)
@@ -289,4 +307,77 @@ async def reset_handler(message):
 
 # Manage mode
 async def manage_mode_handler(message):
-    await message.reply("under development")
+    await message.reply(
+        strings.manage_mode_start,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        strings.manage_mode_options.get("scope-global"),
+                        callback_data="manage-scope-global",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        strings.manage_mode_options.get("scope-gpt35"),
+                        callback_data="manage-scope-gpt35",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        strings.manage_mode_options.get("scope-bing"),
+                        callback_data="manage-scope-bing",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        strings.manage_mode_options.get("scope-bard"),
+                        callback_data="manage-scope-bard",
+                    )
+                ],
+            ]
+        ),
+    )
+
+
+# Manage mode callback
+async def manage_mode_callback_handler(client, query):
+    if re.match(r"^manage-scope-(global|gpt35|bing|bard)$", query.data):
+        await query.message.edit(
+            strings.manage_mode_choose_scope,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            strings.manage_mode_scopes.get("all"),
+                            callback_data=query.data + "-all",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            strings.manage_mode_scopes.get("whitelist"),
+                            callback_data=query.data + "-whitelist",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            strings.manage_mode_scopes.get("manager"),
+                            callback_data=query.data + "-manager",
+                        )
+                    ],
+                ]
+            ),
+        )
+    elif re.match(
+        r"^manage-scope-(global|gpt35|bing|bard)-(all|whitelist|manager)$", query.data
+    ):
+        match = re.match(
+            r"^manage-scope-(global|gpt35|bing|bard)-(all|whitelist|manager)$",
+            query.data,
+        )
+        model = match.group(1)
+        scope = match.group(2)
+        setattr(gvars, "scope_" + model, scope)
+        await query.message.edit(
+            f"Scope of access to `{model}` has been set to `{scope}`"
+        )

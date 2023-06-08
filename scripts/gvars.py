@@ -2,11 +2,17 @@ import os
 import redis
 
 # Load env variables
+bot_token = os.getenv("BOT_TOKEN")
 api_id = os.getenv("API_ID")
 api_hash = os.getenv("API_HASH")
-bot_token = os.getenv("BOT_TOKEN")
 manager = [int(i) for i in os.getenv("MANAGER").split(",")]
-google_bard_cookie = os.getenv("GOOGLE_BARD_COOKIE", None)
+whitelist = [int(i) for i in os.getenv("WHITELIST").split(",")]
+openai_api_key = os.getenv("OPENAI_API_KEY")
+google_bard_cookie = os.getenv("GOOGLE_BARD_COOKIE")
+scope_global = os.getenv("SCOPE_GLOBAL")
+scope_gpt35 = os.getenv("SCOPE_GPT35")
+scope_bing = os.getenv("SCOPE_BING")
+scope_bard = os.getenv("SCOPE_BARD")
 bing_chatbot_close_delay = int(os.getenv("BING_CHATBOT_CLOSE_DELAY", 600))
 bard_chatbot_close_delay = int(os.getenv("BARD_CHATBOT_CLOSE_DELAY", 600))
 
