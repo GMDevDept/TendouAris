@@ -4,8 +4,7 @@ from asyncio import Task
 from EdgeGPT import Chatbot as BingChatbot
 from Bard import AsyncChatbot as BardChatbot
 from scripts import gvars
-
-# from srv.gpt import process_message_gpt
+from srv.gpt import process_message_gpt
 from srv.bing import process_message_bing
 from srv.bard import process_message_bard
 
@@ -68,10 +67,10 @@ class ChatData:
         model_input = {"text": input_text}
         model_output = None
         match model_name:
-            # case "gpt35":
-            #     model_output = await process_message_gpt(
-            #         chatdata=self, model_args=model_args, model_input=model_input
-            #     )
+            case "gpt35":
+                model_output = await process_message_gpt(
+                    chatdata=self, model_args=model_args, model_input=model_input
+                )
             case "bing":
                 model_output = await process_message_bing(
                     chatdata=self, model_args=model_args, model_input=model_input

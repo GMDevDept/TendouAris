@@ -4,9 +4,8 @@
 
 import uvloop
 import logging
-from scripts import gvars, handlers
+from scripts import gvars, handlers, filters as custom_filters
 from scripts.initiate import initiate_bot
-from scripts.filters import group_conv_trigger
 from pyrogram import Client, filters, idle
 
 logging.basicConfig(
@@ -16,6 +15,18 @@ logging.basicConfig(
 # Telegram bot client
 uvloop.install()  # Needs to be placed before creating a Client instance to take effect
 app = Client("Aris", gvars.api_id, gvars.api_hash, bot_token=gvars.bot_token)
+
+
+# Global access filter for messages
+@app.on_message(custom_filters.global_access_filter)
+async def global_access_filter_chat_handler(_, message):
+    await handlers.global_access_filter_handler(message)
+
+
+# Global access filter for callback queries
+@app.on_callback_query(custom_filters.global_access_filter)
+async def global_access_filter_query_handler(_, query):
+    await handlers.global_access_filter_handler(query)
 
 
 # Welcome/help message
@@ -79,7 +90,7 @@ async def api_key_handler(_, message):
         filters.command("aris")
         | filters.regex(r"^爱丽丝")
         | (filters.private & ~filters.regex(r"^/"))
-        | (filters.group & group_conv_trigger)
+        | (filters.group & custom_filters.group_conv_trigger_func)
     )
 )
 async def conversation_handler(_, message):
@@ -96,6 +107,12 @@ async def reset_handler(_, message):
 @app.on_message(filters.command("manage") & filters.user(gvars.manager))
 async def manage_mode_handler(_, message):
     await handlers.manage_mode_handler(message)
+
+
+# Manage mode callback
+@app.on_callback_query(filters.regex(r"^manage-") & filters.user(gvars.manager))
+async def manage_mode_callback_handler(client, query):
+    await handlers.manage_mode_callback_handler(client, query)
 
 
 async def main():
