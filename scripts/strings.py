@@ -1,7 +1,7 @@
 version = """
 **TendouArisBot v2.0.0**
 
-Latest update: 2023/06/06
+Latest update: 2023/06/08
 
 Update log:
 """
@@ -41,6 +41,8 @@ Telegram Bot: [TendouArisBot](https://t.me/TendouArisBot)
 """
 
 no_auth = "接触权限确认失败, 爱丽丝无法回应对象的会话请求🫥"
+
+globally_disabled = "This function is globally disabled by the bot owner"
 
 api_key_required = "请使用 /apikey 命令设置老师自己的OpenAI API key, 输入的密钥将仅供当前会话及您自己使用"
 

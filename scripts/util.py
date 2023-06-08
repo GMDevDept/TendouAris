@@ -34,3 +34,15 @@ async def get_raw_text(message: Message) -> str:
         and message.sticker.emoji
         or ""
     )
+
+
+def access_scope_filter(scope: str, chat_id: int) -> bool:
+    match scope:
+        case "all":
+            return True
+        case "whitelist":
+            return chat_id in gvars.whitelist
+        case "manager":
+            return chat_id in gvars.manager
+        case _:
+            raise ValueError(f"Invalid access scope: {scope}")
