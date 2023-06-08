@@ -90,7 +90,7 @@ async def api_key_handler(_, message):
         filters.command("aris")
         | filters.regex(r"^爱丽丝")
         | (filters.private & ~filters.regex(r"^/"))
-        | (filters.group & custom_filters.group_conv_trigger_func)
+        | (filters.group & custom_filters.group_conv_trigger)
     )
 )
 async def conversation_handler(_, message):

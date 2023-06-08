@@ -3,7 +3,7 @@
 import re
 import asyncio
 import logging
-from scripts import gvars, strings
+from scripts import gvars, strings, util
 from EdgeGPT import Chatbot, ConversationStyle, NotAllowedToAccess
 
 
@@ -12,6 +12,12 @@ async def process_message_bing(
     model_args: dict,
     model_input: dict,
 ) -> dict:
+    access_check = util.access_scope_filter(gvars.scope_bing, chatdata.chat_id)
+    if not access_check:
+        return {
+            "text": f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
+        }
+
     style = model_args.get("style", "creative")
     match style:
         case "creative":
