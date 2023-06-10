@@ -5,3 +5,5 @@ redis==4.5.5
 Pyrogram==2.0.106
 TgCrypto==1.2.5
 uvloop==0.17.0
+langchain==0.0.194
+tiktoken==0.4.0

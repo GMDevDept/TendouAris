@@ -1,3 +1,9 @@
+import logging
+import prompts
+from langchain.chat_models import ChatOpenAI
+from langchain.memory import ConversationSummaryBufferMemory
+from langchain.chains import ConversationChain
+from langchain.prompts import PromptTemplate
 from scripts import gvars, strings, util
 
 
@@ -11,6 +17,49 @@ async def process_message_gpt35(
         return {
             "text": f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
         }
+
+    api_key = (
+        chatdata.openai_api_key
+        or chatdata.chat_id in gvars.whitelist
+        and gvars.openai_api_key
+        or model_input.get("sender_id")
+        and util.load_chat(model_input.get("sender_id"))
+        and util.load_chat(model_input.get("sender_id")).openai_api_key
+    )
+    if not api_key:
+        return {"text": f"{strings.no_auth}\n\n{strings.api_key_required}"}
+
+    aris_prompt = PromptTemplate(
+        input_variables=["history", "input"], template=prompts.aris_prompt_template
+    )
+    conversation_model = ChatOpenAI(
+        model="gpt-3.5-turbo", temperature=1, openai_api_key=api_key
+    )
+
+    if not chatdata.gpt35_history:
+        chatdata.gpt35_history = ConversationSummaryBufferMemory(
+            human_prefix="老师",
+            ai_prefix="爱丽丝",
+            llm=ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=api_key),
+            max_token_limit=1024,
+        )
+
+    if not chatdata.gpt35_conversation:
+        chatdata.gpt35_conversation = ConversationChain(
+            llm=conversation_model, prompt=aris_prompt, memory=chatdata.gpt35_history
+        )
+    from langchain.callbacks import get_openai_callback
+
+    with get_openai_callback() as cb:
+        response = await chatdata.gpt35_conversation.apredict(
+            input=model_input.get("text")
+        )
+        logging.info(f"Total Tokens: {cb.total_tokens}")
+        logging.info(f"Prompt Tokens: {cb.prompt_tokens}")
+        logging.info(f"Completion Tokens: {cb.completion_tokens}")
+        logging.info(f"Total Cost (USD): ${cb.total_cost}")
+
+    return {"text": response}
 
 
 # import os

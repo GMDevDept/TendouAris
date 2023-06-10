@@ -86,7 +86,9 @@ async def model_selection_callback_handler(query):
     else:
         if modelname == "gpt35":
             chatdata = util.load_chat(query.message.chat.id)
-            if chatdata and chatdata.openai_api_key:
+            if chatdata and (
+                chatdata.openai_api_key or chatdata.chat_id in gvars.whitelist
+            ):
                 await query.message.edit(
                     strings.model_choose_preset,
                     reply_markup=InlineKeyboardMarkup(
@@ -247,10 +249,17 @@ async def conversation_handler(message):
     else:
         raw_text = await util.get_raw_text(message)
         input_text = re.sub(r"^/\S*\s*", "", raw_text)
+        sender_id = (
+            message.from_user
+            and message.from_user.id
+            or message.sender_chat
+            and message.sender_chat.id
+        )
 
         if message.reply_to_message:
             context = await util.get_raw_text(message.reply_to_message)
-            input_text = f'Context: "{context}";\n{input_text}'
+            if context and chatdata.last_reply != context:
+                input_text = f'Context: "{context}";\n{input_text}'
 
         model_name = chatdata.model.get("name")
         if model_name == "bing":
@@ -261,7 +270,9 @@ async def conversation_handler(message):
             )
 
         try:
-            model_output = await chatdata.process_message(input_text)
+            model_output = await chatdata.process_message(
+                model_input={"sender_id": sender_id, "text": input_text}
+            )
             text = model_output.get("text")
             photo = model_output.get("photo")
             send_text_seperately = model_output.get("send_text_seperately")
@@ -287,6 +298,8 @@ async def conversation_handler(message):
                         if len(photo_group) == 1 and i > 0:
                             photo_group.insert(0, photo[i - 1])
                         await message.reply_media_group(photo_group, quote=True)
+
+            chatdata.last_reply = text
         except RPCError as e:
             error_message = f"{e}: " + "".join(traceback.format_tb(e.__traceback__))
             logging.error(error_message)
