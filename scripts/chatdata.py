@@ -3,6 +3,8 @@ from typing import Optional
 from asyncio import Task
 from EdgeGPT import Chatbot as BingChatbot
 from Bard import AsyncChatbot as BardChatbot
+from langchain.chains import ConversationChain
+from langchain.memory import ConversationSummaryBufferMemory
 from scripts import gvars
 from srv.gpt import process_message_gpt35
 from srv.bing import process_message_bing
@@ -21,13 +23,15 @@ class ChatData:
         self.chat_id: int = chat_id
         self.model: dict = model  # {"name": str, "args": dict}
         self.openai_api_key: Optional[str] = kwargs.get("openai_api_key")
-        self.openai_history = None
+        self.gpt35_conversation: Optional[ConversationChain] = None
+        self.gpt35_history: Optional[ConversationSummaryBufferMemory] = None
         self.bing_chatbot: Optional[BingChatbot] = None
         self.bing_blocked: Optional[bool] = None
         self.bing_clear_task: Optional[Task] = None
         self.bard_chatbot: Optional[BardChatbot] = None
         self.bard_blocked: Optional[bool] = None
         self.bard_clear_task: Optional[Task] = None
+        self.last_reply: Optional[str] = None
 
         ChatData.total_chats += 1
 
@@ -62,9 +66,8 @@ class ChatData:
         self.model = model
         self.save()
 
-    async def process_message(self, input_text: str) -> Optional[dict]:
+    async def process_message(self, model_input: dict) -> Optional[dict]:
         model_name, model_args = self.model["name"], self.model["args"]
-        model_input = {"text": input_text}
         model_output = None
         match model_name:
             case "gpt35":
