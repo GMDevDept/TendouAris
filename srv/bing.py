@@ -5,9 +5,11 @@ import asyncio
 import logging
 from scripts import gvars, strings, util
 from EdgeGPT import Chatbot, ConversationStyle, NotAllowedToAccess
+from pyrogram import Client
 
 
 async def process_message_bing(
+    client: Client,
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,
@@ -55,7 +57,9 @@ async def process_message_bing(
             conversation_style=conversation_style,
         )
     except Exception as e:
-        logging.error(f"Error happened when calling bing_chatbot.ask: {e}")
+        logging.warning(
+            f"Error happened when calling bing_chatbot.ask in chat {chatdata.chat_id}: {e}"
+        )
         return {
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
         }
@@ -82,8 +86,9 @@ async def process_message_bing(
             if chatdata.bing_chatbot is not None:
                 await chatdata.bing_chatbot.close()
                 chatdata.bing_chatbot = None
-                logging.info(
-                    f"Bing chatbot for chat {chatdata.chat_id} has been closed due to inactivity"
+                await client.send_message(
+                    chatdata.chat_id,
+                    strings.model_reset_due_to_inactivity.format("Bing"),
                 )
 
         chatdata.bing_clear_task = asyncio.create_task(scheduled_auto_close())
