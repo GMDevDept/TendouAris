@@ -13,6 +13,7 @@ scope_global = os.getenv("SCOPE_GLOBAL")
 scope_gpt35 = os.getenv("SCOPE_GPT35")
 scope_bing = os.getenv("SCOPE_BING")
 scope_bard = os.getenv("SCOPE_BARD")
+gpt35_chatbot_close_delay = int(os.getenv("GPT35_CHATBOT_CLOSE_DELAY_IN_GROUP", 600))
 bing_chatbot_close_delay = int(os.getenv("BING_CHATBOT_CLOSE_DELAY", 600))
 bard_chatbot_close_delay = int(os.getenv("BARD_CHATBOT_CLOSE_DELAY", 600))
 

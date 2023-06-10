@@ -1,4 +1,5 @@
 import json
+from pyrogram import Client
 from typing import Optional
 from asyncio import Task
 from EdgeGPT import Chatbot as BingChatbot
@@ -21,10 +22,12 @@ class ChatData:
         **kwargs,
     ):
         self.chat_id: int = chat_id
+        self.is_group: Optional[bool] = None
         self.model: dict = model  # {"name": str, "args": dict}
         self.openai_api_key: Optional[str] = kwargs.get("openai_api_key")
-        self.gpt35_conversation: Optional[ConversationChain] = None
+        self.gpt35_chatbot: Optional[ConversationChain] = None
         self.gpt35_history: Optional[ConversationSummaryBufferMemory] = None
+        self.gpt35_clear_task: Optional[Task] = None
         self.bing_chatbot: Optional[BingChatbot] = None
         self.bing_blocked: Optional[bool] = None
         self.bing_clear_task: Optional[Task] = None
@@ -39,6 +42,7 @@ class ChatData:
     def persistent_data(self) -> dict:
         return {
             "chat_id": self.chat_id,
+            "is_group": self.is_group,
             "model": self.model,
             "openai_api_key": self.openai_api_key,
         }
@@ -66,23 +70,50 @@ class ChatData:
         self.model = model
         self.save()
 
-    async def process_message(self, model_input: dict) -> Optional[dict]:
+    async def process_message(
+        self, client: Client, model_input: dict
+    ) -> Optional[dict]:
         model_name, model_args = self.model["name"], self.model["args"]
         model_output = None
         match model_name:
             case "gpt35":
                 model_output = await process_message_gpt35(
-                    chatdata=self, model_args=model_args, model_input=model_input
+                    client=client,
+                    chatdata=self,
+                    model_args=model_args,
+                    model_input=model_input,
                 )
             case "bing":
                 model_output = await process_message_bing(
-                    chatdata=self, model_args=model_args, model_input=model_input
+                    client=client,
+                    chatdata=self,
+                    model_args=model_args,
+                    model_input=model_input,
                 )
             case "bard":
                 model_output = await process_message_bard(
-                    chatdata=self, model_args=model_args, model_input=model_input
+                    client=client,
+                    chatdata=self,
+                    model_args=model_args,
+                    model_input=model_input,
                 )
         return model_output
+
+    async def reset(self):
+        if self.gpt35_history:
+            self.gpt35_history.clear()
+        if self.bing_chatbot:
+            await self.bing_chatbot.close()
+        self.gpt35_chatbot = None
+        self.gpt35_history = None
+        self.gpt35_clear_task = None
+        self.bing_chatbot = None
+        self.bing_blocked = None
+        self.bing_clear_task = None
+        self.bard_chatbot = None
+        self.bard_blocked = None
+        self.bard_clear_task = None
+        self.last_reply = None
 
 
 class GroupChatData(ChatData):
@@ -101,7 +132,6 @@ class GroupChatData(ChatData):
         data = super().persistent_data
         data.update(
             {
-                "is_group": self.is_group,
                 "auto_clear_enable": self.auto_clear_enable,
                 "floodctrl_enable": self.floodctrl_enable,
             }

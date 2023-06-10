@@ -166,13 +166,22 @@ async def model_selection_callback_handler(query):
 # GPT-3.5 preset selection callback
 async def gpt35_preset_selection_callback_handler(query):
     preset = query.data.replace("gpt35preset-", "")
-    chatdata = util.load_chat(query.message.chat.id)
-    chatdata.set_model(
-        {
-            "name": "gpt35",
-            "args": {"preset": preset},
-        }
+    chatdata = util.load_chat(
+        query.message.chat.id,
+        create_new=True,
+        is_group=await util.is_group(query.message.chat),
     )
+
+    if not (
+        chatdata.model["name"] == "gpt35"
+        and chatdata.model["args"].get("preset") == preset
+    ):
+        chatdata.gpt35_chatbot = None
+        if chatdata.gpt35_history:
+            chatdata.gpt35_history.clear()
+            chatdata.gpt35_history = None
+
+    chatdata.set_model({"name": "gpt35", "args": {"preset": preset}})
 
     await query.message.edit(
         strings.model_changed
@@ -242,7 +251,7 @@ async def api_key_handler(message):
 
 
 # Conversation
-async def conversation_handler(message):
+async def conversation_handler(client, message):
     chatdata = util.load_chat(message.chat.id)
     if not chatdata:
         await message.reply(f"{strings.no_auth}\n\n{strings.api_key_required}")
@@ -271,7 +280,7 @@ async def conversation_handler(message):
 
         try:
             model_output = await chatdata.process_message(
-                model_input={"sender_id": sender_id, "text": input_text}
+                client=client, model_input={"sender_id": sender_id, "text": input_text}
             )
             text = model_output.get("text")
             photo = model_output.get("photo")
@@ -315,17 +324,11 @@ async def conversation_handler(message):
             )
 
 
-# Reset chat history
+# Reset conversation history
 async def reset_handler(message):
     chatdata = util.load_chat(message.chat.id)
     if chatdata:
-        if chatdata.openai_history:
-            chatdata.openai_history = None
-        if chatdata.bing_chatbot:
-            await chatdata.bing_chatbot.close()
-            chatdata.bing_chatbot = None
-        if chatdata.bard_chatbot:
-            chatdata.bard_chatbot = None
+        await chatdata.reset()
 
     await message.reply(strings.history_cleared)
 

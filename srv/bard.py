@@ -8,11 +8,13 @@ import prompts
 from typing import Optional, Union
 from scripts import gvars, strings, util
 from Bard import AsyncChatbot
+from pyrogram import Client
 from pyrogram.types import InputMediaPhoto, InputMediaDocument
 from pyrogram.errors import RPCError
 
 
 async def process_message_bard(
+    client: Client,
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,
@@ -52,7 +54,9 @@ async def process_message_bard(
             message=input_text or " "
         )  # Bard does not accept empty string
     except Exception as e:
-        logging.error(f"Error happened when calling bard_chatbot.ask: {e}")
+        logging.warning(
+            f"Error happened when calling bard_chatbot.ask in chat {chatdata.chat_id}: {e}"
+        )
         return {
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
         }
@@ -119,8 +123,9 @@ async def process_message_bard(
             await asyncio.sleep(gvars.bard_chatbot_close_delay)
             if chatdata.bard_chatbot is not None:
                 chatdata.bard_chatbot = None
-                logging.info(
-                    f"Bard chatbot for chat {chatdata.chat_id} has been reset due to inactivity"
+                await client.send_message(
+                    chatdata.chat_id,
+                    strings.model_reset_due_to_inactivity.format("Bard"),
                 )
 
         chatdata.bard_clear_task = asyncio.create_task(scheduled_auto_close())
