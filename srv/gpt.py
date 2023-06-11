@@ -1,3 +1,4 @@
+import re
 import logging
 import asyncio
 import prompts
@@ -57,8 +58,13 @@ async def process_message_gpt35(
         chatdata.gpt35_clear_task = None
 
     input_text = model_input.get("text")
-    if input_text.startswith("爱丽丝") and model_args.get("preset") != "aris":
-        input_text = input_text.replace("爱丽丝", "", 1)
+
+    if model_args.get("preset") != "aris" and input_text.startswith("爱丽丝"):
+        input_text = re.sub(r"^爱丽丝[，。！？；：,.!?;:]*", "", input_text)
+
+    if model_args.get("preset") == "aris" and chatdata.gpt35_history is not None:
+        backup_moving_summary_buffer = chatdata.gpt35_history.moving_summary_buffer
+        backup_chat_memory = chatdata.gpt35_history.chat_memory.messages.copy()
 
     try:
         response = await chatdata.gpt35_chatbot.apredict(input=input_text)
@@ -69,6 +75,15 @@ async def process_message_gpt35(
         return {
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
         }
+
+    if model_args.get("preset") == "aris" and chatdata.gpt35_history is not None:
+        response = await aris_fallback_response_handler(
+            chatdata,
+            response,
+            input_text,
+            backup_chat_memory,
+            backup_moving_summary_buffer,
+        )
 
     if chatdata.is_group and gvars.gpt35_chatbot_close_delay > 0:
 
@@ -89,6 +104,22 @@ async def process_message_gpt35(
     return {"text": response}
 
 
+def create_gpt35_default_chatbot(
+    chatdata, conversation_model: ChatOpenAI
+) -> ConversationChain:
+    if chatdata.gpt35_history is None:
+        chatdata.gpt35_history = ConversationSummaryBufferMemory(
+            llm=conversation_model,
+            max_token_limit=2048,
+        )
+
+    gpt35_default_chatbot = ConversationChain(
+        llm=conversation_model, memory=chatdata.gpt35_history
+    )
+
+    return gpt35_default_chatbot
+
+
 def create_gpt35_aris_chatbot(
     chatdata, conversation_model: ChatOpenAI
 ) -> ConversationChain:
@@ -100,13 +131,17 @@ def create_gpt35_aris_chatbot(
         template=prompts.summary_prompt_template,
     )
 
-    if not chatdata.gpt35_history:
+    if chatdata.gpt35_history is None:
         chatdata.gpt35_history = ConversationSummaryBufferMemory(
             human_prefix="老师",
             ai_prefix="爱丽丝",
             llm=conversation_model,
             prompt=summary_prompt,
             max_token_limit=1024,
+        )
+        chatdata.gpt35_history.save_context(
+            {"input": prompts.initial_prompts["input"]},
+            {"output": prompts.initial_prompts["output"]},
         )
 
     gpt35_aris_chatbot = ConversationChain(
@@ -116,17 +151,44 @@ def create_gpt35_aris_chatbot(
     return gpt35_aris_chatbot
 
 
-def create_gpt35_default_chatbot(
-    chatdata, conversation_model: ChatOpenAI
-) -> ConversationChain:
-    if not chatdata.gpt35_history:
-        chatdata.gpt35_history = ConversationSummaryBufferMemory(
-            llm=conversation_model,
-            max_token_limit=2048,
+async def aris_fallback_response_handler(
+    chatdata,
+    response,
+    input_text,
+    backup_chat_memory,
+    backup_moving_summary_buffer,
+):
+    fallback = None
+    for keyword in strings.text_filters:
+        if keyword in response:
+            fallback = True
+            break
+
+    if fallback:
+        chatdata.gpt35_history.chat_memory.messages = backup_chat_memory
+        chatdata.gpt35_history.moving_summary_buffer = backup_moving_summary_buffer
+
+        backup_chatbot = ConversationChain(
+            llm=chatdata.gpt35_chatbot.llm,
+            prompt=PromptTemplate(
+                input_variables=["history", "input"],
+                template=prompts.backup_prompt_template,
+            ),
+            memory=chatdata.gpt35_history,
         )
+        fallback_response = await backup_chatbot.apredict(input=input_text)
 
-    gpt35_default_chatbot = ConversationChain(
-        llm=conversation_model, memory=chatdata.gpt35_history
-    )
+        fallback = None
+        for keyword in strings.text_filters:
+            if keyword in fallback_response:
+                fallback = True
+                break
 
-    return gpt35_default_chatbot
+        if fallback:
+            chatdata.gpt35_history.chat_memory.messages = backup_chat_memory
+            chatdata.gpt35_history.moving_summary_buffer = backup_moving_summary_buffer
+            response = f"{response}\n\n({strings.no_record})"
+        else:
+            response = f"{fallback_response}\n\n({strings.profanity_warn})"
+
+    return response

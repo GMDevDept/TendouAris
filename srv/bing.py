@@ -36,7 +36,7 @@ async def process_message_bing(
             chatdata.bing_chatbot = await Chatbot.create()
         except NotAllowedToAccess:
             return {
-                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_chat_creation_failed}`"
+                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_session_creation_failed}`"
             }
     elif chatdata.bing_blocked:
         return {
