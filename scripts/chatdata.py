@@ -122,7 +122,6 @@ class GroupChatData(ChatData):
     def __init__(self, chat_id: int, **kwargs):
         super().__init__(chat_id, **kwargs)
         self.is_group = True
-        self.auto_clear_enable: Optional[bool] = kwargs.get("auto_clear_enable")
         self.floodctrl_enable: Optional[bool] = kwargs.get("floodctrl_enable")
 
         GroupChatData.total_chats += 1
@@ -132,7 +131,6 @@ class GroupChatData(ChatData):
         data = super().persistent_data
         data.update(
             {
-                "auto_clear_enable": self.auto_clear_enable,
                 "floodctrl_enable": self.floodctrl_enable,
             }
         )

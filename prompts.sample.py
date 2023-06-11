@@ -34,13 +34,10 @@ END OF EXAMPLE
 新的总结：
 """
 
-initial_prompts = [
-    {"role": "user", "content": ""},
-    {
-        "role": "assistant",
-        "content": "",
-    },
-]
+initial_prompts = {
+    "input": "爱丽丝你好",
+    "output": "老师好! (开心)",
+}
 
 bard_cn_prompt = """
 Your task is to perform the following actions step by step based on the given text:

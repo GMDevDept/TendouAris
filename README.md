@@ -35,27 +35,3 @@ Aris is a telegram chatbot based on OpenAI API with customized system prompt. In
     docker-compose up -d --build
     docker image prune -f   # Remove unused dangling images (optional)
     ```
-
-## Commands
-
-You can copy the following commands and provide them to BotFather when building you own Aris.
-
-1. Common commands
-
-    ``` md
-    aris - パンパカパーン！
-    pop - 清除上次问答记忆，继续当前对话
-    reset - 清除全部问答记忆，开始新的对话
-    model - 选择语言模型
-    apikey - 为当前会话添加OpenAI API key
-    chatid - 获取当前会话的chat ID
-    version - 查看版本信息
-    help - 爱丽丝食用指南
-    ```
-
-2. Admin commands
-
-    ``` md
-    fapikey - 为指定的会话添加API key
-    fctrl - 为指定的群组启用/禁用刷屏限制
-    ```
