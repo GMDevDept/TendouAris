@@ -270,13 +270,11 @@ async def conversation_handler(client, message):
             if context and chatdata.last_reply != context:
                 input_text = f'Context: "{context}";\n{input_text}'
 
-        model_name = chatdata.model.get("name")
-        if model_name == "bing":
-            placeholder = await message.reply(
-                random.choice(strings.placeholder_before_output)
-                + strings.placeholer_bing,
-                disable_notification=True,
-            )
+        placeholder = await message.reply(
+            random.choice(strings.placeholder_before_output)
+            + (chatdata.model.get("name") == "bing" and strings.placeholer_bing or ""),
+            disable_notification=True,
+        )
 
         try:
             model_output = await chatdata.process_message(
@@ -286,16 +284,10 @@ async def conversation_handler(client, message):
             photo = model_output.get("photo")
             send_text_seperately = model_output.get("send_text_seperately")
 
-            try:
-                await placeholder.delete()
-            except NameError:
-                pass
+            await placeholder.delete()
 
             if not photo or send_text_seperately:
-                await message.reply(
-                    text,
-                    quote=True,
-                )
+                await message.reply(text, quote=True)
 
             if photo:
                 if len(photo) == 1:
