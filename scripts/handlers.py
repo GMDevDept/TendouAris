@@ -1,4 +1,5 @@
 import re
+import json
 import openai
 import random
 import logging
@@ -10,6 +11,7 @@ from pyrogram.types import (
     InlineKeyboardButton,
     Message,
     CallbackQuery,
+    ForceReply,
 )
 from pyrogram.errors import RPCError
 
@@ -52,6 +54,7 @@ async def chatid_handler(message):
 async def model_selection_handler(message):
     await message.reply(
         strings.choose_model,
+        quote=True,
         reply_markup=InlineKeyboardMarkup(
             [
                 [
@@ -103,6 +106,12 @@ async def model_selection_callback_handler(query):
                                 InlineKeyboardButton(
                                     strings.gpt35_presets.get("default"),
                                     callback_data="gpt35preset-default",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    strings.gpt35_presets.get("custom"),
+                                    callback_data="gpt35preset-custom",
                                 )
                             ],
                         ]
@@ -164,7 +173,7 @@ async def model_selection_callback_handler(query):
 
 
 # GPT-3.5 preset selection callback
-async def gpt35_preset_selection_callback_handler(query):
+async def gpt35_preset_selection_callback_handler(client, query):
     preset = query.data.replace("gpt35preset-", "")
     chatdata = util.load_chat(
         query.message.chat.id,
@@ -172,22 +181,125 @@ async def gpt35_preset_selection_callback_handler(query):
         is_group=await util.is_group(query.message.chat),
     )
 
-    if not (
-        chatdata.model["name"] == "gpt35"
-        and chatdata.model["args"].get("preset") == preset
-    ):
-        chatdata.gpt35_chatbot = None
-        if chatdata.gpt35_history:
-            chatdata.gpt35_history.clear()
-            chatdata.gpt35_history = None
+    match preset:
+        case "custom":
+            await query.message.edit(
+                strings.manage_gpt35_custom_preset,
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                strings.custom_preset_options.get("new"),
+                                callback_data="gpt35preset-custom-new",
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                strings.custom_preset_options.get("continue"),
+                                callback_data="gpt35preset-custom-continue",
+                            )
+                        ],
+                    ]
+                ),
+            )
+        case "custom-new":
+            await query.message.edit(
+                strings.custom_preset_template, reply_markup=ForceReply(selective=True)
+            )
+        case "custom-continue":
+            if not chatdata.gpt35_preset:
+                await query.message.edit(strings.custom_preset_unavailable)
+            else:
+                if chatdata.gpt35_history is not None and not (
+                    chatdata.model["name"] == "gpt35"
+                    and chatdata.model["args"].get("preset") == "custom"
+                ):
+                    chatdata.gpt35_chatbot = None
+                    chatdata.gpt35_history = None
+                    await client.send_message(
+                        chatdata.chat_id,
+                        strings.model_reset_due_to_preset_change.format("GPT-3.5"),
+                    )
 
-    chatdata.set_model({"name": "gpt35", "args": {"preset": preset}})
+                chatdata.set_model({"name": "gpt35", "args": {"preset": "custom"}})
 
-    await query.message.edit(
-        strings.model_changed
-        + strings.models.get("model-gpt35")
-        + f" ({strings.gpt35_presets.get(preset).split(' ')[0]})"
-    )
+                await query.message.edit(
+                    strings.model_changed
+                    + strings.models.get("model-gpt35")
+                    + f" ({strings.gpt35_presets.get('custom').split(' ')[0]})"
+                )
+        case _:
+            if chatdata.gpt35_history is not None and not (
+                chatdata.model["name"] == "gpt35"
+                and chatdata.model["args"].get("preset") == preset
+            ):
+                chatdata.gpt35_chatbot = None
+                chatdata.gpt35_history = None
+                await client.send_message(
+                    chatdata.chat_id,
+                    strings.model_reset_due_to_preset_change.format("GPT-3.5"),
+                )
+
+            chatdata.set_model({"name": "gpt35", "args": {"preset": preset}})
+
+            await query.message.edit(
+                strings.model_changed
+                + strings.models.get("model-gpt35")
+                + f" ({strings.gpt35_presets.get(preset).split(' ')[0]})"
+            )
+
+
+# Set custom preset
+async def custom_preset_handler(client, message):
+    chatdata = util.load_chat(message.chat.id)
+    if not chatdata:
+        await message.reply(strings.chatdata_unavailable)
+    else:
+        template_dict = None
+        try:
+            template_json = re.match(r".*?({.*}).*", message.text, re.DOTALL).group(1)
+            template_dict = json.loads(template_json)
+            assert len(template_dict) == 4, "Invalid template length"
+            assert (
+                isinstance(template_dict["prompt"], str)
+                and isinstance(template_dict["ai_prefix"], str)
+                and isinstance(template_dict["human_prefix"], str)
+                and isinstance(template_dict["unlock_required"], bool)
+            ), "Wrong value type(s)"
+        except (
+            TypeError,
+            AttributeError,
+            json.JSONDecodeError,
+            KeyError,
+            AssertionError,
+        ) as e:
+            # Handle cases where message.text is None
+            # or the regular expression pattern does not match anything
+            # or the resulting substring is not a valid JSON object
+            # or the required keys are not present/are of the wrong type
+            template_dict = None
+            await message.reply(
+                f"{strings.custom_template_parse_failed}\n\nError message: `{e}`"
+            )
+
+        if template_dict:
+            if chatdata.gpt35_history is not None:
+                chatdata.gpt35_chatbot = None
+                chatdata.gpt35_history = None
+                await client.send_message(
+                    chatdata.chat_id,
+                    strings.model_reset_due_to_preset_change.format("GPT-3.5"),
+                )
+
+            chatdata.set_gpt35_preset(template_dict)
+            chatdata.set_model({"name": "gpt35", "args": {"preset": "custom"}})
+
+            await message.reply_to_message.delete()
+            await message.reply(
+                strings.model_changed
+                + strings.models.get("model-gpt35")
+                + f" ({strings.gpt35_presets.get('custom').split(' ')[0]})"
+            )
 
 
 # Bing style selection callback
@@ -270,11 +382,13 @@ async def conversation_handler(client, message):
             if context and chatdata.last_reply != context:
                 input_text = f'Context: "{context}";\n{input_text}'
 
-        placeholder = await message.reply(
-            random.choice(strings.placeholder_before_output)
-            + (chatdata.model.get("name") == "bing" and strings.placeholer_bing or ""),
-            disable_notification=True,
-        )
+        placeholder = None
+        if chatdata.model.get("name") == "bing":
+            placeholder = await message.reply(
+                random.choice(strings.placeholder_before_output)
+                + strings.placeholer_bing,
+                disable_notification=True,
+            )
 
         try:
             model_output = await chatdata.process_message(
@@ -284,7 +398,8 @@ async def conversation_handler(client, message):
             photo = model_output.get("photo")
             send_text_seperately = model_output.get("send_text_seperately")
 
-            await placeholder.delete()
+            if placeholder is not None:
+                await placeholder.delete()
 
             if not photo or send_text_seperately:
                 await message.reply(text, quote=True)
@@ -321,8 +436,9 @@ async def reset_handler(message):
     chatdata = util.load_chat(message.chat.id)
     if chatdata:
         await chatdata.reset()
-
-    await message.reply(strings.history_cleared)
+        await message.reply(strings.history_cleared)
+    else:
+        await message.reply(strings.chatdata_unavailable)
 
 
 # Manage mode

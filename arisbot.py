@@ -61,8 +61,14 @@ async def model_selection_callback_handler(_, query):
 
 # GPT-3.5 preset selection callback
 @client.on_callback_query(filters.regex(r"^gpt35preset-"))
-async def gpt35_preset_selection_callback_handler(_, query):
-    await handlers.gpt35_preset_selection_callback_handler(query)
+async def gpt35_preset_selection_callback_handler(client, query):
+    await handlers.gpt35_preset_selection_callback_handler(client, query)
+
+
+# Set custom preset
+@client.on_message(custom_filters.custom_preset_filter)
+async def custom_preset_handler(client, message):
+    await handlers.custom_preset_handler(client, message)
 
 
 # Bing style selection callback
