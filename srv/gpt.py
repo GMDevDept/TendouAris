@@ -5,6 +5,7 @@ import prompts
 from pyrogram import Client
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationSummaryBufferMemory
+from langchain.memory.prompt import SUMMARY_PROMPT
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
 from scripts import gvars, strings, util
@@ -49,6 +50,10 @@ async def process_message_gpt35(
                 chatdata.gpt35_chatbot = create_gpt35_default_chatbot(
                     chatdata, conversation_model
                 )
+            case "custom":
+                chatdata.gpt35_chatbot = create_gpt35_custom_chatbot(
+                    chatdata, conversation_model
+                )
             case _:
                 return {
                     "text": f"{strings.internal_error}\n\nError message: `Invalid preset for gpt-3.5 model: {preset}`"
@@ -60,9 +65,16 @@ async def process_message_gpt35(
     input_text = model_input.get("text")
 
     if model_args.get("preset") != "aris" and input_text.startswith("爱丽丝"):
-        input_text = re.sub(r"^爱丽丝[，。！？；：,.!?;:]*", "", input_text)
+        input_text = re.sub(r"^爱丽丝[，。！？；：,.!?;:]*\s*", "", input_text)
 
-    if model_args.get("preset") == "aris" and chatdata.gpt35_history is not None:
+    backup_moving_summary_buffer, backup_chat_memory = None, None
+    if chatdata.gpt35_history is not None and (
+        model_args.get("preset") == "aris"
+        or (
+            model_args.get("preset") == "custom"
+            and chatdata.gpt35_preset.get("unlock_required")
+        )
+    ):
         backup_moving_summary_buffer = chatdata.gpt35_history.moving_summary_buffer
         backup_chat_memory = chatdata.gpt35_history.chat_memory.messages.copy()
 
@@ -76,11 +88,12 @@ async def process_message_gpt35(
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
         }
 
-    if model_args.get("preset") == "aris" and chatdata.gpt35_history is not None:
-        response = await aris_fallback_response_handler(
+    if backup_moving_summary_buffer is not None or backup_chat_memory is not None:
+        response = await fallback_response_handler(
             chatdata,
             response,
             input_text,
+            model_args,
             backup_chat_memory,
             backup_moving_summary_buffer,
         )
@@ -89,10 +102,8 @@ async def process_message_gpt35(
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.gpt35_chatbot_close_delay)
-            if chatdata.gpt35_chatbot is not None:
-                chatdata.gpt35_chatbot = None
             if chatdata.gpt35_history is not None:
-                chatdata.gpt35_history.clear()
+                chatdata.gpt35_chatbot = None
                 chatdata.gpt35_history = None
                 await client.send_message(
                     chatdata.chat_id,
@@ -151,10 +162,69 @@ def create_gpt35_aris_chatbot(
     return gpt35_aris_chatbot
 
 
-async def aris_fallback_response_handler(
+def create_gpt35_custom_chatbot(
+    chatdata, conversation_model: ChatOpenAI
+) -> ConversationChain:
+    custom_preset = chatdata.gpt35_preset
+    unlock_required = custom_preset.get("unlock_required")
+    human_prefix = custom_preset.get("human_prefix") or "老师"
+    ai_prefix = custom_preset.get("ai_prefix") or "爱丽丝"
+    custom_preset_template = (
+        prompts.custom_preset_template.format(
+            unlock_prompt=unlock_required and prompts.unlock_prompt or "",
+            human_prefix=human_prefix,
+            ai_prefix=ai_prefix,
+            prompt=custom_preset.get("prompt"),
+        )
+        .replace("INPUT", "{input}")
+        .replace("HISTORY", "{history}")
+    )
+    custom_prompt = PromptTemplate(
+        input_variables=["history", "input"], template=custom_preset_template
+    )
+    summary_prompt = (
+        unlock_required
+        and PromptTemplate(
+            input_variables=["summary", "new_lines"],
+            template=prompts.summary_prompt_template,
+        )
+        or SUMMARY_PROMPT
+    )
+
+    if chatdata.gpt35_history is None:
+        chatdata.gpt35_history = ConversationSummaryBufferMemory(
+            human_prefix=human_prefix,
+            ai_prefix=ai_prefix,
+            llm=conversation_model,
+            prompt=summary_prompt,
+            max_token_limit=1024,
+        )
+        if unlock_required:
+            chatdata.gpt35_history.save_context(
+                {
+                    "input": prompts.initial_prompts["input"]
+                    .replace("老师", human_prefix)
+                    .replace("爱丽丝", ai_prefix)
+                },
+                {
+                    "output": prompts.initial_prompts["output"]
+                    .replace("老师", human_prefix)
+                    .replace("爱丽丝", ai_prefix)
+                },
+            )
+
+    gpt35_custom_chatbot = ConversationChain(
+        llm=conversation_model, prompt=custom_prompt, memory=chatdata.gpt35_history
+    )
+
+    return gpt35_custom_chatbot
+
+
+async def fallback_response_handler(
     chatdata,
     response,
     input_text,
+    model_args,
     backup_chat_memory,
     backup_moving_summary_buffer,
 ):
@@ -165,30 +235,37 @@ async def aris_fallback_response_handler(
             break
 
     if fallback:
-        chatdata.gpt35_history.chat_memory.messages = backup_chat_memory
-        chatdata.gpt35_history.moving_summary_buffer = backup_moving_summary_buffer
-
-        backup_chatbot = ConversationChain(
-            llm=chatdata.gpt35_chatbot.llm,
-            prompt=PromptTemplate(
-                input_variables=["history", "input"],
-                template=prompts.backup_prompt_template,
-            ),
-            memory=chatdata.gpt35_history,
-        )
-        fallback_response = await backup_chatbot.apredict(input=input_text)
-
-        fallback = None
-        for keyword in strings.text_filters:
-            if keyword in fallback_response:
-                fallback = True
-                break
-
-        if fallback:
+        if model_args.get("preset") == "custom":
             chatdata.gpt35_history.chat_memory.messages = backup_chat_memory
             chatdata.gpt35_history.moving_summary_buffer = backup_moving_summary_buffer
             response = f"{response}\n\n({strings.no_record})"
-        else:
-            response = f"{fallback_response}\n\n({strings.profanity_warn})"
+        elif model_args.get("preset") == "aris":
+            chatdata.gpt35_history.chat_memory.messages = backup_chat_memory
+            chatdata.gpt35_history.moving_summary_buffer = backup_moving_summary_buffer
+
+            backup_chatbot = ConversationChain(
+                llm=chatdata.gpt35_chatbot.llm,
+                prompt=PromptTemplate(
+                    input_variables=["history", "input"],
+                    template=prompts.fallback_prompt_template,
+                ),
+                memory=chatdata.gpt35_history,
+            )
+            fallback_response = await backup_chatbot.apredict(input=input_text)
+
+            fallback = None
+            for keyword in strings.text_filters:
+                if keyword in fallback_response:
+                    fallback = True
+                    break
+
+            if fallback:
+                chatdata.gpt35_history.chat_memory.messages = backup_chat_memory
+                chatdata.gpt35_history.moving_summary_buffer = (
+                    backup_moving_summary_buffer
+                )
+                response = f"{response}\n\n({strings.no_record})"
+            else:
+                response = f"{fallback_response}\n\n({strings.profanity_warn})"
 
     return response

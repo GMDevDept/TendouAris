@@ -25,6 +25,7 @@ class ChatData:
         self.is_group: Optional[bool] = None
         self.model: dict = model  # {"name": str, "args": dict}
         self.openai_api_key: Optional[str] = kwargs.get("openai_api_key")
+        self.gpt35_preset: Optional[dict] = kwargs.get("gpt35_preset")
         self.gpt35_chatbot: Optional[ConversationChain] = None
         self.gpt35_history: Optional[ConversationSummaryBufferMemory] = None
         self.gpt35_clear_task: Optional[Task] = None
@@ -45,6 +46,7 @@ class ChatData:
             "is_group": self.is_group,
             "model": self.model,
             "openai_api_key": self.openai_api_key,
+            "gpt35_preset": self.gpt35_preset,
         }
 
     def save(self):
@@ -62,12 +64,16 @@ class ChatData:
         gvars.all_chats.update({data["chat_id"]: chatdata})
         return chatdata
 
+    def set_model(self, model: dict):
+        self.model = model
+        self.save()
+
     def set_api_key(self, api_key: str):
         self.openai_api_key = api_key
         self.save()
 
-    def set_model(self, model: dict):
-        self.model = model
+    def set_gpt35_preset(self, preset: dict):
+        self.gpt35_preset = preset
         self.save()
 
     async def process_message(
@@ -100,8 +106,6 @@ class ChatData:
         return model_output
 
     async def reset(self):
-        if self.gpt35_history:
-            self.gpt35_history.clear()
         if self.bing_chatbot:
             await self.bing_chatbot.close()
         self.gpt35_chatbot = None
