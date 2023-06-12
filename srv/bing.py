@@ -66,9 +66,9 @@ async def process_message_bing(
     finally:
         chatdata.bing_blocked = None
 
-    output_text = response["item"]["messages"][1]["text"]
-    sourceAttributions = response["item"]["messages"][1]["sourceAttributions"]
-    if len(sourceAttributions) > 0:
+    output_text = response["item"]["messages"][1].get("text")
+    sourceAttributions = response["item"]["messages"][1].get("sourceAttributions")
+    if sourceAttributions and len(sourceAttributions) > 0:
         output_text = re.sub(r"\[\^(\d+)\^\]", r"[\1]", output_text)
         reference_links = "\n".join(
             [
