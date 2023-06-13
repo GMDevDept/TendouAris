@@ -1,4 +1,5 @@
 import json
+import asyncio
 from pyrogram import Client
 from typing import Optional
 from asyncio import Task
@@ -6,7 +7,7 @@ from EdgeGPT import Chatbot as BingChatbot
 from Bard import AsyncChatbot as BardChatbot
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationSummaryBufferMemory
-from scripts import gvars
+from scripts import gvars, strings
 from srv.gpt import process_message_gpt35, process_message_gpt4
 from srv.bing import process_message_bing
 from srv.bard import process_message_bard
@@ -145,7 +146,10 @@ class GroupChatData(ChatData):
     def __init__(self, chat_id: int, **kwargs):
         super().__init__(chat_id, **kwargs)
         self.is_group = True
-        self.floodctrl_enable: Optional[bool] = kwargs.get("floodctrl_enable")
+        self.flood_control_enabled: Optional[bool] = (
+            kwargs.get("flood_control_enabled") is not False  # default to be True
+        )
+        self.flood_control_record: Optional[dict] = None
 
         GroupChatData.total_chats += 1
 
@@ -154,7 +158,51 @@ class GroupChatData(ChatData):
         data = super().persistent_data
         data.update(
             {
-                "floodctrl_enable": self.floodctrl_enable,
+                "flood_control_enabled": self.flood_control_enabled,
             }
         )
         return data
+
+    def set_flood_control(self, enable: bool):
+        self.flood_control_enabled = enable
+        self.save()
+
+    async def process_message(
+        self, client: Client, model_input: dict
+    ) -> Optional[dict]:
+        if not self.flood_control_enabled:
+            return await super().process_message(client, model_input)
+        else:
+            if not self.flood_control_record:
+                self.flood_control_record = {}
+
+            sender_id = model_input.get("sender_id")
+            if (
+                sender_id in self.flood_control_record
+                and self.flood_control_record[sender_id]["count"]
+                >= gvars.flood_control_count
+            ):
+                return {"text": strings.flood_control_activated}
+
+            model_output = await super().process_message(client, model_input)
+
+            async def clear_flood_control_counter():
+                await asyncio.sleep(gvars.flood_control_interval)
+                if self.flood_control_record and sender_id in self.flood_control_record:
+                    self.flood_control_record[sender_id]["count"] = 0
+                    self.flood_control_record[sender_id]["clear_task"] = None
+
+            if sender_id not in self.flood_control_record:
+                self.flood_control_record[sender_id] = {
+                    "count": 0,
+                    "clear_task": None,
+                }
+
+            self.flood_control_record[sender_id]["count"] += 1
+            if self.flood_control_record[sender_id]["clear_task"] is not None:
+                self.flood_control_record[sender_id]["clear_task"].cancel()
+            self.flood_control_record[sender_id]["clear_task"] = asyncio.create_task(
+                clear_flood_control_counter()
+            )
+
+            return model_output
