@@ -5,7 +5,6 @@ import prompts
 from pyrogram import Client
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationSummaryBufferMemory
-from langchain.memory.prompt import SUMMARY_PROMPT
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
 from scripts import gvars, strings, util
@@ -51,9 +50,14 @@ async def process_message_gpt35(
                     chatdata, conversation_model
                 )
             case "custom":
-                chatdata.gpt35_chatbot = create_gpt35_custom_chatbot(
-                    chatdata, conversation_model
-                )
+                try:
+                    chatdata.gpt35_chatbot = create_gpt35_custom_chatbot(
+                        chatdata, conversation_model
+                    )
+                except (TypeError, AttributeError, LookupError):
+                    return {
+                        "text": f"{strings.internal_error}\n\nError message: `{strings.custom_preset_outdated}`"
+                    }
             case _:
                 return {
                     "text": f"{strings.internal_error}\n\nError message: `Invalid preset for gpt-3.5 model: {preset}`"
@@ -166,15 +170,17 @@ def create_gpt35_custom_chatbot(
     chatdata, conversation_model: ChatOpenAI
 ) -> ConversationChain:
     custom_preset = chatdata.gpt35_preset
-    unlock_required = custom_preset.get("unlock_required")
-    human_prefix = custom_preset.get("human_prefix") or "老师"
-    ai_prefix = custom_preset.get("ai_prefix") or "爱丽丝"
+    unlock_required = custom_preset["unlock_required"]
+    ai_prefix = custom_preset["ai_prefix"] or "爱丽丝"
+    ai_self = custom_preset["ai_self"] or ai_prefix
+    human_prefix = custom_preset["human_prefix"] or "老师"
     custom_preset_template = (
         prompts.custom_preset_template.format(
             unlock_prompt=unlock_required and prompts.unlock_prompt or "",
-            human_prefix=human_prefix,
             ai_prefix=ai_prefix,
-            prompt=custom_preset.get("prompt"),
+            ai_self=ai_self,
+            human_prefix=human_prefix,
+            prompt=custom_preset["prompt"],
         )
         .replace("INPUT", "{input}")
         .replace("HISTORY", "{history}")
@@ -182,13 +188,9 @@ def create_gpt35_custom_chatbot(
     custom_prompt = PromptTemplate(
         input_variables=["history", "input"], template=custom_preset_template
     )
-    summary_prompt = (
-        unlock_required
-        and PromptTemplate(
-            input_variables=["summary", "new_lines"],
-            template=prompts.summary_prompt_template,
-        )
-        or SUMMARY_PROMPT
+    summary_prompt = PromptTemplate(
+        input_variables=["summary", "new_lines"],
+        template=prompts.summary_prompt_template,
     )
 
     if chatdata.gpt35_history is None:
@@ -199,18 +201,10 @@ def create_gpt35_custom_chatbot(
             prompt=summary_prompt,
             max_token_limit=1024,
         )
-        if unlock_required:
+        if custom_preset["sample_output"]:
             chatdata.gpt35_history.save_context(
-                {
-                    "input": prompts.initial_prompts["input"]
-                    .replace("老师", human_prefix)
-                    .replace("爱丽丝", ai_prefix)
-                },
-                {
-                    "output": prompts.initial_prompts["output"]
-                    .replace("老师", human_prefix)
-                    .replace("爱丽丝", ai_prefix)
-                },
+                {"input": custom_preset["sample_input"]},
+                {"output": custom_preset["sample_output"]},
             )
 
     gpt35_custom_chatbot = ConversationChain(

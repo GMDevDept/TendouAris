@@ -259,11 +259,14 @@ async def custom_preset_handler(client, message):
         try:
             template_json = re.match(r".*?({.*}).*", message.text, re.DOTALL).group(1)
             template_dict = json.loads(template_json)
-            assert len(template_dict) == 4, "Invalid template length"
+            assert len(template_dict) == 7, "Invalid template length"
             assert (
                 isinstance(template_dict["prompt"], str)
                 and isinstance(template_dict["ai_prefix"], str)
+                and isinstance(template_dict["ai_self"], str)
                 and isinstance(template_dict["human_prefix"], str)
+                and isinstance(template_dict["sample_input"], str)
+                and isinstance(template_dict["sample_output"], str)
                 and isinstance(template_dict["unlock_required"], bool)
             ), "Wrong value type(s)"
         except (
