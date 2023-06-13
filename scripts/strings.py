@@ -65,6 +65,8 @@ api_key_common_errors = """
 5. `The server had an error processing your request...`: 同上, 再试一次
 """
 
+api_key_not_support_gpt4 = "当前API key不支持GPT4模型, 这与你是否开了ChatGPT的premium无关, 需[加入waitlist](https://openai.com/waitlist/gpt-4-api)并等待通过"
+
 # flood_control_activated = "爱丽丝对话机能冷却中, 机娘也是需要休息的! 🥺\n\n(您在过去{}秒内的token用量 `[{}]` 已超过群内防刷屏阈值 `[{}]`, 请稍候再试或私聊爱丽丝提供自己的API密钥)"
 
 history_cleared = "好的老师, 爱丽丝的记忆清理程序已启动。"
@@ -112,6 +114,7 @@ text_filters = [
 
 models = {
     "model-gpt35": "GPT3.5 Turbo",
+    "model-gpt4": "GPT4",
     "model-bing": "New Bing",
     "model-bard": "Google Bard",
 }
@@ -119,9 +122,10 @@ models = {
 choose_model = """
 请选择希望爱丽丝使用的语言模型:
 \n注意事项:
-1. 目前有且仅有**GPT3.5 Turbo**模型下的**爱丽丝预设**支持**角色扮演**与**内容解锁**
-2. 使用GPT模型需要添加自己的OpenAI API key, 请使用 /apikey 命令设置
-3. Bing和Bard模型目前暂时对所有人开放, 会视服务器流量压力限制使用, 有需要请[搭建自己的机器人](https://github.com/ToffeeNeko/TendouAris)
+1. Bing和Bard模型目前暂时对所有人开放, 会视服务器流量压力限制使用, 有需要请[搭建自己的机器人](https://github.com/ToffeeNeko/TendouAris)
+2. Bing和Bard模型**不支持**角色扮演与内容解锁
+3. 使用GPT模型需要添加自己的OpenAI API key, 请使用 /apikey 命令设置
+4. 使用GPT4模型需要你自己的API key支持GPT4, 与是否开了ChatGPT的premium无关, 需[加入waitlist](https://openai.com/waitlist/gpt-4-api)并等待通过
 """
 
 model_choose_preset = "请选择模型预设:"
@@ -152,13 +156,20 @@ placeholder_before_output = [
 
 placeholer_bing = "\n\n(New Bing模型生成回答速度较慢, 视搜索量可能会长达一分钟以上)"
 
+placeholer_gpt4 = "\n\n(GPT4模型生成回答速度较慢, 请耐心等待)"
+
 gpt35_presets = {
     "aris": "爱丽丝 (默认)",
     "default": "官方原版 (无角色设定)",
     "custom": "自定义专属预设",
 }
 
-manage_gpt35_custom_preset = "管理自定义预设"
+gpt4_presets = {
+    "default": "官方原版 (无角色设定)",
+    "custom": "自定义专属预设",
+}
+
+manage_custom_preset = "管理自定义预设"
 
 custom_preset_options = {
     "new": "创建新预设 (已有自定义预设将被覆盖)",
@@ -169,8 +180,11 @@ custom_preset_unavailable = "您还没有创建过自定义预设"
 
 custom_preset_outdated = "Custom preset invalid, probably caused by template update. Please try creating a new preset"
 
+gpt35_preset_placeholder = "[GPT3.5 Model Custom Preset]"
+
+gpt4_preset_placeholder = "[GPT4 Model Custom Preset]"
+
 custom_preset_template = """
-[GPT3.5 Model Custom Preset]
 请按照以下格式输入自定义预设(复制下方**包括大括号在内**的模版内容, 编辑完成后**回复**这条消息, 注意只编辑后半段引号中的部分):
 \n模版:
 ```
@@ -205,6 +219,7 @@ manage_mode_start = "请选择需要设置的选项:"
 manage_mode_options = {
     "scope-global": "设置bot允许使用范围(全局, 会覆盖其他使用范围设置)",
     "scope-gpt35": "设置GPT3.5 Turbo模型允许使用范围",
+    "scope-gpt4": "设置GPT4模型允许使用范围",
     "scope-bing": "设置New Bing模型允许使用范围",
     "scope-bard": "设置Google Bard模型允许使用范围",
 }

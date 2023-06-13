@@ -7,7 +7,7 @@ from Bard import AsyncChatbot as BardChatbot
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationSummaryBufferMemory
 from scripts import gvars
-from srv.gpt import process_message_gpt35
+from srv.gpt import process_message_gpt35, process_message_gpt4
 from srv.bing import process_message_bing
 from srv.bard import process_message_bard
 
@@ -29,6 +29,10 @@ class ChatData:
         self.gpt35_chatbot: Optional[ConversationChain] = None
         self.gpt35_history: Optional[ConversationSummaryBufferMemory] = None
         self.gpt35_clear_task: Optional[Task] = None
+        self.gpt4_preset: Optional[dict] = kwargs.get("gpt4_preset")
+        self.gpt4_chatbot: Optional[ConversationChain] = None
+        self.gpt4_history: Optional[ConversationSummaryBufferMemory] = None
+        self.gpt4_clear_task: Optional[Task] = None
         self.bing_chatbot: Optional[BingChatbot] = None
         self.bing_blocked: Optional[bool] = None
         self.bing_clear_task: Optional[Task] = None
@@ -47,6 +51,7 @@ class ChatData:
             "model": self.model,
             "openai_api_key": self.openai_api_key,
             "gpt35_preset": self.gpt35_preset,
+            "gpt4_preset": self.gpt4_preset,
         }
 
     def save(self):
@@ -76,6 +81,10 @@ class ChatData:
         self.gpt35_preset = preset
         self.save()
 
+    def set_gpt4_preset(self, preset: dict):
+        self.gpt4_preset = preset
+        self.save()
+
     async def process_message(
         self, client: Client, model_input: dict
     ) -> Optional[dict]:
@@ -84,6 +93,13 @@ class ChatData:
         match model_name:
             case "gpt35":
                 model_output = await process_message_gpt35(
+                    client=client,
+                    chatdata=self,
+                    model_args=model_args,
+                    model_input=model_input,
+                )
+            case "gpt4":
+                model_output = await process_message_gpt4(
                     client=client,
                     chatdata=self,
                     model_args=model_args,
@@ -111,6 +127,9 @@ class ChatData:
         self.gpt35_chatbot = None
         self.gpt35_history = None
         self.gpt35_clear_task = None
+        self.gpt4_chatbot = None
+        self.gpt4_history = None
+        self.gpt4_clear_task = None
         self.bing_chatbot = None
         self.bing_blocked = None
         self.bing_clear_task = None
