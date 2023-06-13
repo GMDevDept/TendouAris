@@ -526,80 +526,6 @@ async def api_key_handler(message):
         await message.reply(strings.api_key_invalid)
 
 
-# Conversation
-async def conversation_handler(client, message):
-    chatdata = util.load_chat(message.chat.id)
-    if not chatdata:
-        await message.reply(f"{strings.no_auth}\n\n{strings.api_key_required}")
-    else:
-        raw_text = await util.get_raw_text(message)
-        input_text = re.sub(r"^/\S*\s*", "", raw_text)
-        sender_id = (
-            message.from_user
-            and message.from_user.id
-            or message.sender_chat
-            and message.sender_chat.id
-        )
-
-        if message.reply_to_message:
-            context = await util.get_raw_text(message.reply_to_message)
-            if context and chatdata.last_reply != context:
-                input_text = f'Context: "{context}";\n{input_text}'
-
-        placeholder = None
-        if chatdata.model.get("name") == "bing" or chatdata.model.get("name") == "gpt4":
-            placeholder = await message.reply(
-                random.choice(strings.placeholder_before_output)
-                + (
-                    chatdata.model.get("name") == "bing"
-                    and strings.placeholer_bing
-                    or chatdata.model.get("name") == "gpt4"
-                    and strings.placeholer_gpt4
-                ),
-                disable_notification=True,
-            )
-
-        try:
-            model_output = await chatdata.process_message(
-                client=client, model_input={"sender_id": sender_id, "text": input_text}
-            )
-            text = model_output.get("text")
-            photo = model_output.get("photo")
-            send_text_seperately = model_output.get("send_text_seperately")
-
-            if placeholder is not None:
-                await placeholder.delete()
-
-            if not photo or send_text_seperately:
-                await message.reply(text, quote=True)
-
-            if photo:
-                if len(photo) == 1:
-                    await message.reply_photo(photo[0], quote=True)
-                else:
-                    # media group length limit: 2-10
-                    for i in range(0, len(photo), 10):
-                        photo_group = photo[i : i + 10]
-                        if len(photo_group) == 1 and i > 0:
-                            photo_group.insert(0, photo[i - 1])
-                        await message.reply_media_group(photo_group, quote=True)
-
-            chatdata.last_reply = text
-        except RPCError as e:
-            error_message = f"{e}: " + "".join(traceback.format_tb(e.__traceback__))
-            logging.error(error_message)
-            await message.reply(
-                f"{strings.rpc_error}\n\nError message:\n`{error_message}`"
-            )
-        except Exception as e:
-            error_message = f"{e}: " + "".join(traceback.format_tb(e.__traceback__))
-            logging.error(error_message)
-            await message.reply(
-                f"{strings.internal_error}\n\nError message:\n`{error_message}`\n\n{strings.feedback}",
-                quote=False,
-            )
-
-
 # Reset conversation history
 async def reset_handler(message):
     chatdata = util.load_chat(message.chat.id)
@@ -693,3 +619,77 @@ async def manage_mode_callback_handler(client, query):
         await query.message.edit(
             f"Scope of access to `{model}` has been set to `{scope}`"
         )
+
+
+# Conversation
+async def conversation_handler(client, message):
+    chatdata = util.load_chat(message.chat.id)
+    if not chatdata:
+        await message.reply(f"{strings.no_auth}\n\n{strings.api_key_required}")
+    else:
+        raw_text = await util.get_raw_text(message)
+        input_text = re.sub(r"^/\S*\s*", "", raw_text)
+        sender_id = (
+            message.from_user
+            and message.from_user.id
+            or message.sender_chat
+            and message.sender_chat.id
+        )
+
+        if message.reply_to_message:
+            context = await util.get_raw_text(message.reply_to_message)
+            if context and chatdata.last_reply != context:
+                input_text = f'Context: "{context}";\n{input_text}'
+
+        placeholder = None
+        if chatdata.model.get("name") == "bing" or chatdata.model.get("name") == "gpt4":
+            placeholder = await message.reply(
+                random.choice(strings.placeholder_before_output)
+                + (
+                    chatdata.model.get("name") == "bing"
+                    and strings.placeholer_bing
+                    or chatdata.model.get("name") == "gpt4"
+                    and strings.placeholer_gpt4
+                ),
+                disable_notification=True,
+            )
+
+        try:
+            model_output = await chatdata.process_message(
+                client=client, model_input={"sender_id": sender_id, "text": input_text}
+            )
+            text = model_output.get("text")
+            photo = model_output.get("photo")
+            send_text_seperately = model_output.get("send_text_seperately")
+
+            if placeholder is not None:
+                await placeholder.delete()
+
+            if not photo or send_text_seperately:
+                await message.reply(text, quote=True)
+
+            if photo:
+                if len(photo) == 1:
+                    await message.reply_photo(photo[0], quote=True)
+                else:
+                    # media group length limit: 2-10
+                    for i in range(0, len(photo), 10):
+                        photo_group = photo[i : i + 10]
+                        if len(photo_group) == 1 and i > 0:
+                            photo_group.insert(0, photo[i - 1])
+                        await message.reply_media_group(photo_group, quote=True)
+
+            chatdata.last_reply = text
+        except RPCError as e:
+            error_message = f"{e}: " + "".join(traceback.format_tb(e.__traceback__))
+            logging.error(error_message)
+            await message.reply(
+                f"{strings.rpc_error}\n\nError message:\n`{error_message}`"
+            )
+        except Exception as e:
+            error_message = f"{e}: " + "".join(traceback.format_tb(e.__traceback__))
+            logging.error(error_message)
+            await message.reply(
+                f"{strings.internal_error}\n\nError message:\n`{error_message}`\n\n{strings.feedback}",
+                quote=False,
+            )

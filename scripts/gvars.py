@@ -18,6 +18,8 @@ gpt35_chatbot_close_delay = int(os.getenv("GPT35_CHATBOT_CLOSE_DELAY_IN_GROUP"))
 gpt4_chatbot_close_delay = int(os.getenv("GPT4_CHATBOT_CLOSE_DELAY"))
 bing_chatbot_close_delay = int(os.getenv("BING_CHATBOT_CLOSE_DELAY"))
 bard_chatbot_close_delay = int(os.getenv("BARD_CHATBOT_CLOSE_DELAY"))
+flood_control_count = int(os.getenv("FLOOD_CONTROL_COUNT"))
+flood_control_interval = int(os.getenv("FLOOD_CONTROL_INTERVAL"))
 
 # Redis
 db_chatdata = redis.Redis(host="arisdata", port=6379, db=0, decode_responses=True)
