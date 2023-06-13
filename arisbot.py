@@ -65,6 +65,12 @@ async def gpt35_preset_selection_callback_handler(client, query):
     await handlers.gpt35_preset_selection_callback_handler(client, query)
 
 
+# GPT-4 preset selection callback
+@client.on_callback_query(filters.regex(r"^gpt4preset-"))
+async def gpt4_preset_selection_callback_handler(client, query):
+    await handlers.gpt4_preset_selection_callback_handler(client, query)
+
+
 # Set custom preset
 @client.on_message(custom_filters.custom_preset_filter)
 async def custom_preset_handler(client, message):
@@ -89,20 +95,6 @@ async def api_key_handler(_, message):
     await handlers.api_key_handler(message)
 
 
-# Conversation
-@client.on_message(
-    ~filters.forwarded
-    & (
-        filters.command("aris")
-        | filters.regex(r"^爱丽丝")
-        | (filters.private & ~filters.regex(r"^/"))
-        | (filters.group & custom_filters.group_conv_trigger)
-    )
-)
-async def conversation_handler(client, message):
-    await handlers.conversation_handler(client, message)
-
-
 # Reset conversation history
 @client.on_message(filters.command("reset"))
 async def reset_handler(_, message):
@@ -119,6 +111,20 @@ async def manage_mode_handler(_, message):
 @client.on_callback_query(filters.regex(r"^manage-") & filters.user(gvars.manager))
 async def manage_mode_callback_handler(client, query):
     await handlers.manage_mode_callback_handler(client, query)
+
+
+# Conversation
+@client.on_message(
+    ~filters.forwarded
+    & (
+        filters.command("aris")
+        | filters.regex(r"^爱丽丝")
+        | (filters.private & ~filters.regex(r"^/"))
+        | (filters.group & ~filters.regex(r"^/") & custom_filters.group_conv_trigger)
+    )
+)
+async def conversation_handler(client, message):
+    await handlers.conversation_handler(client, message)
 
 
 async def main():

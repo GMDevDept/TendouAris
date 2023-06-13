@@ -64,6 +64,11 @@ async def model_selection_handler(message):
                 ],
                 [
                     InlineKeyboardButton(
+                        strings.models.get("model-gpt4"), callback_data="model-gpt4"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
                         strings.models.get("model-bing"), callback_data="model-bing"
                     )
                 ],
@@ -117,6 +122,57 @@ async def model_selection_callback_handler(query):
                         ]
                     ),
                 )
+            else:
+                await query.message.edit(
+                    f"{strings.no_auth}\n\n{strings.api_key_required}"
+                )
+        elif modelname == "gpt4":
+            chatdata = util.load_chat(query.message.chat.id)
+            if chatdata and (
+                chatdata.openai_api_key or chatdata.chat_id in gvars.manager
+            ):
+                try:
+                    await openai.ChatCompletion.acreate(
+                        api_key=chatdata.openai_api_key
+                        or chatdata.chat_id in gvars.manager
+                        and gvars.openai_api_key
+                        or "ERROR",  # must be true
+                        model="gpt-4",
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": "Test message, please reply '1'",
+                            }
+                        ],
+                    )
+
+                    await query.message.edit(
+                        strings.model_choose_preset,
+                        reply_markup=InlineKeyboardMarkup(
+                            [
+                                [
+                                    InlineKeyboardButton(
+                                        strings.gpt4_presets.get("default"),
+                                        callback_data="gpt4preset-default",
+                                    )
+                                ],
+                                [
+                                    InlineKeyboardButton(
+                                        strings.gpt4_presets.get("custom"),
+                                        callback_data="gpt4preset-custom",
+                                    )
+                                ],
+                            ]
+                        ),
+                    )
+                except openai.error.InvalidRequestError as e:
+                    await query.message.reply(
+                        f"{strings.api_key_not_support_gpt4}\n\nError message: `{e}`"
+                    )
+                except openai.error.OpenAIError as e:
+                    await query.message.reply(
+                        f"{strings.api_key_invalid}\n\nError message: `{e}`\n\n{strings.api_key_common_errors}"
+                    )
             else:
                 await query.message.edit(
                     f"{strings.no_auth}\n\n{strings.api_key_required}"
@@ -184,7 +240,7 @@ async def gpt35_preset_selection_callback_handler(client, query):
     match preset:
         case "custom":
             await query.message.edit(
-                strings.manage_gpt35_custom_preset,
+                strings.manage_custom_preset,
                 reply_markup=InlineKeyboardMarkup(
                     [
                         [
@@ -204,7 +260,8 @@ async def gpt35_preset_selection_callback_handler(client, query):
             )
         case "custom-new":
             await query.message.edit(
-                strings.custom_preset_template, reply_markup=ForceReply(selective=True)
+                strings.gpt35_preset_placeholder + strings.custom_preset_template,
+                reply_markup=ForceReply(selective=True),
             )
         case "custom-continue":
             if not chatdata.gpt35_preset:
@@ -218,7 +275,7 @@ async def gpt35_preset_selection_callback_handler(client, query):
                     chatdata.gpt35_history = None
                     await client.send_message(
                         chatdata.chat_id,
-                        strings.model_reset_due_to_preset_change.format("GPT-3.5"),
+                        strings.model_reset_due_to_preset_change.format("GPT3.5"),
                     )
 
                 chatdata.set_model({"name": "gpt35", "args": {"preset": "custom"}})
@@ -237,7 +294,7 @@ async def gpt35_preset_selection_callback_handler(client, query):
                 chatdata.gpt35_history = None
                 await client.send_message(
                     chatdata.chat_id,
-                    strings.model_reset_due_to_preset_change.format("GPT-3.5"),
+                    strings.model_reset_due_to_preset_change.format("GPT3.5"),
                 )
 
             chatdata.set_model({"name": "gpt35", "args": {"preset": preset}})
@@ -246,6 +303,84 @@ async def gpt35_preset_selection_callback_handler(client, query):
                 strings.model_changed
                 + strings.models.get("model-gpt35")
                 + f" ({strings.gpt35_presets.get(preset).split(' ')[0]})"
+            )
+
+
+# GPT-4 preset selection callback
+async def gpt4_preset_selection_callback_handler(client, query):
+    preset = query.data.replace("gpt4preset-", "")
+    chatdata = util.load_chat(
+        query.message.chat.id,
+        create_new=True,
+        is_group=await util.is_group(query.message.chat),
+    )
+
+    match preset:
+        case "custom":
+            await query.message.edit(
+                strings.manage_custom_preset,
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                strings.custom_preset_options.get("new"),
+                                callback_data="gpt4preset-custom-new",
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                strings.custom_preset_options.get("continue"),
+                                callback_data="gpt4preset-custom-continue",
+                            )
+                        ],
+                    ]
+                ),
+            )
+        case "custom-new":
+            await query.message.edit(
+                strings.gpt4_preset_placeholder + strings.custom_preset_template,
+                reply_markup=ForceReply(selective=True),
+            )
+        case "custom-continue":
+            if not chatdata.gpt4_preset:
+                await query.message.edit(strings.custom_preset_unavailable)
+            else:
+                if chatdata.gpt4_history is not None and not (
+                    chatdata.model["name"] == "gpt4"
+                    and chatdata.model["args"].get("preset") == "custom"
+                ):
+                    chatdata.gpt4_chatbot = None
+                    chatdata.gpt4_history = None
+                    await client.send_message(
+                        chatdata.chat_id,
+                        strings.model_reset_due_to_preset_change.format("GPT-4"),
+                    )
+
+                chatdata.set_model({"name": "gpt4", "args": {"preset": "custom"}})
+
+                await query.message.edit(
+                    strings.model_changed
+                    + strings.models.get("model-gpt4")
+                    + f" ({strings.gpt4_presets.get('custom').split(' ')[0]})"
+                )
+        case _:
+            if chatdata.gpt4_history is not None and not (
+                chatdata.model["name"] == "gpt4"
+                and chatdata.model["args"].get("preset") == preset
+            ):
+                chatdata.gpt4_chatbot = None
+                chatdata.gpt4_history = None
+                await client.send_message(
+                    chatdata.chat_id,
+                    strings.model_reset_due_to_preset_change.format("GPT-4"),
+                )
+
+            chatdata.set_model({"name": "gpt4", "args": {"preset": preset}})
+
+            await query.message.edit(
+                strings.model_changed
+                + strings.models.get("model-gpt4")
+                + f" ({strings.gpt4_presets.get(preset).split(' ')[0]})"
             )
 
 
@@ -286,23 +421,49 @@ async def custom_preset_handler(client, message):
             )
 
         if template_dict:
-            if chatdata.gpt35_history is not None:
-                chatdata.gpt35_chatbot = None
-                chatdata.gpt35_history = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_preset_change.format("GPT-3.5"),
+            # Already validated in filters.custom_preset_filter
+            model_name = re.match(
+                r"^\s*\[(\S*)\sModel Custom Preset\]", message.reply_to_message.text
+            ).group(1)
+
+            if model_name == "GPT3.5":
+                if chatdata.gpt35_history is not None:
+                    chatdata.gpt35_chatbot = None
+                    chatdata.gpt35_history = None
+                    await client.send_message(
+                        chatdata.chat_id,
+                        strings.model_reset_due_to_preset_change.format("GPT3.5"),
+                    )
+
+                chatdata.set_gpt35_preset(template_dict)
+                chatdata.set_model({"name": "gpt35", "args": {"preset": "custom"}})
+
+                await message.reply_to_message.delete()
+                await message.reply(
+                    strings.model_changed
+                    + strings.models.get("model-gpt35")
+                    + f" ({strings.gpt35_presets.get('custom').split(' ')[0]})"
                 )
+            elif model_name == "GPT4":
+                if chatdata.gpt4_history is not None:
+                    chatdata.gpt4_chatbot = None
+                    chatdata.gpt4_history = None
+                    await client.send_message(
+                        chatdata.chat_id,
+                        strings.model_reset_due_to_preset_change.format("GPT4"),
+                    )
 
-            chatdata.set_gpt35_preset(template_dict)
-            chatdata.set_model({"name": "gpt35", "args": {"preset": "custom"}})
+                chatdata.set_gpt4_preset(template_dict)
+                chatdata.set_model({"name": "gpt4", "args": {"preset": "custom"}})
 
-            await message.reply_to_message.delete()
-            await message.reply(
-                strings.model_changed
-                + strings.models.get("model-gpt35")
-                + f" ({strings.gpt35_presets.get('custom').split(' ')[0]})"
-            )
+                await message.reply_to_message.delete()
+                await message.reply(
+                    strings.model_changed
+                    + strings.models.get("model-gpt4")
+                    + f" ({strings.gpt4_presets.get('custom').split(' ')[0]})"
+                )
+            else:
+                raise ValueError(f"Invalid model name: {model_name}")
 
 
 # Bing style selection callback
@@ -386,10 +547,15 @@ async def conversation_handler(client, message):
                 input_text = f'Context: "{context}";\n{input_text}'
 
         placeholder = None
-        if chatdata.model.get("name") == "bing":
+        if chatdata.model.get("name") == "bing" or chatdata.model.get("name") == "gpt4":
             placeholder = await message.reply(
                 random.choice(strings.placeholder_before_output)
-                + strings.placeholer_bing,
+                + (
+                    chatdata.model.get("name") == "bing"
+                    and strings.placeholer_bing
+                    or chatdata.model.get("name") == "gpt4"
+                    and strings.placeholer_gpt4
+                ),
                 disable_notification=True,
             )
 
@@ -464,6 +630,12 @@ async def manage_mode_handler(message):
                 ],
                 [
                     InlineKeyboardButton(
+                        strings.manage_mode_options.get("scope-gpt4"),
+                        callback_data="manage-scope-gpt4",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
                         strings.manage_mode_options.get("scope-bing"),
                         callback_data="manage-scope-bing",
                     )
@@ -481,7 +653,7 @@ async def manage_mode_handler(message):
 
 # Manage mode callback
 async def manage_mode_callback_handler(client, query):
-    if re.match(r"^manage-scope-(global|gpt35|bing|bard)$", query.data):
+    if re.match(r"^manage-scope-(global|gpt35|gpt4|bing|bard)$", query.data):
         await query.message.edit(
             strings.manage_mode_choose_scope,
             reply_markup=InlineKeyboardMarkup(
@@ -508,10 +680,11 @@ async def manage_mode_callback_handler(client, query):
             ),
         )
     elif re.match(
-        r"^manage-scope-(global|gpt35|bing|bard)-(all|whitelist|manager)$", query.data
+        r"^manage-scope-(global|gpt35|gpt4|bing|bard)-(all|whitelist|manager)$",
+        query.data,
     ):
         match = re.match(
-            r"^manage-scope-(global|gpt35|bing|bard)-(all|whitelist|manager)$",
+            r"^manage-scope-(global|gpt35|gpt4|bing|bard)-(all|whitelist|manager)$",
             query.data,
         )
         model = match.group(1)
