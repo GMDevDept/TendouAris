@@ -167,6 +167,8 @@ custom_preset_options = {
 
 custom_preset_unavailable = "您还没有创建过自定义预设"
 
+custom_preset_outdated = "Custom preset invalid, probably caused by template update. Please try creating a new preset"
+
 custom_preset_template = """
 [GPT3.5 Model Custom Preset]
 请按照以下格式输入自定义预设(复制下方**包括大括号在内**的模版内容, 编辑完成后**回复**这条消息, 注意只编辑后半段引号中的部分):
@@ -175,15 +177,20 @@ custom_preset_template = """
 {
     "prompt": "你叫爱丽丝, 就读于千年科技学园, 我是你的老师",
     "ai_prefix": "爱丽丝",
+    "ai_self": "",
     "human_prefix": "老师",
+    "sample_input": "你好爱丽丝",
+    "sample_output": "老师好, 爱丽丝很高兴见到老师(露出微笑)",
     "unlock_required": false
 }
 ```
 \n注释:
-1. prompt: 全部系统设定, 角色人设尽量详细完整, 注意文字中不能有英文引号, 全文长度不能超过Telegram单条消息长度上限
+1. prompt: 全部系统设定, 角色人设尽量详细完整, 注意**文字中不能有英文引号**, 全文长度不能超过Telegram单条消息长度上限
 2. ai_prefix: (选填) 自定义AI的名字, 引号必须保留, 留空默认爱丽丝
-3. human_prefix: (选填) AI怎么称呼你, 引号必须保留, 留空默认老师
-4. unlock_required: 只能放true或者false, 不带引号, 如果设为true, 加载你的系统设定时会额外加一段prompt尝试解锁OpenAI的内容限制, 可能会破坏你的人设, 且不保证有效; 如果没有特殊需要或者你的prompt自带解锁功能的话建议把此选项设为false
+3. ai_self: (选填) AI怎么称呼自己, 如在下, 妾身, 爱丽丝, 本超天才病弱美少女黑客~~, 老胡~~等, 建议搭配`sample_output`使用, 引号必须保留, 留空默认与`ai_prefix`相同
+4. human_prefix: (选填) AI怎么称呼你, 引号必须保留, 留空默认老师
+5. sample_input, sample_output: (选填) 对话风格示范, 用于引导AI使用特定的语气、格式、口癖等, 引号必须保留, 留空则不会进行引导
+6. unlock_required: 只能放true或者false, 不带引号, 如果设为true, 加载你的系统设定时会额外加一段prompt尝试解锁OpenAI的内容限制, 可能会破坏你的人设, 且不保证有效; 如果没有特殊需要或者你的prompt自带解锁功能的话建议把此选项设为false
 """
 
 custom_template_parse_failed = "模版解析失败, 请严格确保格式正确"
