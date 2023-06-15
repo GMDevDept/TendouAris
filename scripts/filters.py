@@ -24,6 +24,15 @@ async def global_access_filter_func(
 global_access_filter = filters.create(global_access_filter_func)
 
 
+async def group_admin_filter_func(
+    _, client, update: Union[Message, CallbackQuery]
+) -> bool:
+    return await util.is_group_update_from_admin(client, update)
+
+
+group_admin_filter = filters.create(group_admin_filter_func)
+
+
 async def group_conv_trigger_func(_, __, message: Message) -> bool:
     if message.reply_to_message and message.from_user and not message.from_user.is_self:
         rm = message.reply_to_message

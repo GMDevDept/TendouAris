@@ -146,10 +146,13 @@ class GroupChatData(ChatData):
     def __init__(self, chat_id: int, **kwargs):
         super().__init__(chat_id, **kwargs)
         self.is_group = True
-        self.flood_control_enabled: Optional[bool] = (
+        self.flood_control_enabled: bool = (
             kwargs.get("flood_control_enabled") is not False  # default to be True
         )
         self.flood_control_record: Optional[dict] = None
+        self.model_select_admin_only: bool = (
+            kwargs.get("model_select_admin_only") is not False  # default to be True
+        )
 
         GroupChatData.total_chats += 1
 
@@ -159,12 +162,17 @@ class GroupChatData(ChatData):
         data.update(
             {
                 "flood_control_enabled": self.flood_control_enabled,
+                "model_select_admin_only": self.model_select_admin_only,
             }
         )
         return data
 
     def set_flood_control(self, enable: bool):
         self.flood_control_enabled = enable
+        self.save()
+
+    def set_model_select_admin_only(self, enable: bool):
+        self.model_select_admin_only = enable
         self.save()
 
     async def process_message(
@@ -182,7 +190,11 @@ class GroupChatData(ChatData):
                 and self.flood_control_record[sender_id]["count"]
                 >= gvars.flood_control_count
             ):
-                return {"text": strings.flood_control_activated}
+                return {
+                    "text": strings.flood_control_activated.format(
+                        gvars.flood_control_count, gvars.flood_control_interval
+                    )
+                }
 
             model_output = await super().process_message(client, model_input)
 

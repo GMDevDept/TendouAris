@@ -41,6 +41,7 @@ async def set_bot_commands(client: Client):
         BotCommand("chatid", "获取当前会话的chat ID"),
         BotCommand("help", "爱丽丝食用指南"),
         BotCommand("version", "查看版本及更新信息"),
+        BotCommand("setting", "当前群聊设置 (仅管理员可用, 不支持频道身份)"),
     ]
     await client.set_bot_commands(
         commands_group_admin, scope=BotCommandScopeAllChatAdministrators()
