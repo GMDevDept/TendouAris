@@ -1,7 +1,7 @@
 version = """
 **TendouArisBot v2.0.0**
 
-Latest update: 2023/06/13
+Latest update: 2023/06/14
 
 Update log:
 """
@@ -44,7 +44,9 @@ no_auth = "接触权限确认失败, 爱丽丝无法回应对象的会话请求�
 
 globally_disabled = "This function is globally disabled by the bot owner"
 
-chatdata_unavailable = "爱丽丝无法获取当前会话的数据"
+group_command_admin_only = "This command is only available for group admins"
+
+chatdata_unavailable = "爱丽丝无法获取当前会话的数据, 请先设置API key或选择语言模型"
 
 api_key_required = "请使用 /apikey 命令设置老师自己的OpenAI API key, 输入的密钥将仅供当前会话及您自己使用"
 
@@ -67,7 +69,7 @@ api_key_common_errors = """
 
 api_key_not_support_gpt4 = "当前API key不支持GPT4模型, 这与你是否开了ChatGPT的premium无关, 需[加入waitlist](https://openai.com/waitlist/gpt-4-api)并等待通过"
 
-flood_control_activated = "爱丽丝对话机能冷却中, 机娘也是需要休息的! 🥺\n\n(您的对话请求过于频繁, 请稍候再试)"
+flood_control_activated = "爱丽丝对话机能冷却中, 机娘也是需要休息的! 🥺\n\n(群内防刷屏对话频率限制: {}条/{}秒)"
 
 history_cleared = "好的老师, 爱丽丝的记忆清理程序已启动。"
 
@@ -214,7 +216,24 @@ bard_presets = {
     "cn": "中文支持Beta版",
 }
 
-manage_mode_start = "请选择需要设置的选项:"
+chat_setting_menu = "请选择需要设置的选项:"
+
+chat_setting_options = {
+    "model_access": "更改 /model 命令允许使用范围",
+    "flood_control": "启用/禁用防刷屏功能",
+}
+
+model_access_options = {
+    "all": "所有成员",
+    "admin": "仅管理员",
+}
+
+flood_control_options = {
+    "on": "启用 (单人对话频率限制: `{}`条/`{}`秒)",
+    "off": "禁用",
+}
+
+manage_mode_menu = "请选择需要设置的选项:"
 
 manage_mode_options = {
     "scope-global": "设置bot允许使用范围(全局, 会覆盖其他使用范围设置)",
