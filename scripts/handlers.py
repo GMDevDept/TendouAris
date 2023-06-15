@@ -51,35 +51,47 @@ async def chatid_handler(message):
 
 
 # Model selection
-async def model_selection_handler(message):
-    await message.reply(
-        strings.choose_model,
-        quote=True,
-        reply_markup=InlineKeyboardMarkup(
-            [
+async def model_selection_handler(client, message):
+    chatdata = util.load_chat(message.chat.id)
+    if (
+        chatdata
+        and chatdata.is_group
+        and chatdata.model_select_admin_only
+        and not await util.is_group_update_from_admin(client, message)
+    ):
+        await message.reply(
+            f"{strings.no_auth}\n\n({strings.group_command_admin_only})"
+        )
+    else:
+        await message.reply(
+            strings.choose_model,
+            quote=True,
+            reply_markup=InlineKeyboardMarkup(
                 [
-                    InlineKeyboardButton(
-                        strings.models.get("model-gpt35"), callback_data="model-gpt35"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        strings.models.get("model-gpt4"), callback_data="model-gpt4"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        strings.models.get("model-bing"), callback_data="model-bing"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        strings.models.get("model-bard"), callback_data="model-bard"
-                    )
-                ],
-            ]
-        ),
-    )
+                    [
+                        InlineKeyboardButton(
+                            strings.models.get("model-gpt35"),
+                            callback_data="model-gpt35",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            strings.models.get("model-gpt4"), callback_data="model-gpt4"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            strings.models.get("model-bing"), callback_data="model-bing"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            strings.models.get("model-bard"), callback_data="model-bard"
+                        )
+                    ],
+                ]
+            ),
+        )
 
 
 # Model selection callback
@@ -529,17 +541,117 @@ async def api_key_handler(message):
 # Reset conversation history
 async def reset_handler(message):
     chatdata = util.load_chat(message.chat.id)
-    if chatdata:
+    if not chatdata:
+        await message.reply(strings.chatdata_unavailable)
+    else:
         await chatdata.reset()
         await message.reply(strings.history_cleared)
-    else:
+
+
+# Chat settings
+async def chat_setting_handler(message):
+    chatdata = util.load_chat(message.chat.id)
+    if not chatdata:
         await message.reply(strings.chatdata_unavailable)
+    else:
+        await message.reply(
+            strings.chat_setting_menu,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            strings.chat_setting_options.get("model_access"),
+                            callback_data="chat_setting-model_access",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            strings.chat_setting_options.get("flood_control"),
+                            callback_data="chat_setting-flood_control",
+                        )
+                    ],
+                ]
+            ),
+        )
+
+
+# Chat settings callback
+async def chat_setting_callback_handler(query):
+    option = query.data.replace("chat_setting-", "")
+    chatdata = util.load_chat(query.message.chat.id)
+    if not chatdata:
+        await query.message.reply(strings.chatdata_unavailable)
+    else:
+        match option:
+            case "model_access":
+                await query.message.edit(
+                    strings.chat_setting_options.get("model_access"),
+                    reply_markup=InlineKeyboardMarkup(
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    strings.model_access_options.get("all"),
+                                    callback_data="chat_setting-model_access-all",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    strings.model_access_options.get("admin"),
+                                    callback_data="chat_setting-model_access-admin",
+                                )
+                            ],
+                        ]
+                    ),
+                )
+            case "model_access-all":
+                chatdata.set_model_select_admin_only(False)
+                await query.message.edit(
+                    f"{strings.chat_setting_options.get('model_access')}: {strings.model_access_options.get('all')}"
+                )
+            case "model_access-admin":
+                chatdata.set_model_select_admin_only(True)
+                await query.message.edit(
+                    f"{strings.chat_setting_options.get('model_access')}: {strings.model_access_options.get('admin')}"
+                )
+            case "flood_control":
+                await query.message.edit(
+                    strings.chat_setting_options.get("flood_control"),
+                    reply_markup=InlineKeyboardMarkup(
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    strings.flood_control_options.get("on").format(
+                                        gvars.flood_control_count,
+                                        gvars.flood_control_interval,
+                                    ),
+                                    callback_data="chat_setting-flood_control-on",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    strings.flood_control_options.get("off"),
+                                    callback_data="chat_setting-flood_control-off",
+                                )
+                            ],
+                        ]
+                    ),
+                )
+            case "flood_control-on":
+                chatdata.set_flood_control(True)
+                await query.message.edit(
+                    f"{strings.chat_setting_options.get('flood_control')}: {strings.flood_control_options.get('on').format(gvars.flood_control_count, gvars.flood_control_interval)}"
+                )
+            case "flood_control-off":
+                chatdata.set_flood_control(False)
+                await query.message.edit(
+                    f"{strings.chat_setting_options.get('flood_control')}: {strings.flood_control_options.get('off')}"
+                )
 
 
 # Manage mode
 async def manage_mode_handler(message):
     await message.reply(
-        strings.manage_mode_start,
+        strings.manage_mode_menu,
         reply_markup=InlineKeyboardMarkup(
             [
                 [

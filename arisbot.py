@@ -49,8 +49,8 @@ async def chatid_handler(_, message):
 
 # Model selection
 @client.on_message(filters.command("model"))
-async def model_selection_handler(_, message):
-    await handlers.model_selection_handler(message)
+async def model_selection_handler(client, message):
+    await handlers.model_selection_handler(client, message)
 
 
 # Model selection callback
@@ -99,6 +99,22 @@ async def api_key_handler(_, message):
 @client.on_message(filters.command("reset"))
 async def reset_handler(_, message):
     await handlers.reset_handler(message)
+
+
+# Chat settings
+@client.on_message(
+    filters.command("setting") & filters.group & custom_filters.group_admin_filter
+)
+async def chat_setting_handler(_, message):
+    await handlers.chat_setting_handler(message)
+
+
+# Chat settings callback
+@client.on_callback_query(
+    filters.regex(r"^chat_setting-") & custom_filters.group_admin_filter
+)
+async def chat_setting_callback_handler(_, query):
+    await handlers.chat_setting_callback_handler(query)
 
 
 # Manage mode
