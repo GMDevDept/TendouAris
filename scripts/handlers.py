@@ -6,6 +6,7 @@ import logging
 import traceback
 from typing import Union
 from scripts import gvars, strings, util
+from scripts.chatdata import ChatData, GroupChatData
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -651,7 +652,7 @@ async def chat_setting_callback_handler(query):
 # Manage mode
 async def manage_mode_handler(message):
     await message.reply(
-        strings.manage_mode_menu,
+        f"{strings.manage_mode_menu}\n\nActive chat count: {ChatData.total}\nActive group chat count: {GroupChatData.total}\nDatabase entry count: {gvars.db_chatdata.dbsize()}",
         reply_markup=InlineKeyboardMarkup(
             [
                 [

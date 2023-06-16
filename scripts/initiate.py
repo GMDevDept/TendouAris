@@ -14,7 +14,6 @@ async def set_bot_commands(client: Client):
         BotCommand("aris", "パンパカパーン！"),
         BotCommand("reset", "重置对话历史"),
         BotCommand("apikey", "为当前会话添加OpenAI API key"),
-        BotCommand("chatid", "获取当前会话的chat ID"),
         BotCommand("help", "爱丽丝食用指南"),
         BotCommand("version", "查看版本及更新信息"),
     ]
