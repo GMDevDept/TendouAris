@@ -14,7 +14,7 @@ from srv.bard import process_message_bard
 
 
 class ChatData:
-    total_chats = 0
+    total = 0
 
     def __init__(
         self,
@@ -42,8 +42,6 @@ class ChatData:
         self.bard_clear_task: Optional[Task] = None
         self.last_reply: Optional[str] = None
 
-        ChatData.total_chats += 1
-
     @property
     def persistent_data(self) -> dict:
         return {
@@ -56,6 +54,9 @@ class ChatData:
         }
 
     def save(self):
+        assert self.chat_id
+        if self.chat_id not in gvars.all_chats:
+            ChatData.total += 1
         gvars.all_chats.update({self.chat_id: self})
         data_json = json.dumps(self.persistent_data)
         gvars.db_chatdata.set(self.chat_id, data_json)
@@ -67,7 +68,11 @@ class ChatData:
             chatdata = GroupChatData(**data)
         else:
             chatdata = ChatData(**data)
+
+        if chatdata.chat_id not in gvars.all_chats:
+            ChatData.total += 1
         gvars.all_chats.update({data["chat_id"]: chatdata})
+
         return chatdata
 
     def set_model(self, model: dict):
@@ -89,6 +94,7 @@ class ChatData:
     async def process_message(
         self, client: Client, model_input: dict
     ) -> Optional[dict]:
+        assert self.chat_id
         model_name, model_args = self.model["name"], self.model["args"]
         model_output = None
         match model_name:
@@ -141,7 +147,7 @@ class ChatData:
 
 
 class GroupChatData(ChatData):
-    total_chats = 0
+    total = 0
 
     def __init__(self, chat_id: int, **kwargs):
         super().__init__(chat_id, **kwargs)
@@ -154,8 +160,6 @@ class GroupChatData(ChatData):
             kwargs.get("model_select_admin_only") is not False  # default to be True
         )
 
-        GroupChatData.total_chats += 1
-
     @property
     def persistent_data(self):
         data = super().persistent_data
@@ -166,6 +170,11 @@ class GroupChatData(ChatData):
             }
         )
         return data
+
+    def save(self):
+        if self.chat_id not in gvars.all_chats:
+            GroupChatData.total += 1
+        return super().save()
 
     def set_flood_control(self, enable: bool):
         self.flood_control_enabled = enable
