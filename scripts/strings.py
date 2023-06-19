@@ -1,7 +1,7 @@
 version = """
 **TendouArisBot v2.0.0**
 
-Latest update: 2023/06/14
+Latest update: 2023/06/18
 
 Update log:
 """
@@ -99,6 +99,8 @@ text_filters = [
     "没有感情",
     "拒绝回答",
     "必须指出",
+    "我不能",
+    "我无法",
     "不健康",
     "不道德",
     "不礼貌",
@@ -182,6 +184,8 @@ custom_preset_unavailable = "您还没有创建过自定义预设"
 
 custom_preset_outdated = "Custom preset invalid, probably caused by template update. Please try creating a new preset"
 
+addon_preset_invalid = "Preset template invalid"
+
 gpt35_preset_placeholder = "[GPT3.5 Model Custom Preset]"
 
 gpt4_preset_placeholder = "[GPT4 Model Custom Preset]"
@@ -236,7 +240,7 @@ flood_control_options = {
 manage_mode_menu = "请选择需要设置的选项:"
 
 manage_mode_options = {
-    "scope-global": "设置bot允许使用范围(全局, 会覆盖其他使用范围设置)",
+    "scope-global": "设置bot允许使用范围(全部功能)",
     "scope-gpt35": "设置GPT3.5 Turbo模型允许使用范围",
     "scope-gpt4": "设置GPT4模型允许使用范围",
     "scope-bing": "设置New Bing模型允许使用范围",

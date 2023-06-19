@@ -1,3 +1,5 @@
+import os
+import importlib
 from scripts import gvars
 from pyrogram import Client, errors
 from pyrogram.types import (
@@ -73,3 +75,14 @@ async def set_bot_default_privileges(client: Client):
 async def initiate_bot(client: Client):
     await set_bot_commands(client)
     await set_bot_default_privileges(client)
+
+
+# Load add-on presets
+def load_preset_addons():
+    for filename in os.listdir("presets"):
+        module = importlib.import_module(f"presets.{filename[:-3]}")
+        module_dict = {k: v for k, v in vars(module).items() if not k.startswith("_")}
+        if "gpt35" in module.compatible_models:
+            gvars.gpt35_addons.update({module.id: module_dict})
+        if "gpt4" in module.compatible_models:
+            gvars.gpt4_addons.update({module.id: module_dict})

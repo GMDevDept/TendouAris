@@ -18,7 +18,7 @@ from pyrogram.errors import RPCError
 
 
 # Global access filter
-async def global_access_filter_handler(update: Union[Message, CallbackQuery]):
+async def global_access_filter_handler(client, update: Union[Message, CallbackQuery]):
     message = (
         isinstance(update, Message)
         and update
@@ -32,7 +32,7 @@ async def global_access_filter_handler(update: Union[Message, CallbackQuery]):
 
 
 # Welcome/help message
-async def help_handler(message):
+async def help_handler(client, message):
     try:
         sender = message.from_user
         name = f"{sender.first_name and sender.first_name or ''} {sender.last_name and sender.last_name or ''}".strip()
@@ -42,12 +42,12 @@ async def help_handler(message):
 
 
 # Version info and update log
-async def version_handler(message):
+async def version_handler(client, message):
     await message.reply(strings.version)
 
 
 # Get current chat id
-async def chatid_handler(message):
+async def chatid_handler(client, message):
     await message.reply(f"Chat ID: `{message.chat.id}`")
 
 
@@ -96,7 +96,7 @@ async def model_selection_handler(client, message):
 
 
 # Model selection callback
-async def model_selection_callback_handler(query):
+async def model_selection_callback_handler(client, query):
     modelname = query.data.replace("model-", "")
     scope = getattr(gvars, "scope_" + modelname)
     access_check = util.access_scope_filter(scope, query.message.chat.id)
@@ -132,6 +132,15 @@ async def model_selection_callback_handler(query):
                                     callback_data="gpt35preset-custom",
                                 )
                             ],
+                        ]
+                        + [
+                            [
+                                InlineKeyboardButton(
+                                    preset.get("display_name"),
+                                    callback_data="gpt35preset-addon-" + id,
+                                )
+                            ]
+                            for id, preset in gvars.gpt35_addons.items()
                         ]
                     ),
                 )
@@ -175,6 +184,15 @@ async def model_selection_callback_handler(query):
                                         callback_data="gpt4preset-custom",
                                     )
                                 ],
+                            ]
+                            + [
+                                [
+                                    InlineKeyboardButton(
+                                        preset.get("display_name"),
+                                        callback_data="gpt4preset-addon-" + id,
+                                    )
+                                ]
+                                for id, preset in gvars.gpt4_addons.items()
                             ]
                         ),
                     )
@@ -251,6 +269,25 @@ async def gpt35_preset_selection_callback_handler(client, query):
     )
 
     match preset:
+        case "default" | "aris":
+            if chatdata.gpt35_history is not None and not (
+                chatdata.model["name"] == "gpt35"
+                and chatdata.model["args"].get("preset") == preset
+            ):
+                chatdata.gpt35_chatbot = None
+                chatdata.gpt35_history = None
+                await client.send_message(
+                    chatdata.chat_id,
+                    strings.model_reset_due_to_preset_change.format("GPT3.5"),
+                )
+
+            chatdata.set_model({"name": "gpt35", "args": {"preset": preset}})
+
+            await query.message.edit(
+                strings.model_changed
+                + strings.models.get("model-gpt35")
+                + f" ({strings.gpt35_presets.get(preset).split(' ')[0]})"
+            )
         case "custom":
             await query.message.edit(
                 strings.manage_custom_preset,
@@ -296,9 +333,10 @@ async def gpt35_preset_selection_callback_handler(client, query):
                 await query.message.edit(
                     strings.model_changed
                     + strings.models.get("model-gpt35")
-                    + f" ({strings.gpt35_presets.get('custom').split(' ')[0]})"
+                    + f" ({strings.gpt35_presets.get('custom').split(' ')[0]})\n\n`{json.dumps(chatdata.gpt35_preset, indent=4, ensure_ascii=False)}`"
                 )
         case _:
+            assert preset.startswith("addon-"), f"Invalid callback: {query.data}"
             if chatdata.gpt35_history is not None and not (
                 chatdata.model["name"] == "gpt35"
                 and chatdata.model["args"].get("preset") == preset
@@ -310,12 +348,18 @@ async def gpt35_preset_selection_callback_handler(client, query):
                     strings.model_reset_due_to_preset_change.format("GPT3.5"),
                 )
 
-            chatdata.set_model({"name": "gpt35", "args": {"preset": preset}})
+            preset_id = preset.replace("addon-", "")
+            chatdata.set_model(
+                {
+                    "name": "gpt35",
+                    "args": {"preset": "addon", "id": preset_id},
+                }
+            )
 
             await query.message.edit(
                 strings.model_changed
                 + strings.models.get("model-gpt35")
-                + f" ({strings.gpt35_presets.get(preset).split(' ')[0]})"
+                + f" ({gvars.gpt35_addons.get(preset_id).get('display_name')})\n\n{gvars.gpt35_addons.get(preset_id).get('description')}"
             )
 
 
@@ -329,6 +373,25 @@ async def gpt4_preset_selection_callback_handler(client, query):
     )
 
     match preset:
+        case "default":
+            if chatdata.gpt4_history is not None and not (
+                chatdata.model["name"] == "gpt4"
+                and chatdata.model["args"].get("preset") == preset
+            ):
+                chatdata.gpt4_chatbot = None
+                chatdata.gpt4_history = None
+                await client.send_message(
+                    chatdata.chat_id,
+                    strings.model_reset_due_to_preset_change.format("GPT4"),
+                )
+
+            chatdata.set_model({"name": "gpt4", "args": {"preset": preset}})
+
+            await query.message.edit(
+                strings.model_changed
+                + strings.models.get("model-gpt4")
+                + f" ({strings.gpt4_presets.get(preset).split(' ')[0]})"
+            )
         case "custom":
             await query.message.edit(
                 strings.manage_custom_preset,
@@ -366,7 +429,7 @@ async def gpt4_preset_selection_callback_handler(client, query):
                     chatdata.gpt4_history = None
                     await client.send_message(
                         chatdata.chat_id,
-                        strings.model_reset_due_to_preset_change.format("GPT-4"),
+                        strings.model_reset_due_to_preset_change.format("GPT4"),
                     )
 
                 chatdata.set_model({"name": "gpt4", "args": {"preset": "custom"}})
@@ -374,9 +437,10 @@ async def gpt4_preset_selection_callback_handler(client, query):
                 await query.message.edit(
                     strings.model_changed
                     + strings.models.get("model-gpt4")
-                    + f" ({strings.gpt4_presets.get('custom').split(' ')[0]})"
+                    + f" ({strings.gpt4_presets.get('custom').split(' ')[0]})\n\n`{json.dumps(chatdata.gpt4_preset, indent=4, ensure_ascii=False)}`"
                 )
         case _:
+            assert preset.startswith("addon-"), f"Invalid callback: {query.data}"
             if chatdata.gpt4_history is not None and not (
                 chatdata.model["name"] == "gpt4"
                 and chatdata.model["args"].get("preset") == preset
@@ -385,15 +449,21 @@ async def gpt4_preset_selection_callback_handler(client, query):
                 chatdata.gpt4_history = None
                 await client.send_message(
                     chatdata.chat_id,
-                    strings.model_reset_due_to_preset_change.format("GPT-4"),
+                    strings.model_reset_due_to_preset_change.format("GPT4"),
                 )
 
-            chatdata.set_model({"name": "gpt4", "args": {"preset": preset}})
+            preset_id = preset.replace("addon-", "")
+            chatdata.set_model(
+                {
+                    "name": "gpt4",
+                    "args": {"preset": "addon", "id": preset_id},
+                }
+            )
 
             await query.message.edit(
                 strings.model_changed
                 + strings.models.get("model-gpt4")
-                + f" ({strings.gpt4_presets.get(preset).split(' ')[0]})"
+                + f" ({gvars.gpt4_addons.get(preset_id).get('display_name')})\n\n{gvars.gpt4_addons.get(preset_id).get('description')}"
             )
 
 
@@ -480,7 +550,7 @@ async def custom_preset_handler(client, message):
 
 
 # Bing style selection callback
-async def bing_style_selection_callback_handler(query):
+async def bing_style_selection_callback_handler(client, query):
     style = query.data.replace("bingstyle-", "")
     chatdata = util.load_chat(
         query.message.chat.id,
@@ -495,7 +565,7 @@ async def bing_style_selection_callback_handler(query):
 
 
 # Bard preset selection callback
-async def bard_preset_selection_callback_handler(query):
+async def bard_preset_selection_callback_handler(client, query):
     preset = query.data.replace("bardpreset-", "")
     chatdata = util.load_chat(
         query.message.chat.id,
@@ -512,7 +582,7 @@ async def bard_preset_selection_callback_handler(query):
 
 
 # Set OpenAI API key
-async def api_key_handler(message):
+async def api_key_handler(client, message):
     api_key_input = re.sub(r"^/\S*\s*", "", message.text)
     if api_key_input.startswith("sk-"):
         try:
@@ -540,7 +610,7 @@ async def api_key_handler(message):
 
 
 # Reset conversation history
-async def reset_handler(message):
+async def reset_handler(client, message):
     chatdata = util.load_chat(message.chat.id)
     if not chatdata:
         await message.reply(strings.chatdata_unavailable)
@@ -550,7 +620,7 @@ async def reset_handler(message):
 
 
 # Chat settings
-async def chat_setting_handler(message):
+async def chat_setting_handler(client, message):
     chatdata = util.load_chat(message.chat.id)
     if not chatdata:
         await message.reply(strings.chatdata_unavailable)
@@ -577,7 +647,7 @@ async def chat_setting_handler(message):
 
 
 # Chat settings callback
-async def chat_setting_callback_handler(query):
+async def chat_setting_callback_handler(client, query):
     option = query.data.replace("chat_setting-", "")
     chatdata = util.load_chat(query.message.chat.id)
     if not chatdata:
@@ -650,7 +720,7 @@ async def chat_setting_callback_handler(query):
 
 
 # Manage mode
-async def manage_mode_handler(message):
+async def manage_mode_handler(client, message):
     await message.reply(
         f"{strings.manage_mode_menu}\n\nActive chat count: {ChatData.total}\nActive group chat count: {GroupChatData.total}\nDatabase entry count: {gvars.db_chatdata.dbsize()}",
         reply_markup=InlineKeyboardMarkup(
@@ -794,15 +864,11 @@ async def conversation_handler(client, message):
 
             chatdata.last_reply = text
         except RPCError as e:
-            error_message = f"{e}: " + "".join(traceback.format_tb(e.__traceback__))
-            logging.error(error_message)
-            await message.reply(
-                f"{strings.rpc_error}\n\nError message:\n`{error_message}`"
-            )
+            logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
+            await message.reply(f"{strings.rpc_error}\n\nError message:\n`{e}`")
         except Exception as e:
-            error_message = f"{e}: " + "".join(traceback.format_tb(e.__traceback__))
-            logging.error(error_message)
+            logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
             await message.reply(
-                f"{strings.internal_error}\n\nError message:\n`{error_message}`\n\n{strings.feedback}",
+                f"{strings.internal_error}\n\nError message:\n`{e}`\n\n{strings.feedback}",
                 quote=False,
             )
