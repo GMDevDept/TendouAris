@@ -4,7 +4,7 @@ import re
 from typing import Union
 from scripts import gvars, util
 from pyrogram import filters
-from pyrogram.types import Message, CallbackQuery, ForceReply
+from pyrogram.types import Message, CallbackQuery
 
 
 async def global_access_filter_func(
@@ -48,7 +48,6 @@ async def custom_preset_filter_func(_, __, message: Message) -> bool:
     rm = message.reply_to_message
     if (
         rm
-        and (rm.reply_markup and isinstance(rm.reply_markup, ForceReply))
         and (rm.from_user and rm.from_user.is_self)
         and (rm.text and re.match(r"^\s*\[(\S*)\sModel Custom Preset\]", rm.text))
     ):
