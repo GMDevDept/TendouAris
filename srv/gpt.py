@@ -121,7 +121,7 @@ async def process_message_gpt35(
             f"Error happened when calling gpt35_chatbot.apredict in chat {chatdata.chat_id}: {e}"
         )
         return {
-            "text": f"{strings.api_error}\n\n{strings.api_key_common_errors}\n\nError Message:\n`{e}`"
+            "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
         }
 
     if backup_moving_summary_buffer is not None or backup_chat_memory is not None:
@@ -438,7 +438,7 @@ async def process_message_gpt4(
             f"Error happened when calling gpt4_chatbot.apredict in chat {chatdata.chat_id}: {e}"
         )
         return {
-            "text": f"{strings.api_error}\n\n{strings.api_key_common_errors}\n\nError Message:\n`{e}`"
+            "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
         }
 
     if backup_moving_summary_buffer is not None or backup_chat_memory is not None:

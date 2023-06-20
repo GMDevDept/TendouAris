@@ -12,7 +12,6 @@ from pyrogram.types import (
     InlineKeyboardButton,
     InputMediaPhoto,
     CallbackQuery,
-    ForceReply,
     Message,
 )
 from pyrogram.errors import RPCError
@@ -313,8 +312,7 @@ async def gpt35_preset_selection_callback_handler(client, query):
             )
         case "custom-new":
             await query.message.edit(
-                strings.gpt35_preset_placeholder + strings.custom_preset_template,
-                reply_markup=ForceReply(selective=True),
+                strings.gpt35_preset_placeholder + strings.custom_preset_template
             )
         case "custom-continue":
             if not chatdata.gpt35_preset:
@@ -417,8 +415,7 @@ async def gpt4_preset_selection_callback_handler(client, query):
             )
         case "custom-new":
             await query.message.edit(
-                strings.gpt4_preset_placeholder + strings.custom_preset_template,
-                reply_markup=ForceReply(selective=True),
+                strings.gpt4_preset_placeholder + strings.custom_preset_template
             )
         case "custom-continue":
             if not chatdata.gpt4_preset:
@@ -862,7 +859,10 @@ async def conversation_handler(client, message):
                             )
                         )
                         valid_media.append(url)
-                    except Exception:
+                    except RPCError:
+                        fallback_text += f"[Invalid Media]({url})\n"
+                    except Exception as e:
+                        logging.warning(f"Error occurred during processing media: {e}")
                         fallback_text += f"[Invalid Media]({url})\n"
 
                 text += fallback_text.rstrip()
