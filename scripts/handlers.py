@@ -10,11 +10,14 @@ from scripts.chatdata import ChatData, GroupChatData
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
-    Message,
+    InputMediaPhoto,
     CallbackQuery,
     ForceReply,
+    Message,
 )
 from pyrogram.errors import RPCError
+from pyrogram.raw.functions.messages import UploadMedia
+from pyrogram.raw.types import InputMediaPhotoExternal
 
 
 # Global access filter
@@ -842,25 +845,54 @@ async def conversation_handler(client, message):
                 client=client, model_input={"sender_id": sender_id, "text": input_text}
             )
             text = model_output.get("text")
-            photo = model_output.get("photo")
-            send_text_seperately = model_output.get("send_text_seperately")
+            photos = model_output.get("photo")  # list of urls
 
             if placeholder is not None:
                 await placeholder.delete()
 
-            if not photo or send_text_seperately:
-                await message.reply(text, quote=True)
+            valid_media = []
+            if photos:
+                fallback_text = "\n\n"
+                for url in photos:
+                    try:
+                        await client.invoke(
+                            UploadMedia(
+                                peer=await client.resolve_peer(chatdata.chat_id),
+                                media=InputMediaPhotoExternal(url=url),
+                            )
+                        )
+                        valid_media.append(url)
+                    except Exception:
+                        fallback_text += f"[Invalid Media]({url})\n"
 
-            if photo:
-                if len(photo) == 1:
-                    await message.reply_photo(photo[0], quote=True)
+                text += fallback_text.rstrip()
+
+            if valid_media:
+                if len(valid_media) == 1:
+                    await message.reply_photo(
+                        valid_media[0], quote=True, caption=len(text) < 1024 and text
+                    )
                 else:
+                    media_group = [
+                        InputMediaPhoto(
+                            url,
+                            caption=i == len(valid_media) - 1
+                            and len(text) < 1024
+                            and text,
+                        )
+                        for i, url in enumerate(valid_media)
+                    ]
+
                     # media group length limit: 2-10
-                    for i in range(0, len(photo), 10):
-                        photo_group = photo[i : i + 10]
-                        if len(photo_group) == 1 and i > 0:
-                            photo_group.insert(0, photo[i - 1])
-                        await message.reply_media_group(photo_group, quote=True)
+                    for i in range(0, len(media_group), 10):
+                        batch = media_group[i : i + 10]
+                        if len(batch) == 1:
+                            batch.insert(0, media_group[i - 1])
+                        await message.reply_media_group(batch, quote=True)
+
+            # Max caption length limit set by Telegram
+            if not valid_media or len(text) >= 1024:
+                await message.reply(text, quote=True)
 
             chatdata.last_reply = text
         except RPCError as e:
