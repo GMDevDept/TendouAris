@@ -5,12 +5,10 @@ import json
 import asyncio
 import logging
 import prompts
-from typing import Optional, Union
+from typing import Optional
 from scripts import gvars, strings, util
 from Bard import AsyncChatbot
 from pyrogram import Client
-from pyrogram.types import InputMediaPhoto, InputMediaDocument
-from pyrogram.errors import RPCError
 
 
 async def process_message_bard(
@@ -79,43 +77,11 @@ async def process_message_bard(
             # or the resulting substring is not a valid JSON object
             pass  # Return raw text
 
-    output_photo: Optional[list(Union[InputMediaPhoto, InputMediaDocument])] = None
-    send_text_seperately = None
+    output_photo: Optional[list(str)] = None
     raw_photos = response.get("images")  # set, {link1, link2}
     if raw_photos:
-        if len(raw_photos) > 0:
-            output_text = re.sub(r"\n\[.*\]", "", output_text)
-            if len(output_text) >= 1024:  # Max caption length limit set by Telegram
-                send_text_seperately = True
-
-            try:
-                output_photo = [
-                    InputMediaPhoto(
-                        photo,
-                        caption=len(output_text) < 1024
-                        and i == len(raw_photos) - 1
-                        and output_text
-                        or "",
-                    )
-                    for i, photo in enumerate(raw_photos)
-                ]
-            except RPCError:
-                output_photo = [
-                    InputMediaDocument(
-                        photo,
-                        caption=len(output_text) < 1024
-                        and i == len(raw_photos) - 1
-                        and output_text
-                        or "",
-                    )
-                    for i, photo in enumerate(raw_photos)
-                ]
-            except Exception as e:
-                output_photo = None
-                link_to_raw_photos = " ".join(
-                    [f"[{i+1}]({url})" for i, url in enumerate(raw_photos)]
-                )
-                output_text = output_text + "\n\n" + {e} + "\n" + link_to_raw_photos
+        output_text = re.sub(r"\n\[.*\]", "", output_text)
+        output_photo = list(raw_photos)
 
     if gvars.bard_chatbot_close_delay > 0:
 
@@ -133,5 +99,4 @@ async def process_message_bard(
     return {
         "text": output_text,
         "photo": output_photo,
-        "send_text_seperately": send_text_seperately,
     }
