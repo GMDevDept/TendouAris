@@ -1,5 +1,5 @@
 version = """
-**TendouArisBot v2.0.0**
+**TendouArisBot v2.0.1**
 
 Latest update: 2023/06/21
 
@@ -64,7 +64,7 @@ api_key_invalid = """
 
 api_key_common_errors = """
 常见错误信息参考:
-1. Error message为空: API key无效, 检查一下是不是复制错了, 或者去OpenAI官网链接建一个新key (自己胡编的就不用看了肯定报错
+1. `Incorrect API key provided...`: API key无效, 检查一下是不是复制错了, 或者去OpenAI官网链接建一个新key (自己胡编的就不用看了肯定报错
 2. `You exceeded your current quota...`: OpenAI账号欠费了, 去官网绑定支付方式或者重新买号
 3. `Rate limit reached...`: 官方限制了没绑支付方式的账号每分钟只能请求3次, 等会再试
 4. `That model is currently overloaded with other requests...`: OpenAI服务器炸了, 重新再试一次
