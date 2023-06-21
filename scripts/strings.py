@@ -1,43 +1,47 @@
 version = """
 **TendouArisBot v2.0.0**
 
-Latest update: 2023/06/18
+Latest update: 2023/06/21
 
 Update log:
+- 新增GPT4模型支持
+- GPT3.5和GPT4支持自定义预设/角色扮演/内容解锁, 详见 `/model - gpt3.5/gpt4 - 自定义专属预设`
+- 优化了GPT3.5和GPT4会话历史处理机制, 减少了token消耗, 现在基本不会出现token溢出上限的情况了
+- 爱丽丝的GitHub repo现在支持通过模版快捷添加预设模块, 欢迎[通过issue或pull request为爱丽丝添加预设](https://github.com/ToffeeNeko/TendouAris#contributing)
+- New Bing和Google Bard目前对所有人开放, 后续视服务器压力可能会限制使用
 """
 
 manual = """
-{} Sensei, 欢迎您成为勇者爱丽丝的伙伴! 😆
+**{} Sensei, 欢迎您成为勇者爱丽丝的伙伴!** 😆
 在出发冒险之前, 记得请先使用 /apikey 指令设置爱丽丝的OpenAI API key哦~ 😉
-\n如何与爱丽丝对话:
+\n**如何与爱丽丝对话:**
 1. 私聊时, 直接发送文字即可, 也可以使用 /aris 指令 + 你的输入内容进行对话
-2. 在群聊中, 可以使用 /aris 指令或回复爱丽丝发送的消息来与她对话。**当爱丽丝为群聊的管理员时**, 她还可以自动识别以“爱丽丝”开头的消息并进行回复
-\n目前支持的语言模型:
+2. 在群聊中, 可以使用 /aris 指令或**回复**爱丽丝发送的消息来与她对话。**当爱丽丝为群聊的管理员时**, 她还可以自动识别以“爱丽丝”开头的消息并进行回复
+\n**通过 /model 指令选择语言模型, 目前支持的模型包括:**
 1. GPT3.5 Turbo (默认)
-2. New Bing
-2. Google Bard
-\nFAQ:
+2. GPT4
+3. New Bing
+4. Google Bard
+\n**FAQ:**
 Q: 爱丽丝和普通的ChatGPT有什么不同?
 A: 除了角色设定外, 爱丽丝还通过预设prompt解除了一部分ChatGPT的内容输出限制, 可以和她聊更多ChatGPT无法回答的话题
 Q: 爱丽丝忘记了自己的身份/拒绝回答问题/复读自己是语言模型怎么办?
 A: 尝试使用 /reset 指令重置对话
-Q: 为什么爱丽丝有时无法完成API请求/回复消息很慢?
-A: 爱丽丝的回复速度主要取决于OpenAI服务器的响应速度, 服务器波动时就会出现回复慢甚至请求错误, 不是爱丽丝本身的问题。**OpenAI最近频繁限制未绑定支付方式的账号API请求数量, 低至每分钟3次, 还请注意**
 Q: OpenAI API key是什么? 怎么获取?
 A: API key是爱丽丝实现对话功能所必需的, 可以在 `https://platform.openai.com/account/api-keys` 页面获取。不知道如何注册OpenAI账号请自行谷歌
 Q: 输入的API key安全吗?
 A: 私聊中输入的API key只会被用于你自己的帐号, 群聊中输入的API key也只会被用于当前群聊, 实在不放心欢迎自建
-\n爱丽丝指令集:
-/aris - パンパカパーン!
-/pop - 清除上次问答记忆, 继续当前对话
-/reset - 清除全部问答记忆, 开始新的对话
+\n**爱丽丝指令集:**
+/aris - パンパカパーン！
 /model - 选择语言模型
-/apikey - 为当前会话添加OpenAI API key
+/reset - 重置对话历史
+/apikey - 为当前会话添加API key
 /chatid - 获取当前会话的chat ID
-/version - 查看版本信息
 /help - 爱丽丝食用指南
-\n开源项目地址: [GitHub](https://github.com/ToffeeNeko/TendouAris)
-Telegram Bot: [TendouArisBot](https://t.me/TendouArisBot)
+/version - 查看版本及更新信息
+/setting - 当前群聊设置 (仅群组内可用)
+\n**开源项目地址:** [GitHub](https://github.com/ToffeeNeko/TendouAris)
+**Telegram Bot:** [TendouArisBot](https://t.me/TendouArisBot)
 """
 
 no_auth = "接触权限确认失败, 爱丽丝无法回应对象的会话请求🫥"
@@ -126,10 +130,12 @@ models = {
 choose_model = """
 请选择希望爱丽丝使用的语言模型:
 \n注意事项:
-1. Bing和Bard模型目前暂时对所有人开放, 会视服务器流量压力限制使用, 有需要请[搭建自己的机器人](https://github.com/ToffeeNeko/TendouAris)
-2. Bing和Bard模型**不支持**角色扮演与内容解锁
-3. 使用GPT模型需要添加自己的OpenAI API key, 请使用 /apikey 命令设置
-4. 使用GPT4模型需要你自己的API key支持GPT4, 与是否开了ChatGPT的premium无关, 需[加入waitlist](https://openai.com/waitlist/gpt-4-api)并等待通过
+1. 使用GPT模型需要添加自己的OpenAI API key, 请使用 /apikey 命令设置
+2. GPT3.5和GPT4支持自定义预设/角色扮演/内容解锁, 详见 `/model - gpt3.5/gpt4 - 自定义专属预设`
+4. 使用GPT4模型需要你自己的API key支持GPT4, 与是否开了ChatGPT的premium无关, 需加入waitlist并等待通过
+3. 优化了GPT3.5和GPT4会话历史处理机制, 减少了token消耗, 现在基本不会出现token溢出上限的情况了
+5. 爱丽丝的GitHub repo现在支持通过模版快捷添加预设模块, 欢迎[通过issue或pull request为爱丽丝添加预设](https://github.com/ToffeeNeko/TendouAris#contributing)
+6. New Bing和Google Bard目前对所有人开放, **不支持**角色扮演与内容解锁, 后续视服务器压力可能会限制使用, 有需要请[搭建自己的机器人](https://github.com/ToffeeNeko/TendouAris#deployment)
 """
 
 model_choose_preset = "请选择模型预设:"
