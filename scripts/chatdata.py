@@ -94,7 +94,6 @@ class ChatData:
     async def process_message(
         self, client: Client, model_input: dict
     ) -> Optional[dict]:
-        assert self.chat_id
         model_name, model_args = self.model["name"], self.model["args"]
         model_output = None
         match model_name:
