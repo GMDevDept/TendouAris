@@ -5,7 +5,7 @@
 import uvloop
 import logging
 from scripts import gvars, handlers, filters as custom_filters
-from scripts.initiate import initiate_bot, load_preset_addons
+from scripts.initiate import initiate_bot, load_preset_addons, setup_whitelist
 from pyrogram import Client, filters, idle
 
 logging.basicConfig(
@@ -144,6 +144,7 @@ async def conversation_handler(client, message):
 
 
 async def main():
+    setup_whitelist()
     load_preset_addons()
     await client.start()
     await initiate_bot(client)
