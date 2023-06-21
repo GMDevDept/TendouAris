@@ -1,61 +1,60 @@
-<h1 align="center">
-    <img width="500" src="resources/tendouaris.png" alt="Aris">
-    <p align="left">TendouAris</p>
-</h1>
+<p align="center">
+    <img src="resources/tendouaris.png" alt="Aris" width="500">
+    <p align="center"></p>
+    <p align="center">
+        <b><i>“ようこそ先生。アリスは先生を待っていました。”</i></b>
+    </p>
+    <p align="center"></p>
+</p>
+
+# TendouAris
 
 [![Telegram bot](https://img.shields.io/badge/bot-%40TendouArisBot-229ed9?logo=telegram&style=for-the-badge)](https://t.me/TendouArisBot)
 
 ## Introduction
 
-Aris is a telegram chatbot based on OpenAI API with customized system prompt. In the future will add support for more language models.
+Aris is a telegram chatbot based on OpenAI API with customized character preset. In the future will add support for more language models.
 
-| Model Name | Support |
-|:---:|:---:|
-| gpt-3.5-turbo | ✅ |
-| New Bing | Self-host only |
-| Google Bard | Self-host only |
+| Model Name | Support | Custom Prompt |
+|:---:|:---:|:---:|
+| gpt-3.5-turbo | ✅ | ✅ |
+| gpt-4 | ✅ | ✅ |
+| New Bing | ✅ | 🚫 |
+| Google Bard | ✅ | 🚫 |
+
+## Contributing
+
+Aris supports importing add-on presets from template, which makes it pretty easy to contribute your own character preset to her, even for those who have no coding basis.
+
+To add your own preset to Aris, follow the steps below:
+
+1. Create a new text file (.txt, .py, etc.) on your local machine.
+2. Copy texts from the [template](https://raw.githubusercontent.com/ToffeeNeko/TendouAris/master/srv/gpt/gpt.py) and paste it into the file you just created.
+3. Edit your prompts following the instructions in the template, just like how you create your own custom preset using the bot's command menu in Telegram. Refer to other [currently available add-on presets](https://github.com/ToffeeNeko/TendouAris/tree/master/presets) if there's any confusion.
+4. Submit your preset by [creating an issue](https://github.com/ToffeeNeko/TendouAris/issues/new), either attach the text file (recommended) or paste the content of your preset into the issue description.
+
+Alternatively, if you have experience in git, you can also fork this repo and submit your preset by creating a pull request. Just put your `preset.py` file under `/presets` directory and make sure to the file name same as the `id` of the preset.
 
 ## Deployment
 
-1. Download source code and go to project root directory
+1. Download source code and go to project root directory.
 
     ``` bash
     git clone https://github.com/ToffeeNeko/TendouAris.git
     cd TendouAris
     ```
 
-2. Rename .env.sample to .env and fill in the values
-3. Rename prompts.sample.py to prompts.py and fill in the values
+2. Rename .env.sample to .env and fill the values.
+3. Rename prompts.sample.py to prompts.py and cusomize the following prompts:
+   - `aris_prompt_template`
+   - `initial_prompts`
+   - `fallback_prompt_template`
+   - `summary_prompt_template`
+   - `unlock_prompt`
 
-4. (Optional) To enable New Bing language model, export cookie from bing.com to /srv/bing/cookies.json (sample provided for format reference)
-
-5. Build docker container
+4. Build docker container.
 
     ``` bash
     docker-compose up -d --build
     docker image prune -f   # Remove unused dangling images (optional)
-    ```
-
-## Commands
-
-You can copy the following commands and provide them to BotFather when building you own Aris.
-
-1. Common commands
-
-    ``` md
-    aris - パンパカパーン！
-    pop - 清除上次问答记忆，继续当前对话
-    reset - 清除全部问答记忆，开始新的对话
-    model - 选择语言模型
-    apikey - 为当前会话添加OpenAI API key
-    chatid - 获取当前会话的chat ID
-    version - 查看版本信息
-    help - 爱丽丝食用指南
-    ```
-
-2. Admin commands
-
-    ``` md
-    fapikey - 为指定的会话添加API key
-    fctrl - 为指定的群组启用/禁用刷屏限制
     ```
