@@ -264,11 +264,7 @@ async def model_selection_callback_handler(client, query):
 # GPT-3.5 preset selection callback
 async def gpt35_preset_selection_callback_handler(client, query):
     preset = query.data.replace("gpt35preset-", "")
-    chatdata = util.load_chat(
-        query.message.chat.id,
-        create_new=True,
-        is_group=await util.is_group(query.message.chat),
-    )
+    chatdata = util.load_chat(query.message.chat.id)
 
     match preset:
         case "default" | "aris":
@@ -367,11 +363,7 @@ async def gpt35_preset_selection_callback_handler(client, query):
 # GPT-4 preset selection callback
 async def gpt4_preset_selection_callback_handler(client, query):
     preset = query.data.replace("gpt4preset-", "")
-    chatdata = util.load_chat(
-        query.message.chat.id,
-        create_new=True,
-        is_group=await util.is_group(query.message.chat),
-    )
+    chatdata = util.load_chat(query.message.chat.id)
 
     match preset:
         case "default":

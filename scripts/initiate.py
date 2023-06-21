@@ -1,6 +1,7 @@
 import os
+import json
 import importlib
-from scripts import gvars
+from scripts import gvars, util
 from pyrogram import Client, errors
 from pyrogram.types import (
     ChatPrivileges,
@@ -86,3 +87,12 @@ def load_preset_addons():
             gvars.gpt35_addons.update({module.id: module_dict})
         if "gpt4" in module.compatible_models:
             gvars.gpt4_addons.update({module.id: module_dict})
+
+
+# Create profile for chats in whitelist
+def setup_whitelist():
+    for chat_id in gvars.whitelist:
+        if not gvars.db_chatdata.exists(chat_id):
+            # Append to db only, not using .save() here to avoid miscounting active chats
+            chatdata = util.load_chat(chat_id, create_new=True, is_group=chat_id < 0)
+            gvars.db_chatdata.set(chat_id, json.dumps(chatdata.persistent_data))
