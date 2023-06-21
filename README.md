@@ -29,7 +29,7 @@ Aris supports importing add-on presets from template, which makes it pretty easy
 To add your own preset to Aris, follow the steps below:
 
 1. Create a new text file (.txt, .py, etc.) on your local machine.
-2. Copy texts from the [template](https://raw.githubusercontent.com/ToffeeNeko/TendouAris/master/srv/gpt/gpt.py) and paste it into the file you just created.
+2. Copy texts from the [template](https://raw.githubusercontent.com/ToffeeNeko/TendouAris/master/presets/template.py) and paste it into the file you just created.
 3. Edit your prompts following the instructions in the template, just like how you create your own custom preset using the bot's command menu in Telegram. Refer to other [currently available add-on presets](https://github.com/ToffeeNeko/TendouAris/tree/master/presets) if there's any confusion.
 4. Submit your preset by [creating an issue](https://github.com/ToffeeNeko/TendouAris/issues/new), either attach the text file (recommended) or paste the content of your preset into the issue description.
 
