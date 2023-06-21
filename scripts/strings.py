@@ -221,6 +221,8 @@ custom_preset_template = """
 
 custom_template_parse_failed = "模版解析失败, 请严格确保格式正确"
 
+github_contributing = "🙋‍♀️ 为爱丽丝添加更多预设!"
+
 bard_presets = {
     "default": "官方原版 (仅支持英日韩语对话)",
     "cn": "中文支持Beta版",

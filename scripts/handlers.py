@@ -144,6 +144,14 @@ async def model_selection_callback_handler(client, query):
                             ]
                             for id, preset in gvars.gpt35_addons.items()
                         ]
+                        + [
+                            [
+                                InlineKeyboardButton(
+                                    strings.github_contributing,
+                                    url="https://github.com/ToffeeNeko/TendouAris#contributing",
+                                )
+                            ],
+                        ]
                     ),
                 )
             else:
@@ -195,6 +203,14 @@ async def model_selection_callback_handler(client, query):
                                     )
                                 ]
                                 for id, preset in gvars.gpt4_addons.items()
+                            ]
+                            + [
+                                [
+                                    InlineKeyboardButton(
+                                        strings.github_contributing,
+                                        url="https://github.com/ToffeeNeko/TendouAris#contributing",
+                                    )
+                                ],
                             ]
                         ),
                     )
