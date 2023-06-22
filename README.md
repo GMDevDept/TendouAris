@@ -51,8 +51,8 @@ Alternatively, if you have experience in git, you can also fork this repo and su
    - `fallback_prompt_template`
    - `summary_prompt_template`
    - `unlock_prompt`
-
-4. Build docker container.
+4. (Optional) Export cookies from <https://bing.com/chat> and save it as `bing_cookies_fallback.json` under `\srv` directory. Check [EdgeGPT ducumentation](https://github.com/acheong08/EdgeGPT#authentication) for why and how to do this. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/bing_cookies_fallback.sample.json) is provided for format reference.
+5. Build docker container.
 
     ``` bash
     docker-compose up -d --build

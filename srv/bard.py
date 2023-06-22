@@ -29,7 +29,7 @@ async def process_message_bard(
         try:
             chatdata.bard_chatbot = await AsyncChatbot.create(gvars.google_bard_cookie)
         except Exception as e:
-            logging.warning(
+            logging.error(
                 f"Error happened when creating bard_chatbot in chat {chatdata.chat_id}: {e}"
             )
             return {
@@ -43,7 +43,7 @@ async def process_message_bard(
         chatdata.bard_clear_task.cancel()
         chatdata.bard_clear_task = None
 
-    input_text = model_input.get("text")
+    input_text = model_input.get("text") or "Hi"  # Bard does not accept empty string
     if input_text.startswith("爱丽丝"):
         input_text = input_text.replace("爱丽丝", "Bard", 1)
     if preset == "cn":
@@ -51,11 +51,9 @@ async def process_message_bard(
 
     chatdata.bard_blocked = True
     try:
-        response = await chatdata.bard_chatbot.ask(
-            message=input_text or " "
-        )  # Bard does not accept empty string
+        response = await chatdata.bard_chatbot.ask(message=input_text)
     except Exception as e:
-        logging.warning(
+        logging.error(
             f"Error happened when calling bard_chatbot.ask in chat {chatdata.chat_id}: {e}"
         )
         return {

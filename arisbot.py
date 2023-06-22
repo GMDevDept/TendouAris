@@ -9,7 +9,7 @@ from scripts.initiate import initiate_bot, load_preset_addons, setup_whitelist
 from pyrogram import Client, filters, idle
 
 logging.basicConfig(
-    format="[ %(levelname)s / %(asctime)s]: %(message)s", level=logging.INFO
+    format="[ %(levelname)s / %(asctime)s]: %(message)s", level=logging.WARNING
 )
 
 # Telegram bot client

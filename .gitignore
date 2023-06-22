@@ -195,3 +195,4 @@ prompts.py
 *.session-journal
 *test*
 .DS_Store
+bing_cookies_fallback.json

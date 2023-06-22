@@ -1,9 +1,12 @@
 version = """
-**TendouArisBot v2.0.1**
+**TendouArisBot v2.0.2**
 
-Latest update: 2023/06/21
+Latest update: 2023/06/22
 
 Update log:
+v2.0.2
+- 修复了Bing模型authentication failed的问题
+v2.0.0
 - 新增GPT4模型支持
 - GPT3.5和GPT4支持自定义预设/角色扮演/内容解锁, 详见 `/model - gpt3.5/gpt4 - 自定义专属预设`
 - 优化了GPT3.5和GPT4会话历史处理机制, 减少了token消耗, 现在基本不会出现token溢出上限的情况了
@@ -146,9 +149,7 @@ bing_choose_style = "请选择New Bing模型的对话风格:"
 
 chat_concurrent_blocked = "Please wait for the last conversation to finish"
 
-bing_session_creation_failed = (
-    "bing.com is currently blocking our access, please try again later"
-)
+bing_chatbot_creation_failed = "Bing chatbot creation failed"
 
 bard_cookie_unavailable = (
     "GOOGLE_BARD_COOKIE environment variable is not set for the bot"
@@ -207,7 +208,7 @@ custom_preset_template = """
     "human_prefix": "老师",
     "sample_input": "你好爱丽丝",
     "sample_output": "老师好, 爱丽丝很高兴见到老师(露出微笑)",
-    "unlock_required": false
+    "unlock_required": true
 }
 ```
 \n注释:
