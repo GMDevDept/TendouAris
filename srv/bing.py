@@ -1,10 +1,11 @@
 # https://github.com/acheong08/EdgeGPT
 
 import re
+import json
 import asyncio
 import logging
 from scripts import gvars, strings, util
-from EdgeGPT import Chatbot, ConversationStyle, NotAllowedToAccess
+from EdgeGPT.EdgeGPT import Chatbot, ConversationStyle, NotAllowedToAccess
 from pyrogram import Client
 
 
@@ -35,8 +36,16 @@ async def process_message_bing(
         try:
             chatdata.bing_chatbot = await Chatbot.create()
         except NotAllowedToAccess:
+            cookies = json.loads(
+                open("srv/bing_cookies_fallback.json", encoding="utf-8").read()
+            )
+            chatdata.bing_chatbot = await Chatbot.create(cookies=cookies)
+        except Exception as e:
+            logging.error(
+                f"Error happened when creating bing_chatbot in chat {chatdata.chat_id}: {e}"
+            )
             return {
-                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_session_creation_failed}`"
+                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {e}`"
             }
     elif chatdata.bing_blocked:
         return {
@@ -55,9 +64,10 @@ async def process_message_bing(
         response = await chatdata.bing_chatbot.ask(
             prompt=input_text,
             conversation_style=conversation_style,
+            simplify_response=True,
         )
     except Exception as e:
-        logging.warning(
+        logging.error(
             f"Error happened when calling bing_chatbot.ask in chat {chatdata.chat_id}: {e}"
         )
         return {
@@ -66,14 +76,14 @@ async def process_message_bing(
     finally:
         chatdata.bing_blocked = None
 
-    output_text = response["item"]["messages"][1].get("text")
-    sourceAttributions = response["item"]["messages"][1].get("sourceAttributions")
-    if sourceAttributions and len(sourceAttributions) > 0:
+    output_text = response["text"]
+    sources = response.get("sources")
+    if sources and len(sources) > 0:
         output_text = re.sub(r"\[\^(\d+)\^\]", r"[\1]", output_text)
         reference_links = "\n".join(
             [
-                f"[[{i+1}] {sourceAttributions[i]['providerDisplayName']}]({sourceAttributions[i]['seeMoreUrl']})"
-                for i in range(len(sourceAttributions))
+                f"[[{i+1}] {sources[i]['providerDisplayName']}]({sources[i]['seeMoreUrl']})"
+                for i in range(len(sources))
             ]
         )
         reference_text = f"\n\nReferences:\n{reference_links}"

@@ -117,7 +117,7 @@ async def process_message_gpt35(
     try:
         response = await chatdata.gpt35_chatbot.apredict(input=input_text)
     except Exception as e:
-        logging.warning(
+        logging.error(
             f"Error happened when calling gpt35_chatbot.apredict in chat {chatdata.chat_id}: {e}"
         )
         return {
@@ -434,7 +434,7 @@ async def process_message_gpt4(
     try:
         response = await chatdata.gpt4_chatbot.apredict(input=input_text)
     except Exception as e:
-        logging.warning(
+        logging.error(
             f"Error happened when calling gpt4_chatbot.apredict in chat {chatdata.chat_id}: {e}"
         )
         return {

@@ -3,7 +3,7 @@ import asyncio
 from pyrogram import Client
 from typing import Optional
 from asyncio import Task
-from EdgeGPT import Chatbot as BingChatbot
+from EdgeGPT.EdgeGPT import Chatbot as BingChatbot
 from Bard import AsyncChatbot as BardChatbot
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationSummaryBufferMemory
