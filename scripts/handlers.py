@@ -125,12 +125,6 @@ async def model_selection_callback_handler(client, query):
                             ],
                             [
                                 InlineKeyboardButton(
-                                    strings.gpt35_presets.get("default"),
-                                    callback_data="gpt35preset-default",
-                                )
-                            ],
-                            [
-                                InlineKeyboardButton(
                                     strings.gpt35_presets.get("custom"),
                                     callback_data="gpt35preset-custom",
                                 )
@@ -146,6 +140,12 @@ async def model_selection_callback_handler(client, query):
                             for id, preset in gvars.gpt35_addons.items()
                         ]
                         + [
+                            [
+                                InlineKeyboardButton(
+                                    strings.gpt35_presets.get("default"),
+                                    callback_data="gpt35preset-default",
+                                )
+                            ],
                             [
                                 InlineKeyboardButton(
                                     strings.github_contributing,
@@ -488,7 +488,7 @@ async def custom_preset_handler(client, message):
         try:
             template_json = re.match(r".*?({.*}).*", message.text, re.DOTALL).group(1)
             template_dict = json.loads(template_json)
-            assert len(template_dict) == 7, "Invalid template length"
+            assert len(template_dict) == 8, "Invalid template length"
             assert (
                 isinstance(template_dict["prompt"], str)
                 and isinstance(template_dict["ai_prefix"], str)
@@ -497,6 +497,7 @@ async def custom_preset_handler(client, message):
                 and isinstance(template_dict["sample_input"], str)
                 and isinstance(template_dict["sample_output"], str)
                 and isinstance(template_dict["unlock_required"], bool)
+                and isinstance(template_dict["keyword_filter"], bool)
             ), "Wrong value type(s)"
         except (
             TypeError,

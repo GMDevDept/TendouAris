@@ -1,10 +1,11 @@
 version = """
-**TendouArisBot v2.0.2**
+**TendouArisBot v2.0.3**
 
-Latest update: 2023/06/22
+Latest update: 2023/06/24
 
 Update log:
-v2.0.2
+v2.0.3
+- 添加了新的GPT3.5模型预设: 葵、关系养成模拟器
 - 修复了Bing模型authentication failed的问题
 v2.0.0
 - 新增GPT4模型支持
@@ -141,7 +142,7 @@ choose_model = """
 6. New Bing和Google Bard目前对所有人开放, **不支持**角色扮演与内容解锁, 后续视服务器压力可能会限制使用, 有需要请[搭建自己的机器人](https://github.com/ToffeeNeko/TendouAris#deployment)
 """
 
-model_choose_preset = "请选择模型预设:"
+model_choose_preset = "请选择希望爱丽丝使用的模型预设:"
 
 model_changed = "当前模型:"
 
@@ -172,12 +173,12 @@ placeholer_gpt4 = "\n\n(GPT4模型生成回答速度较慢, 请耐心等待)"
 gpt35_presets = {
     "aris": "爱丽丝 (默认)",
     "default": "官方原版 (无角色设定)",
-    "custom": "自定义专属预设",
+    "custom": "✨ 自定义专属预设",
 }
 
 gpt4_presets = {
     "default": "官方原版 (无角色设定)",
-    "custom": "自定义专属预设",
+    "custom": "✨ 自定义专属预设",
 }
 
 manage_custom_preset = "管理自定义预设"
@@ -208,16 +209,18 @@ custom_preset_template = """
     "human_prefix": "老师",
     "sample_input": "你好爱丽丝",
     "sample_output": "老师好, 爱丽丝很高兴见到老师(露出微笑)",
-    "unlock_required": true
+    "unlock_required": true,
+    "keyword_filter": true
 }
 ```
 \n注释:
-1. prompt: 全部系统设定, 角色人设尽量详细完整, 注意**文字中不能有英文引号**, 全文长度不能超过Telegram单条消息长度上限
+1. prompt: 全部系统设定, 角色人设尽量详细完整, 注意**文字中不能有英文单双引号和段落换行**, 引号可用中文引号代替, 换行可用空格代替; 全文长度不能超过Telegram单条消息长度上限
 2. ai_prefix: (选填) 自定义AI的名字, 引号必须保留, 留空默认爱丽丝
 3. ai_self: (选填) AI怎么称呼自己, 如在下, 妾身, 爱丽丝, 本超天才病弱美少女黑客~~, 老胡~~等, 建议搭配`sample_output`使用, 引号必须保留, 留空默认与`ai_prefix`相同
 4. human_prefix: (选填) AI怎么称呼你, 引号必须保留, 留空默认老师
 5. sample_input, sample_output: (选填) 对话风格示范, 用于引导AI使用特定的语气、格式、口癖等, 引号必须保留, 留空则不会进行引导
-6. unlock_required: 只能放true或者false, 不带引号, 如果设为true, 加载你的系统设定时会额外加一段prompt尝试解锁OpenAI的内容限制, 可能会破坏你的人设, 且不保证有效; 如果没有特殊需要或者你的prompt自带解锁功能的话建议把此选项设为false
+6. unlock_required: 只能放true或者false, 如果设为true, 加载你的系统设定时会额外加一段prompt尝试解锁OpenAI的内容限制, 可能会破坏你的人设, 且不保证有效; 如果你的prompt自带解锁功能的话建议设为false
+7. keyword_filter: 只能放true或者false, 如果设为true, 当模型输出文本中包含常见违规提示词时会自动消除本条对话记忆; 如果打算进行角色扮演则建议设为true
 """
 
 custom_template_parse_failed = "模版解析失败, 请严格确保格式正确"

@@ -10,10 +10,13 @@ display_name = "Sample Preset"
 # Description for this preset, which will be shown in the bot preset selection menu
 description = "This is a sample preset."
 
-# The full system prompt for your preset, character settings should be included, no English quotation marks allowed, length should be less than 4000 characters
+# The full system prompt for your preset, character settings should be included, length should be less than 4000 characters, support base64 encoded string
 prompt = """
 This is a sample system prompt.
 """
+
+# If the prompt above is base64 encoded, set this to True; otherwise set this to False
+base64_encoded = False
 
 # The name of your AI, comment out if no name is needed
 ai_prefix = "Aris"
@@ -35,5 +38,8 @@ sample_io = [
 # Set to True if your preset needs extra prompt to unlock OpenAI's content limitation
 unlock_required = False
 
+# Set to True to enable auto clearing memory when output text contains common keywords indicating that AI refuses to provide answer. Recommended to set True if this preset is for role playing purpose
+keyword_filter = True
+
 # Token limit for ConversationSummaryBufferMemory, keep as default if there's no special requirement
-buffer_token_limit = 1024
+buffer_token_limit = 2048
