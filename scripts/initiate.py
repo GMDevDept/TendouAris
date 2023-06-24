@@ -1,5 +1,6 @@
 import os
 import json
+import base64
 import importlib
 from scripts import gvars, util
 from pyrogram import Client, errors
@@ -81,12 +82,17 @@ async def initiate_bot(client: Client):
 # Load add-on presets
 def load_preset_addons():
     for filename in os.listdir("presets"):
-        module = importlib.import_module(f"presets.{filename[:-3]}")
-        module_dict = {k: v for k, v in vars(module).items() if not k.startswith("_")}
-        if "gpt35" in module.compatible_models:
-            gvars.gpt35_addons.update({module.id: module_dict})
-        if "gpt4" in module.compatible_models:
-            gvars.gpt4_addons.update({module.id: module_dict})
+        if filename.endswith(".py"):
+            module = importlib.import_module(f"presets.{filename[:-3]}")
+            module_dict = {
+                k: v for k, v in vars(module).items() if not k.startswith("_")
+            }
+            if module_dict.get("base64_encoded"):
+                module_dict["prompt"] = base64.b64decode(module_dict["prompt"]).decode()
+            if "gpt35" in module.compatible_models:
+                gvars.gpt35_addons.update({module.id: module_dict})
+            if "gpt4" in module.compatible_models:
+                gvars.gpt4_addons.update({module.id: module_dict})
 
 
 # Create profile for chats in whitelist

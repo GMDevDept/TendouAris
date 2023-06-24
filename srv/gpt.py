@@ -81,8 +81,7 @@ async def process_message_gpt35(
         chatdata.gpt35_clear_task.cancel()
         chatdata.gpt35_clear_task = None
 
-    input_text = model_input.get("text")
-
+    input_text = model_input.get("text") or "Hi"  # Prevent self generated conversations
     if model_args.get("preset") != "aris" and input_text.startswith("爱丽丝"):
         if model_args.get("preset") == "custom" and chatdata.gpt35_preset.get(
             "ai_prefix"
@@ -104,11 +103,11 @@ async def process_message_gpt35(
         model_args.get("preset") == "aris"
         or (
             model_args.get("preset") == "custom"
-            and chatdata.gpt35_preset.get("unlock_required")
+            and chatdata.gpt35_preset.get("keyword_filter")
         )
         or (
             model_args.get("preset") == "addon"
-            and gvars.gpt35_addons.get(model_args.get("id")).get("unlock_required")
+            and gvars.gpt35_addons.get(model_args.get("id")).get("keyword_filter")
         )
     ):
         backup_moving_summary_buffer = chatdata.gpt35_history.moving_summary_buffer
@@ -399,8 +398,7 @@ async def process_message_gpt4(
         chatdata.gpt4_clear_task.cancel()
         chatdata.gpt4_clear_task = None
 
-    input_text = model_input.get("text")
-
+    input_text = model_input.get("text") or "Hi"  # Prevent self generated conversations
     if input_text.startswith("爱丽丝"):
         if model_args.get("preset") == "custom" and chatdata.gpt4_preset.get(
             "ai_prefix"
@@ -421,11 +419,11 @@ async def process_message_gpt4(
     if chatdata.gpt4_history is not None and (
         (
             model_args.get("preset") == "custom"
-            and chatdata.gpt4_preset.get("unlock_required")
+            and chatdata.gpt4_preset.get("keyword_filter")
         )
         or (
             model_args.get("preset") == "addon"
-            and gvars.gpt4_addons.get(model_args.get("id")).get("unlock_required")
+            and gvars.gpt4_addons.get(model_args.get("id")).get("keyword_filter")
         )
     ):
         backup_moving_summary_buffer = chatdata.gpt4_history.moving_summary_buffer

@@ -5,7 +5,7 @@ import json
 import asyncio
 import logging
 from scripts import gvars, strings, util
-from EdgeGPT.EdgeGPT import Chatbot, ConversationStyle, NotAllowedToAccess
+from EdgeGPT.EdgeGPT import Chatbot, ConversationStyle
 from pyrogram import Client
 
 
@@ -35,18 +35,19 @@ async def process_message_bing(
     if not chatdata.bing_chatbot:
         try:
             chatdata.bing_chatbot = await Chatbot.create()
-        except NotAllowedToAccess:
-            cookies = json.loads(
-                open("srv/bing_cookies_fallback.json", encoding="utf-8").read()
-            )
-            chatdata.bing_chatbot = await Chatbot.create(cookies=cookies)
-        except Exception as e:
-            logging.error(
-                f"Error happened when creating bing_chatbot in chat {chatdata.chat_id}: {e}"
-            )
-            return {
-                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {e}`"
-            }
+        except Exception:
+            try:
+                cookies = json.loads(
+                    open("srv/bing_cookies_fallback.json", encoding="utf-8").read()
+                )
+                chatdata.bing_chatbot = await Chatbot.create(cookies=cookies)
+            except Exception as e:
+                logging.error(
+                    f"Error happened when creating bing_chatbot in chat {chatdata.chat_id}: {e}"
+                )
+                return {
+                    "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {e}`"
+                }
     elif chatdata.bing_blocked:
         return {
             "text": f"{strings.api_error}\n\nError Message:\n`{strings.chat_concurrent_blocked}`"
