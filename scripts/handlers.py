@@ -301,7 +301,7 @@ async def gpt35_preset_selection_callback_handler(client, query):
             await query.message.edit(
                 strings.model_changed
                 + strings.models.get("model-gpt35")
-                + f" ({strings.gpt35_presets.get(preset).split(' ')[0]})"
+                + f" ({strings.gpt35_presets.get(preset).split(' (')[0]})"
             )
         case "custom":
             await query.message.edit(
@@ -348,7 +348,7 @@ async def gpt35_preset_selection_callback_handler(client, query):
                 await query.message.edit(
                     strings.model_changed
                     + strings.models.get("model-gpt35")
-                    + f" ({strings.gpt35_presets.get('custom').split(' ')[0]})\n\n`{json.dumps(chatdata.gpt35_preset, indent=4, ensure_ascii=False)}`"
+                    + f" ({strings.gpt35_presets.get('custom').split(' (')[0]})\n\n`{json.dumps(chatdata.gpt35_preset, indent=4, ensure_ascii=False)}`"
                 )
         case _:
             assert preset.startswith("addon-"), f"Invalid callback: {query.data}"
@@ -401,7 +401,7 @@ async def gpt4_preset_selection_callback_handler(client, query):
             await query.message.edit(
                 strings.model_changed
                 + strings.models.get("model-gpt4")
-                + f" ({strings.gpt4_presets.get(preset).split(' ')[0]})"
+                + f" ({strings.gpt4_presets.get(preset).split(' (')[0]})"
             )
         case "custom":
             await query.message.edit(
@@ -448,7 +448,7 @@ async def gpt4_preset_selection_callback_handler(client, query):
                 await query.message.edit(
                     strings.model_changed
                     + strings.models.get("model-gpt4")
-                    + f" ({strings.gpt4_presets.get('custom').split(' ')[0]})\n\n`{json.dumps(chatdata.gpt4_preset, indent=4, ensure_ascii=False)}`"
+                    + f" ({strings.gpt4_presets.get('custom').split(' (')[0]})\n\n`{json.dumps(chatdata.gpt4_preset, indent=4, ensure_ascii=False)}`"
                 )
         case _:
             assert preset.startswith("addon-"), f"Invalid callback: {query.data}"
@@ -537,7 +537,7 @@ async def custom_preset_handler(client, message):
                 await message.reply(
                     strings.model_changed
                     + strings.models.get("model-gpt35")
-                    + f" ({strings.gpt35_presets.get('custom').split(' ')[0]})"
+                    + f" ({strings.gpt35_presets.get('custom').split(' (')[0]})"
                 )
             elif model_name == "GPT4":
                 if chatdata.gpt4_history is not None:
@@ -555,7 +555,7 @@ async def custom_preset_handler(client, message):
                 await message.reply(
                     strings.model_changed
                     + strings.models.get("model-gpt4")
-                    + f" ({strings.gpt4_presets.get('custom').split(' ')[0]})"
+                    + f" ({strings.gpt4_presets.get('custom').split(' (')[0]})"
                 )
             else:
                 raise ValueError(f"Invalid model name: {model_name}")
@@ -589,7 +589,7 @@ async def bard_preset_selection_callback_handler(client, query):
     await query.message.edit(
         strings.model_changed
         + strings.models.get("model-bard")
-        + f" ({strings.bard_presets.get(preset).split(' ')[0]})"
+        + f" ({strings.bard_presets.get(preset).split(' (')[0]})"
     )
 
 
