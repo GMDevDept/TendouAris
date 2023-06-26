@@ -1,9 +1,11 @@
 version = """
-**TendouArisBot v2.0.3**
+**TendouArisBot v2.0.4**
 
-Latest update: 2023/06/24
+Latest update: 2023/06/26
 
 Update log:
+v2.0.4
+- 添加了新的GPT3.5模型预设: 风俗体验馆
 v2.0.3
 - 添加了新的GPT3.5模型预设: 葵、关系养成模拟器
 - 修复了Bing模型authentication failed的问题
