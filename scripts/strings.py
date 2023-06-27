@@ -1,7 +1,7 @@
 version = """
-**TendouArisBot v2.0.4**
+**TendouArisBot v2.0.5**
 
-Latest update: 2023/06/26
+Latest update: 2023/06/27
 
 Update log:
 v2.0.4
@@ -247,7 +247,7 @@ model_access_options = {
 }
 
 flood_control_options = {
-    "on": "启用 (单人对话频率限制: `{}`条/`{}`秒)",
+    "on": "启用 (每人{}条/{}秒)",
     "off": "禁用",
 }
 
