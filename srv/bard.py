@@ -5,7 +5,6 @@ import json
 import asyncio
 import logging
 import prompts
-from typing import Optional
 from scripts import gvars, strings, util
 from Bard import AsyncChatbot
 from pyrogram import Client
@@ -46,12 +45,33 @@ async def process_message_bard(
     input_text = model_input.get("text") or "Hi"  # Bard does not accept empty string
     if input_text.startswith("爱丽丝"):
         input_text = input_text.replace("爱丽丝", "Bard", 1)
-    if preset == "cn":
-        input_text = prompts.bard_cn_prompt.format(input_text)
 
     chatdata.bard_blocked = True
     try:
-        response = await chatdata.bard_chatbot.ask(message=input_text)
+        if preset == "default":
+            response = await chatdata.bard_chatbot.ask(message=input_text)
+        elif preset == "cn":
+            input_text = prompts.bard_cn_input_prompt.format(input_text)
+            pre_response = await chatdata.bard_chatbot.ask(message=input_text)
+            try:
+                # Match json object in the output text
+                output_json = re.match(
+                    r".*?({.*}).*", pre_response["content"], re.DOTALL
+                ).group(1)
+                output_dict = json.loads(output_json)
+                input_text_final = output_dict["en_translation"]
+            except (AttributeError, json.JSONDecodeError, KeyError):
+                # Handle cases where the regular expression pattern does not match anything
+                # or the resulting substring is not a valid JSON object
+                # or the JSON object does not contain the key "en_translation"
+                input_text_final = input_text  # Fallback to the original input text
+            except Exception as e:
+                logging.error(
+                    f"Error happened when handling bard cn input in chat {chatdata.chat_id}: {e}"
+                )
+                return {"text": f"{strings.api_error}\n\nError Message:\n`{e}`"}
+
+            response = await chatdata.bard_chatbot.ask(message=input_text_final)
     except Exception as e:
         logging.error(
             f"Error happened when calling bard_chatbot.ask in chat {chatdata.chat_id}: {e}"
@@ -62,27 +82,10 @@ async def process_message_bard(
     finally:
         chatdata.bard_blocked = None
 
-    output_text = response["content"] or None
-    if preset == "cn":
-        try:
-            # Match json object in the output text
-            output_json = re.match(r".*?({.*}).*", output_text, re.DOTALL).group(1)
-            output_dict = json.loads(output_json)
-            output_text = (
-                output_dict["en_response"]
-                + "\n\n"
-                + output_dict["en_response_translated_to_cn"]
-            )
-        except (AttributeError, json.JSONDecodeError):
-            # Handle cases where the regular expression pattern does not match anything
-            # or the resulting substring is not a valid JSON object
-            pass  # Return raw text
-
-    output_photo: Optional[list(str)] = None
-    raw_photos = response.get("images")  # set, {link1, link2}
-    if raw_photos:
+    output_text = response["content"]
+    output_photo = response["images"]
+    if output_photo:
         output_text = re.sub(r"\n\[.*\]", "", output_text)
-        output_photo = list(raw_photos)
 
     if gvars.bard_chatbot_close_delay > 0:
 

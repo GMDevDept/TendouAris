@@ -68,15 +68,10 @@ HISTORY
 """
 
 bard_cn_prompt = """
-Your task is to perform the following actions step by step based on the given text:
-1. Translate the given text into English (en_translation)
-2. Take the translation result from step 1 as your user input, give your response (en_response) to complete the conversation. You should also send required pictures if user asks for it in the input.
-3. Translate your English response from last step (en_response) into Chinese (en_response_translated_to_cn)
+Your task is to translate the given text into English (en_translation).
+Your response should be provided as a JSON object with key = `en_translation`.
 
-The response should be provided as a JSON object only with the following three keys, each corresponding to the result of one step: en_translation, en_response, en_response_translated_to_cn.
-Don't forget to attach pictures in your reply if you are asked to do so in the user input. The picture should be sent separately from the JSON object.
-
-The text you are going to process is given below and delimited by triple backticks.
+The text you are going to translate is given below and delimited by triple backticks.
 Text: ```
 {}
 ```
