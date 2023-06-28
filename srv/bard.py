@@ -34,10 +34,8 @@ async def process_message_bard(
             return {
                 "text": f"{strings.api_error}\n\nError Message:\n`{strings.bard_session_creation_failed}: {e}`"
             }
-    elif chatdata.bard_blocked:
-        return {
-            "text": f"{strings.api_error}\n\nError Message:\n`{strings.chat_concurrent_blocked}`"
-        }
+    elif "bard" in chatdata.concurrent_lock:
+        return {"text": strings.concurrent_locked}
     elif chatdata.bard_clear_task is not None:
         chatdata.bard_clear_task.cancel()
         chatdata.bard_clear_task = None
@@ -46,7 +44,7 @@ async def process_message_bard(
     if input_text.startswith("爱丽丝"):
         input_text = input_text.replace("爱丽丝", "Bard", 1)
 
-    chatdata.bard_blocked = True
+    chatdata.concurrent_lock.add("bard")
     try:
         if preset == "default":
             response = await chatdata.bard_chatbot.ask(message=input_text)
@@ -80,7 +78,7 @@ async def process_message_bard(
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
         }
     finally:
-        chatdata.bard_blocked = None
+        chatdata.concurrent_lock.remove("bard")
 
     output_text = response["content"]
     output_photo = response["images"]

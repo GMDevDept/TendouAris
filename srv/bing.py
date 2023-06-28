@@ -48,10 +48,8 @@ async def process_message_bing(
                 return {
                     "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {e}`"
                 }
-    elif chatdata.bing_blocked:
-        return {
-            "text": f"{strings.api_error}\n\nError Message:\n`{strings.chat_concurrent_blocked}`"
-        }
+    elif "bing" in chatdata.concurrent_lock:
+        return {"text": strings.concurrent_locked}
     elif chatdata.bing_clear_task is not None:
         chatdata.bing_clear_task.cancel()
         chatdata.bing_clear_task = None
@@ -60,7 +58,7 @@ async def process_message_bing(
     if input_text.startswith("爱丽丝"):
         input_text = input_text.replace("爱丽丝", "Bing", 1)
 
-    chatdata.bing_blocked = True
+    chatdata.concurrent_lock.add("bing")
     try:
         response = await chatdata.bing_chatbot.ask(
             prompt=input_text,
@@ -75,7 +73,7 @@ async def process_message_bing(
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
         }
     finally:
-        chatdata.bing_blocked = None
+        chatdata.concurrent_lock.remove("bing")
 
     output_text = response["text"]
     sources = response.get("sources")
