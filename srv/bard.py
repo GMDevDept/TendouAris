@@ -4,8 +4,7 @@ import re
 import json
 import asyncio
 import logging
-import prompts
-from scripts import gvars, strings, util
+from scripts import gvars, strings, util, prompts
 from Bard import AsyncChatbot
 from pyrogram import Client
 

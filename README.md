@@ -45,16 +45,17 @@ Alternatively, if you have experience in git, you can also fork this repo and su
     ```
 
 2. Rename .env.sample to .env and fill the values.
-3. Rename prompts.sample.py to prompts.py and cusomize the following prompts:
-   - `aris_prompt_template`
-   - `initial_prompts`
-   - `fallback_prompt_template`
-   - `summary_prompt_template`
-   - `unlock_prompt`
-4. (Optional) Export cookies from <https://bing.com/chat> and save it as `bing_cookies_fallback.json` under `\srv` directory. Check [EdgeGPT ducumentation](https://github.com/acheong08/EdgeGPT#authentication) for why and how to do this. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/bing_cookies_fallback.sample.json) is provided for format reference.
-5. Build docker container.
+3. (Optional) Export cookies from <https://bing.com/chat> and save it as `bing_cookies_fallback.json` under `\srv` directory. Check [EdgeGPT ducumentation](https://github.com/acheong08/EdgeGPT#authentication) for why and how to do this. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/bing_cookies_fallback.sample.json) is provided for format reference.
+4. Build docker container.
 
     ``` bash
     docker-compose up -d --build
     docker image prune -f   # Remove unused dangling images (optional)
     ```
+
+## Dependencies
+
+- [Pyrogram](https://github.com/pyrogram/pyrogram): Elegant, modern and asynchronous Telegram MTProto API framework in Python for users and bots
+- [LangChain](https://github.com/hwchase17/langchain): ⚡ Building applications with LLMs through composability ⚡
+- [EdgeGPT](https://github.com/acheong08/EdgeGPT): Reverse engineered API of Microsoft's Bing Chat AI
+- [Bard](https://github.com/acheong08/Bard): Python SDK/API for reverse engineered Google Bard

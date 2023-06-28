@@ -1,16 +1,11 @@
 version = """
-**TendouArisBot v2.0.7**
+**TendouArisBot v2.1.0**
 
 Latest update: 2023/06/28
 
 Update log:
-v2.0.6
-- Bard模型修复
-v2.0.4
-- 添加了新的GPT3.5模型预设: 风俗体验馆
-v2.0.3
-- 添加了新的GPT3.5模型预设: 葵、关系养成模拟器
-- 修复了Bing模型authentication failed的问题
+v2.1.0
+- 自建时不再需要设置默认prompt文件
 v2.0.0
 - 新增GPT4模型支持
 - GPT3.5和GPT4支持自定义预设/角色扮演/内容解锁, 详见 `/model - gpt3.5/gpt4 - 自定义专属预设`
