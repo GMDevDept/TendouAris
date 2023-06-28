@@ -77,6 +77,8 @@ async def process_message_gpt35(
                 return {
                     "text": f"{strings.internal_error}\n\nError message: `Invalid preset for gpt35 model: {preset}`"
                 }
+    elif "gpt35" in chatdata.concurrent_lock:
+        return {"text": strings.concurrent_locked}
     elif chatdata.gpt35_clear_task is not None:
         chatdata.gpt35_clear_task.cancel()
         chatdata.gpt35_clear_task = None
@@ -113,6 +115,7 @@ async def process_message_gpt35(
         backup_moving_summary_buffer = chatdata.gpt35_history.moving_summary_buffer
         backup_chat_memory = chatdata.gpt35_history.chat_memory.messages.copy()
 
+    chatdata.concurrent_lock.add("gpt35")
     try:
         response = await chatdata.gpt35_chatbot.apredict(input=input_text)
     except Exception as e:
@@ -122,6 +125,8 @@ async def process_message_gpt35(
         return {
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
         }
+    finally:
+        chatdata.concurrent_lock.remove("gpt35")
 
     if backup_moving_summary_buffer is not None or backup_chat_memory is not None:
         response = await fallback_response_handler(
@@ -308,7 +313,19 @@ async def fallback_response_handler(
                 ),
                 memory=chatdata.gpt35_history,
             )
-            fallback_response = await backup_chatbot.apredict(input=input_text)
+
+            chatdata.concurrent_lock.add(chatdata.model["name"])
+            try:
+                fallback_response = await backup_chatbot.apredict(input=input_text)
+            except Exception as e:
+                logging.error(
+                    f"Error happened when calling backup_chatbot.apredict in chat {chatdata.chat_id}: {e}"
+                )
+                return {
+                    "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
+                }
+            finally:
+                chatdata.concurrent_lock.remove(chatdata.model["name"])
 
             fallback = None
             for keyword in strings.text_filters:
@@ -394,6 +411,8 @@ async def process_message_gpt4(
                 return {
                     "text": f"{strings.internal_error}\n\nError message: `Invalid preset for gpt4 model: {preset}`"
                 }
+    elif "gpt4" in chatdata.concurrent_lock:
+        return {"text": strings.concurrent_locked}
     elif chatdata.gpt4_clear_task is not None:
         chatdata.gpt4_clear_task.cancel()
         chatdata.gpt4_clear_task = None
@@ -429,6 +448,7 @@ async def process_message_gpt4(
         backup_moving_summary_buffer = chatdata.gpt4_history.moving_summary_buffer
         backup_chat_memory = chatdata.gpt4_history.chat_memory.messages.copy()
 
+    chatdata.concurrent_lock.add("gpt4")
     try:
         response = await chatdata.gpt4_chatbot.apredict(input=input_text)
     except Exception as e:
@@ -438,6 +458,8 @@ async def process_message_gpt4(
         return {
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
         }
+    finally:
+        chatdata.concurrent_lock.remove("gpt4")
 
     if backup_moving_summary_buffer is not None or backup_chat_memory is not None:
         response = await fallback_response_handler(

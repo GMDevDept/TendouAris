@@ -35,12 +35,11 @@ class ChatData:
         self.gpt4_history: Optional[ConversationSummaryBufferMemory] = None
         self.gpt4_clear_task: Optional[Task] = None
         self.bing_chatbot: Optional[BingChatbot] = None
-        self.bing_blocked: Optional[bool] = None
         self.bing_clear_task: Optional[Task] = None
         self.bard_chatbot: Optional[BardChatbot] = None
-        self.bard_blocked: Optional[bool] = None
         self.bard_clear_task: Optional[Task] = None
         self.last_reply: Optional[str] = None
+        self.concurrent_lock: set = set()  # {model}
 
     @property
     def persistent_data(self) -> dict:
@@ -137,12 +136,11 @@ class ChatData:
         self.gpt4_history = None
         self.gpt4_clear_task = None
         self.bing_chatbot = None
-        self.bing_blocked = None
         self.bing_clear_task = None
         self.bard_chatbot = None
-        self.bard_blocked = None
         self.bard_clear_task = None
         self.last_reply = None
+        self.concurrent_lock.clear()
 
 
 class GroupChatData(ChatData):

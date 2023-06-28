@@ -1,7 +1,7 @@
 version = """
-**TendouArisBot v2.0.6**
+**TendouArisBot v2.0.7**
 
-Latest update: 2023/06/27
+Latest update: 2023/06/28
 
 Update log:
 v2.0.6
@@ -152,7 +152,7 @@ model_changed = "当前模型:"
 
 bing_choose_style = "请选择New Bing模型的对话风格:"
 
-chat_concurrent_blocked = "Please wait for the last conversation to finish"
+concurrent_locked = "老师请稍等, 爱丽丝还在思考您的上一个问题哦…😮‍💨"
 
 bing_chatbot_creation_failed = "Bing chatbot creation failed"
 
