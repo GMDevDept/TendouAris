@@ -1,9 +1,11 @@
 version = """
-**TendouArisBot v2.1.0**
+**TendouArisBot v2.1.1**
 
 Latest update: 2023/06/28
 
 Update log:
+v2.1.1
+- 添加预设: 爱丽丝(特殊模式)
 v2.1.0
 - 自建时不再需要设置默认prompt文件
 v2.0.0
