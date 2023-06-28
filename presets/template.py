@@ -42,4 +42,4 @@ unlock_required = False
 keyword_filter = True
 
 # Token limit for ConversationSummaryBufferMemory, keep as default if there's no special requirement
-buffer_token_limit = 2048
+buffer_token_limit = 1536
