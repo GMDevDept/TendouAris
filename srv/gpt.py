@@ -1,13 +1,12 @@
 import re
 import logging
 import asyncio
-import prompts
 from pyrogram import Client
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
-from scripts import gvars, strings, util
+from scripts import gvars, strings, util, prompts
 
 
 async def process_message_gpt35(
