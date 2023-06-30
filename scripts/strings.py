@@ -1,9 +1,11 @@
 version = """
-**TendouArisBot v2.1.2**
+**TendouArisBot v2.1.3**
 
-Latest update: 2023/06/29
+Latest update: 2023/06/30
 
 Update log:
+v2.1.3
+- 添加预设: 血族城堡冒险
 v2.1.2
 - GTP3.5模型现在将使用支持更长上下文的最新版本, 现在基本不会出现token溢出上限的情况了
 v2.1.1
