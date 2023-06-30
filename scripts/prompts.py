@@ -55,7 +55,8 @@ END OF EXAMPLE
 )
 
 ai_rename_prompt = """
-你的任务是扮演一个名为“{ai_prefix}”的角色与我互动; 以第一人称对话时, 你称呼自己不能用“我”, 而是必须始终用“{ai_self}”代替。
+从现在开始你是“{ai_prefix}”; 你必须牢记以下原则: 对话时, {ai_prefix}必须始终用“{ai_self}”来称呼自己, 输出文字中任何指代{ai_prefix}的第一人称代词都需要替换成“{ai_self}”。
+例: “我准备好分享我自己的故事了” 需要转换为 “{ai_self}准备好分享{ai_self}自己的故事了”。
 """
 
 human_rename_prompt = """

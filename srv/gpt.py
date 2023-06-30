@@ -36,23 +36,26 @@ async def process_message_gpt35(
     if chatdata.gpt35_chatbot is None or chatdata.gpt35_history is None:
         preset = model_args.get("preset", "aris")
         conversation_model = ChatOpenAI(
-            model="gpt-3.5-turbo", temperature=1, openai_api_key=api_key
+            model="gpt-3.5-turbo-16k", temperature=0.7, openai_api_key=api_key
+        )
+        summary_model = ChatOpenAI(
+            model="gpt-3.5-turbo", temperature=0.3, openai_api_key=api_key
         )
 
         match preset:
             case "aris":
                 chatdata.gpt35_chatbot = create_gpt35_aris_chatbot(
-                    chatdata, conversation_model
+                    chatdata, conversation_model, summary_model
                 )
             case "default":
                 chatdata.gpt35_chatbot = create_gpt35_default_chatbot(
-                    chatdata, conversation_model
+                    chatdata, conversation_model, summary_model
                 )
             case "custom":
                 custom_preset = chatdata.gpt35_preset
                 try:
                     chatdata.gpt35_chatbot = create_gpt35_custom_chatbot(
-                        chatdata, conversation_model, custom_preset
+                        chatdata, conversation_model, summary_model, custom_preset
                     )
                 except (TypeError, AttributeError, LookupError):
                     return {
@@ -63,7 +66,7 @@ async def process_message_gpt35(
                 addon_preset = gvars.gpt35_addons.get(preset_id)
                 try:
                     chatdata.gpt35_chatbot = create_gpt35_custom_chatbot(
-                        chatdata, conversation_model, addon_preset
+                        chatdata, conversation_model, summary_model, addon_preset
                     )
                 except (TypeError, AttributeError, LookupError) as e:
                     logging.error(
@@ -125,7 +128,7 @@ async def process_message_gpt35(
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
         }
     finally:
-        chatdata.concurrent_lock.remove("gpt35")
+        chatdata.concurrent_lock.discard("gpt35")
 
     if backup_moving_summary_buffer is not None or backup_chat_memory is not None:
         response = await fallback_response_handler(
@@ -155,11 +158,11 @@ async def process_message_gpt35(
 
 
 def create_gpt35_default_chatbot(
-    chatdata, conversation_model: ChatOpenAI
+    chatdata, conversation_model: ChatOpenAI, summary_model: ChatOpenAI
 ) -> ConversationChain:
     if chatdata.gpt35_history is None:
         chatdata.gpt35_history = ConversationSummaryBufferMemory(
-            llm=conversation_model,
+            llm=summary_model,
             max_token_limit=2048,
         )
 
@@ -171,7 +174,7 @@ def create_gpt35_default_chatbot(
 
 
 def create_gpt35_aris_chatbot(
-    chatdata, conversation_model: ChatOpenAI
+    chatdata, conversation_model: ChatOpenAI, summary_model: ChatOpenAI
 ) -> ConversationChain:
     aris_prompt = PromptTemplate(
         input_variables=["history", "input"], template=prompts.aris_prompt_template
@@ -185,9 +188,9 @@ def create_gpt35_aris_chatbot(
         chatdata.gpt35_history = ConversationSummaryBufferMemory(
             human_prefix="老师",
             ai_prefix="爱丽丝",
-            llm=conversation_model,
+            llm=summary_model,
             prompt=summary_prompt,
-            max_token_limit=1024,
+            max_token_limit=2048,
         )
         chatdata.gpt35_history.save_context(
             {"input": prompts.initial_prompts["input"]},
@@ -202,7 +205,10 @@ def create_gpt35_aris_chatbot(
 
 
 def create_gpt35_custom_chatbot(
-    chatdata, conversation_model: ChatOpenAI, preset_args: dict
+    chatdata,
+    conversation_model: ChatOpenAI,
+    summary_model: ChatOpenAI,
+    preset_args: dict,
 ) -> ConversationChain:
     unlock_required = preset_args.get("unlock_required")
     ai_prefix = preset_args.get("ai_prefix") or preset_args.get("ai_self")
@@ -248,12 +254,12 @@ def create_gpt35_custom_chatbot(
         chatdata.gpt35_history = ConversationSummaryBufferMemory(
             human_prefix=human_prefix or "我",
             ai_prefix=ai_prefix or "你",
-            llm=conversation_model,
+            llm=summary_model,
             prompt=PromptTemplate(
                 input_variables=["summary", "new_lines"],
                 template=prompts.summary_prompt_template,
             ),
-            max_token_limit=preset_args.get("buffer_token_limit", 1024),
+            max_token_limit=preset_args.get("buffer_token_limit", 2048),
         )
         if preset_args.get("sample_io"):
             for io_pair in preset_args.get("sample_io"):
@@ -324,7 +330,7 @@ async def fallback_response_handler(
                     "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
                 }
             finally:
-                chatdata.concurrent_lock.remove(chatdata.model["name"])
+                chatdata.concurrent_lock.discard(chatdata.model["name"])
 
             fallback = None
             for keyword in strings.text_filters:
@@ -371,10 +377,10 @@ async def process_message_gpt4(
     if chatdata.gpt4_chatbot is None or chatdata.gpt4_history is None:
         preset = model_args.get("preset", "default")
         conversation_model = ChatOpenAI(
-            model="gpt-4", temperature=1, openai_api_key=api_key
+            model="gpt-4", temperature=0.7, openai_api_key=api_key
         )
         summary_model = ChatOpenAI(
-            model="gpt-3.5-turbo", temperature=1, openai_api_key=api_key
+            model="gpt-3.5-turbo", temperature=0.3, openai_api_key=api_key
         )
 
         match preset:
@@ -458,7 +464,7 @@ async def process_message_gpt4(
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
         }
     finally:
-        chatdata.concurrent_lock.remove("gpt4")
+        chatdata.concurrent_lock.discard("gpt4")
 
     if backup_moving_summary_buffer is not None or backup_chat_memory is not None:
         response = await fallback_response_handler(
@@ -558,7 +564,7 @@ def create_gpt4_custom_chatbot(
                 input_variables=["summary", "new_lines"],
                 template=prompts.summary_prompt_template,
             ),
-            max_token_limit=preset_args.get("buffer_token_limit", 1024),
+            max_token_limit=preset_args.get("buffer_token_limit", 2048),
         )
         if preset_args.get("sample_io"):
             for io_pair in preset_args.get("sample_io"):

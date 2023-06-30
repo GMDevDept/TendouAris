@@ -77,7 +77,7 @@ async def process_message_bard(
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
         }
     finally:
-        chatdata.concurrent_lock.remove("bard")
+        chatdata.concurrent_lock.discard("bard")
 
     output_text = response["content"]
     output_photo = response["images"]
