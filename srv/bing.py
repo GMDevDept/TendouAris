@@ -73,7 +73,7 @@ async def process_message_bing(
             "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
         }
     finally:
-        chatdata.concurrent_lock.remove("bing")
+        chatdata.concurrent_lock.discard("bing")
 
     output_text = response["text"]
     sources = response.get("sources")

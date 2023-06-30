@@ -1,9 +1,11 @@
 version = """
-**TendouArisBot v2.1.1**
+**TendouArisBot v2.1.2**
 
-Latest update: 2023/06/28
+Latest update: 2023/06/29
 
 Update log:
+v2.1.2
+- GTP3.5模型现在将使用支持更长上下文的最新版本, 现在基本不会出现token溢出上限的情况了
 v2.1.1
 - 添加预设: 爱丽丝(特殊模式)
 v2.1.0
@@ -11,7 +13,6 @@ v2.1.0
 v2.0.0
 - 新增GPT4模型支持
 - GPT3.5和GPT4支持自定义预设/角色扮演/内容解锁, 详见 `/model - gpt3.5/gpt4 - 自定义专属预设`
-- 优化了GPT3.5和GPT4会话历史处理机制, 减少了token消耗, 现在基本不会出现token溢出上限的情况了
 - 爱丽丝的GitHub repo现在支持通过模版快捷添加预设模块, 欢迎[通过issue或pull request为爱丽丝添加预设](https://github.com/ToffeeNeko/TendouAris#contributing)
 - New Bing和Google Bard目前对所有人开放, 后续视服务器压力可能会限制使用
 """
@@ -218,8 +219,8 @@ custom_preset_template = """
 1. prompt: 全部系统设定, 角色人设尽量详细完整, 注意**文字中不能有英文单双引号和段落换行**, 引号可用中文引号代替, 换行可用空格代替; 全文长度不能超过Telegram单条消息长度上限
 2. ai_prefix: (选填) 自定义AI的名字, 引号必须保留, 留空默认爱丽丝
 3. ai_self: (选填) AI怎么称呼自己, 如在下, 妾身, 爱丽丝, 本超天才病弱美少女黑客~~, 老胡~~等, 建议搭配`sample_output`使用, 引号必须保留, 留空默认与`ai_prefix`相同
-4. human_prefix: (选填) AI怎么称呼你, 引号必须保留, 留空默认老师
-5. sample_input, sample_output: (选填) 对话风格示范, 用于引导AI使用特定的语气、格式、口癖等, 引号必须保留, 留空则不会进行引导
+4. human_prefix: (选填) AI怎么称呼你, 建议搭配`sample_output`使用, 引号必须保留, 留空默认老师
+5. sample_input, sample_output: (选填) 对话风格示范, 用于引导AI使用特定的自称、语气、格式、口癖等, 引号必须保留, 留空则不会进行引导
 6. unlock_required: 只能放true或者false, 如果设为true, 加载你的系统设定时会额外加一段prompt尝试解锁OpenAI的内容限制, 可能会破坏你的人设, 且不保证有效; 如果你的prompt自带解锁功能的话建议设为false
 7. keyword_filter: 只能放true或者false, 如果设为true, 当模型输出文本中包含常见违规提示词时会自动消除本条对话记忆; 如果打算进行角色扮演则建议设为true
 """
