@@ -1,10 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.1.4**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.1.5**
 
 **▎Latest update**
-2023/07/01
+2023/07/02
 
 **▎Update log**
+v2.1.5
+- 添加两个新预设
 v2.1.4
 - 添加三个新预设
 v2.1.3
