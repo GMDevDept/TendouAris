@@ -8,7 +8,7 @@ id = "fgo"
 display_name = "FGO 4P"
 
 # Description for this preset, which will be shown in the bot preset selection menu
-description = "阿尔托莉雅, 紫式部, 源赖光\n\n(GPT3.5效果不佳, 推荐GPT4)"
+description = "阿尔托莉雅, 紫式部, 源赖光\n\n(推荐使用GPT4)"
 
 # The full system prompt for your preset, character settings should be included, length should be less than 4000 characters, support base64 encoded string
 prompt = """
