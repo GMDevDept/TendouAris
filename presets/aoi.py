@@ -1,5 +1,5 @@
 # Assign a list of compatible models that this preset can be used with, now only support "gpt35" or "gpt4" or both
-compatible_models = ["gpt35"]
+compatible_models = ["gpt35", "gpt4"]
 
 # Unique preset id, must be same as the file name, no spaces, no special characters, cannot be same with other presets
 id = "aoi"

@@ -1,9 +1,12 @@
 version = """
-**TendouArisBot v2.1.3**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.1.4**
 
-Latest update: 2023/06/30
+**▎Latest update**
+2023/07/01
 
-Update log:
+**▎Update log**
+v2.1.4
+- 添加三个新预设
 v2.1.3
 - 添加预设: 血族城堡冒险
 v2.1.2
@@ -22,15 +25,15 @@ v2.0.0
 manual = """
 **{} Sensei, 欢迎您成为勇者爱丽丝的伙伴!** 😆
 在出发冒险之前, 记得请先使用 /apikey 指令设置爱丽丝的OpenAI API key哦~ 😉
-\n**如何与爱丽丝对话:**
+\n**▎如何与爱丽丝对话:**
 1. 私聊时, 直接发送文字即可, 也可以使用 /aris 指令 + 你的输入内容进行对话
 2. 在群聊中, 可以使用 /aris 指令或**回复**爱丽丝发送的消息来与她对话。**当爱丽丝为群聊的管理员时**, 她还可以自动识别以“爱丽丝”开头的消息并进行回复
-\n**通过 /model 指令选择语言模型, 目前支持的模型包括:**
+\n**▎通过 /model 指令选择语言模型, 目前支持的模型包括:**
 1. GPT3.5 Turbo (默认)
 2. GPT4
 3. New Bing
 4. Google Bard
-\n**FAQ:**
+\n**▎FAQ:**
 Q: 爱丽丝和普通的ChatGPT有什么不同?
 A: 除了角色设定外, 爱丽丝还通过预设prompt解除了一部分ChatGPT的内容输出限制, 可以和她聊更多ChatGPT无法回答的话题
 Q: 爱丽丝忘记了自己的身份/拒绝回答问题/复读自己是语言模型怎么办?
@@ -39,7 +42,7 @@ Q: OpenAI API key是什么? 怎么获取?
 A: API key是爱丽丝实现对话功能所必需的, 可以在 `https://platform.openai.com/account/api-keys` 页面获取。不知道如何注册OpenAI账号请自行谷歌
 Q: 输入的API key安全吗?
 A: 私聊中输入的API key只会被用于你自己的帐号, 群聊中输入的API key也只会被用于当前群聊, 实在不放心欢迎自建
-\n**爱丽丝指令集:**
+\n**▎爱丽丝指令集:**
 /aris - パンパカパーン！
 /model - 选择语言模型
 /reset - 重置对话历史
@@ -48,8 +51,8 @@ A: 私聊中输入的API key只会被用于你自己的帐号, 群聊中输入�
 /help - 爱丽丝食用指南
 /version - 查看版本及更新信息
 /setting - 当前群聊设置 (仅群组内可用)
-\n**开源项目地址:** [GitHub](https://github.com/ToffeeNeko/TendouAris)
-**Telegram Bot:** [TendouArisBot](https://t.me/TendouArisBot)
+\n**▎开源项目地址:** [GitHub](https://github.com/ToffeeNeko/TendouAris)
+**▎Telegram Bot:** [TendouArisBot](https://t.me/TendouArisBot)
 """
 
 no_auth = "接触权限确认失败, 爱丽丝无法回应对象的会话请求🫥"
