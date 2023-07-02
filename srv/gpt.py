@@ -39,7 +39,7 @@ async def process_message_gpt35(
             model="gpt-3.5-turbo-16k", temperature=0.7, openai_api_key=api_key
         )
         summary_model = ChatOpenAI(
-            model="gpt-3.5-turbo", temperature=0.3, openai_api_key=api_key
+            model="gpt-3.5-turbo-16k", temperature=0.3, openai_api_key=api_key
         )
 
         match preset:
@@ -380,7 +380,7 @@ async def process_message_gpt4(
             model="gpt-4", temperature=0.7, openai_api_key=api_key
         )
         summary_model = ChatOpenAI(
-            model="gpt-3.5-turbo", temperature=0.3, openai_api_key=api_key
+            model="gpt-3.5-turbo-16k", temperature=0.3, openai_api_key=api_key
         )
 
         match preset:
