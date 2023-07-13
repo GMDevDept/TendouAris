@@ -2,9 +2,11 @@ version = """
 **▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.1.5**
 
 **▎Latest update**
-2023/07/02
+2023/07/13
 
 **▎Update log**
+v2.1.6
+- Bard已经开放官方中文支持
 v2.1.5
 - 添加两个新预设
 v2.1.4
@@ -237,8 +239,7 @@ custom_template_parse_failed = "模版解析失败, 请严格确保格式正确"
 github_contributing = "🙋‍♀️ 为爱丽丝添加更多预设!"
 
 bard_presets = {
-    "default": "官方原版 (仅支持英日韩语对话)",
-    "cn": "中文输入Beta版 (输出仍为英语)",
+    "default": "官方原版",
 }
 
 chat_setting_menu = "请选择需要设置的选项:"

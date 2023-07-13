@@ -266,13 +266,7 @@ async def model_selection_callback_handler(client, query):
                                     strings.bard_presets.get("default"),
                                     callback_data="bardpreset-default",
                                 )
-                            ],
-                            [
-                                InlineKeyboardButton(
-                                    strings.bard_presets.get("cn"),
-                                    callback_data="bardpreset-cn",
-                                )
-                            ],
+                            ]
                         ]
                     ),
                 )
