@@ -1,10 +1,9 @@
 # https://github.com/acheong08/Bard
 
 import re
-import json
 import asyncio
 import logging
-from scripts import gvars, strings, util, prompts
+from scripts import gvars, strings, util
 from Bard import AsyncChatbot
 from pyrogram import Client
 
@@ -47,28 +46,6 @@ async def process_message_bard(
     try:
         if preset == "default":
             response = await chatdata.bard_chatbot.ask(message=input_text)
-        elif preset == "cn":
-            input_text = prompts.bard_cn_input_prompt.format(input_text)
-            pre_response = await chatdata.bard_chatbot.ask(message=input_text)
-            try:
-                # Match json object in the output text
-                output_json = re.match(
-                    r".*?({.*}).*", pre_response["content"], re.DOTALL
-                ).group(1)
-                output_dict = json.loads(output_json)
-                input_text_final = output_dict["en_translation"]
-            except (AttributeError, json.JSONDecodeError, KeyError):
-                # Handle cases where the regular expression pattern does not match anything
-                # or the resulting substring is not a valid JSON object
-                # or the JSON object does not contain the key "en_translation"
-                input_text_final = input_text  # Fallback to the original input text
-            except Exception as e:
-                logging.error(
-                    f"Error happened when handling bard cn input in chat {chatdata.chat_id}: {e}"
-                )
-                return {"text": f"{strings.api_error}\n\nError Message:\n`{e}`"}
-
-            response = await chatdata.bard_chatbot.ask(message=input_text_final)
     except Exception as e:
         logging.error(
             f"Error happened when calling bard_chatbot.ask in chat {chatdata.chat_id}: {e}"

@@ -78,13 +78,3 @@ HISTORY
 {human_prefix}: INPUT
 {ai_prefix}:
 """
-
-bard_cn_input_prompt = """
-Your task is to translate the given text into English (en_translation).
-Your response should be provided as a JSON object with key = `en_translation`.
-
-The text you are going to translate is given below and delimited by triple backticks.
-Text: ```
-{}
-```
-"""
