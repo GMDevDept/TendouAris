@@ -1,10 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.1.5**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.1.7**
 
 **▎Latest update**
 2023/07/13
 
 **▎Update log**
+v2.1.7
+- 修复New Bing模型
 v2.1.6
 - Bard已经开放官方中文支持
 v2.1.5

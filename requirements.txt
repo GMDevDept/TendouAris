@@ -1,4 +1,4 @@
-EdgeGPT==0.11.5
+EdgeGPT==0.12.1
 GoogleBard==1.4.0
 openai==0.27.7
 redis==4.5.5
