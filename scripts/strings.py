@@ -1,31 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.1.7**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.1.8**
 
 **▎Latest update**
-2023/07/13
+2023/09/11
 
 **▎Update log**
-v2.1.7
-- 修复New Bing模型
-v2.1.6
-- Bard已经开放官方中文支持
-v2.1.5
-- 添加两个新预设
-v2.1.4
-- 添加三个新预设
-v2.1.3
-- 添加预设: 血族城堡冒险
-v2.1.2
-- GTP3.5模型现在将使用支持更长上下文的最新版本, 现在基本不会出现token溢出上限的情况了
-v2.1.1
-- 添加预设: 爱丽丝(特殊模式)
-v2.1.0
-- 自建时不再需要设置默认prompt文件
-v2.0.0
-- 新增GPT4模型支持
-- GPT3.5和GPT4支持自定义预设/角色扮演/内容解锁, 详见 `/model - gpt3.5/gpt4 - 自定义专属预设`
-- 爱丽丝的GitHub repo现在支持通过模版快捷添加预设模块, 欢迎[通过issue或pull request为爱丽丝添加预设](https://github.com/ToffeeNeko/TendouAris#contributing)
-- New Bing和Google Bard目前对所有人开放, 后续视服务器压力可能会限制使用
+v2.1.8
+- 更新依赖
 """
 
 manual = """
@@ -165,9 +146,7 @@ concurrent_locked = "老师请稍等, 爱丽丝还在思考您的上一个问题
 
 bing_chatbot_creation_failed = "Bing chatbot creation failed"
 
-bard_cookie_unavailable = (
-    "GOOGLE_BARD_COOKIE environment variable is not set for the bot"
-)
+bard_cookie_unavailable = "Cookies required by Bard model is not set in .env"
 
 bard_session_creation_failed = "Bard chatbot creation failed"
 
