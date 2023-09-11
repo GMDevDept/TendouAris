@@ -24,7 +24,9 @@ async def process_message_bard(
 
     if not chatdata.bard_chatbot:
         try:
-            chatdata.bard_chatbot = await AsyncChatbot.create(gvars.google_bard_cookie)
+            chatdata.bard_chatbot = await AsyncChatbot.create(
+                gvars.bard_1psid, gvars.bard_1psidts
+            )
         except Exception as e:
             logging.error(
                 f"Error happened when creating bard_chatbot in chat {chatdata.chat_id}: {e}"

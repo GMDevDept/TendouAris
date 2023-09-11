@@ -254,7 +254,7 @@ async def model_selection_callback_handler(client, query):
                 ),
             )
         elif modelname == "bard":
-            if not gvars.google_bard_cookie:
+            if not gvars.bard_1psid or not gvars.bard_1psidts:
                 await query.message.edit(strings.bard_cookie_unavailable)
             else:
                 await query.message.edit(
