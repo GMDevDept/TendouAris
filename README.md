@@ -21,6 +21,7 @@ Aris is a telegram chatbot based on OpenAI API with customized character preset.
 | gpt-4 | ✅ | ✅ |
 | New Bing | ✅ | 🚫 |
 | Google Bard | ✅ | 🚫 |
+| Claude | ✅ | 🚫 |
 
 ## Contributing
 
@@ -59,3 +60,4 @@ Alternatively, if you have experience in git, you can also fork this repo and su
 - [LangChain](https://github.com/hwchase17/langchain): ⚡ Building applications with LLMs through composability ⚡
 - [EdgeGPT](https://github.com/acheong08/EdgeGPT): Reverse engineered API of Microsoft's Bing Chat AI
 - [Bard](https://github.com/acheong08/Bard): Python SDK/API for reverse engineered Google Bard
+- [Async-Claude-Client](https://github.com/canxin121/Async-Claude-Client): Async client for claude.ai and claude bot of slack

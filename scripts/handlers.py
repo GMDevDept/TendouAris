@@ -93,6 +93,12 @@ async def model_selection_handler(client, message):
                             strings.models.get("model-bard"), callback_data="model-bard"
                         )
                     ],
+                    [
+                        InlineKeyboardButton(
+                            strings.models.get("model-claude"),
+                            callback_data="model-claude",
+                        )
+                    ],
                 ]
             ),
         )
@@ -270,6 +276,17 @@ async def model_selection_callback_handler(client, query):
                         ]
                     ),
                 )
+        elif modelname == "claude":
+            chatdata = util.load_chat(
+                query.message.chat.id,
+                create_new=True,
+                is_group=await util.is_group(query.message.chat),
+            )
+            chatdata.set_model({"name": "claude", "args": None})
+
+            await query.message.edit(
+                strings.model_changed + strings.models.get("model-claude")
+            )
 
 
 # GPT-3.5 preset selection callback
@@ -761,6 +778,12 @@ async def manage_mode_handler(client, message):
                         callback_data="manage-scope-bard",
                     )
                 ],
+                [
+                    InlineKeyboardButton(
+                        strings.manage_mode_options.get("scope-claude"),
+                        callback_data="manage-scope-claude",
+                    )
+                ],
             ]
         ),
     )
@@ -768,7 +791,7 @@ async def manage_mode_handler(client, message):
 
 # Manage mode callback
 async def manage_mode_callback_handler(client, query):
-    if re.match(r"^manage-scope-(global|gpt35|gpt4|bing|bard)$", query.data):
+    if re.match(r"^manage-scope-(global|gpt35|gpt4|bing|bard|claude)$", query.data):
         await query.message.edit(
             strings.manage_mode_choose_scope,
             reply_markup=InlineKeyboardMarkup(
@@ -795,11 +818,11 @@ async def manage_mode_callback_handler(client, query):
             ),
         )
     elif re.match(
-        r"^manage-scope-(global|gpt35|gpt4|bing|bard)-(all|whitelist|manager)$",
+        r"^manage-scope-(global|gpt35|gpt4|bing|bard|claude)-(all|whitelist|manager)$",
         query.data,
     ):
         match = re.match(
-            r"^manage-scope-(global|gpt35|gpt4|bing|bard)-(all|whitelist|manager)$",
+            r"^manage-scope-(global|gpt35|gpt4|bing|bard|claude)-(all|whitelist|manager)$",
             query.data,
         )
         model = match.group(1)

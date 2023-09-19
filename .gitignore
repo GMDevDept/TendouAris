@@ -194,3 +194,4 @@ pyrightconfig.json
 *test*
 .DS_Store
 bing_cookies_fallback.json
+claude_cookies.json

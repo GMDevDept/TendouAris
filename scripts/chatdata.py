@@ -5,12 +5,14 @@ from typing import Optional
 from asyncio import Task
 from EdgeGPT.EdgeGPT import Chatbot as BingChatbot
 from Bard import AsyncChatbot as BardChatbot
+from async_claude_client import ClaudeAiClient
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationSummaryBufferMemory
 from scripts import gvars, strings
 from srv.gpt import process_message_gpt35, process_message_gpt4
 from srv.bing import process_message_bing
 from srv.bard import process_message_bard
+from srv.claude import process_message_claude
 
 
 class ChatData:
@@ -38,6 +40,9 @@ class ChatData:
         self.bing_clear_task: Optional[Task] = None
         self.bard_chatbot: Optional[BardChatbot] = None
         self.bard_clear_task: Optional[Task] = None
+        self.claude_chatbot: Optional[ClaudeAiClient] = None
+        self.claude_uuid: Optional[str] = None
+        self.claude_clear_task: Optional[Task] = None
         self.last_reply: Optional[str] = None
         self.concurrent_lock: set = set()  # {model}
 
@@ -124,6 +129,13 @@ class ChatData:
                     model_args=model_args,
                     model_input=model_input,
                 )
+            case "claude":
+                model_output = await process_message_claude(
+                    client=client,
+                    chatdata=self,
+                    model_args=model_args,
+                    model_input=model_input,
+                )
         return model_output
 
     async def reset(self):
@@ -139,6 +151,9 @@ class ChatData:
         self.bing_clear_task = None
         self.bard_chatbot = None
         self.bard_clear_task = None
+        self.claude_chatbot = None
+        self.claude_uuid = None
+        self.claude_clear_task = None
         self.last_reply = None
         self.concurrent_lock.clear()
 
