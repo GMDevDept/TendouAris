@@ -1,12 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.1.8**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.2.0**
 
 **▎Latest update**
-2023/09/11
+2023/09/18
 
 **▎Update log**
-v2.1.8
-- 更新依赖
+v2.2.0
+- 新增Claude模型支持
 """
 
 manual = """
@@ -20,6 +20,7 @@ manual = """
 2. GPT4
 3. New Bing
 4. Google Bard
+5. Claude
 \n**▎FAQ:**
 Q: 爱丽丝和普通的ChatGPT有什么不同?
 A: 除了角色设定外, 爱丽丝还通过预设prompt解除了一部分ChatGPT的内容输出限制, 可以和她聊更多ChatGPT无法回答的话题
@@ -123,6 +124,7 @@ models = {
     "model-gpt4": "GPT4",
     "model-bing": "New Bing",
     "model-bard": "Google Bard",
+    "model-claude": "Claude",
 }
 
 choose_model = """
@@ -149,6 +151,8 @@ bing_chatbot_creation_failed = "Bing chatbot creation failed"
 bard_cookie_unavailable = "Cookies required by Bard model is not set in .env"
 
 bard_session_creation_failed = "Bard chatbot creation failed"
+
+claude_chatbot_creation_failed = "Claude chatbot creation failed"
 
 placeholder_before_output = [
     "爱丽丝正在搜寻资料中, 请稍等……",
@@ -248,6 +252,7 @@ manage_mode_options = {
     "scope-gpt4": "设置GPT4模型允许使用范围",
     "scope-bing": "设置New Bing模型允许使用范围",
     "scope-bard": "设置Google Bard模型允许使用范围",
+    "scope-claude": "设置Claude模型允许使用范围",
 }
 
 manage_mode_choose_scope = "请选择允许使用的范围:"
