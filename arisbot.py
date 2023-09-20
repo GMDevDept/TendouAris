@@ -89,6 +89,12 @@ async def bard_preset_selection_callback_handler(client, query):
     await handlers.bard_preset_selection_callback_handler(client, query)
 
 
+# Claude preset selection callback
+@client.on_callback_query(filters.regex(r"^claudepreset-"))
+async def claude_preset_selection_callback_handler(client, query):
+    await handlers.claude_preset_selection_callback_handler(client, query)
+
+
 # Set OpenAI API key
 @client.on_message(filters.command("apikey") & filters.text)
 async def api_key_handler(client, message):

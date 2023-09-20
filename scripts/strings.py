@@ -1,10 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.2.0**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.2.1**
 
 **▎Latest update**
-2023/09/18
+2023/09/20
 
 **▎Update log**
+v2.2.1
+- 为Claude模型添加爱丽丝预设
 v2.2.0
 - 新增Claude模型支持
 """
@@ -154,6 +156,8 @@ bard_session_creation_failed = "Bard chatbot creation failed"
 
 claude_chatbot_creation_failed = "Claude chatbot creation failed"
 
+claude_api_limit_reached = "Claude API usage limit reached, please wait a few hours"
+
 placeholder_before_output = [
     "爱丽丝正在搜寻资料中, 请稍等……",
     "回答生成中, 请给爱丽丝一点点时间……",
@@ -162,9 +166,11 @@ placeholder_before_output = [
     "パンパカパーン! 爱丽丝, 回答生成中……",
 ]
 
-placeholer_bing = "\n\n(New Bing模型生成回答速度较慢, 视搜索量可能会长达一分钟以上)"
+placeholder_bing = "\n\n(New Bing模型生成回答速度较慢, 视搜索量可能会长达一分钟以上)"
 
-placeholer_gpt4 = "\n\n(GPT4模型生成回答速度较慢, 请耐心等待)"
+placeholder_gpt4 = "\n\n(GPT4模型生成回答速度较慢, 请耐心等待)"
+
+placeholder_claude = "\n\n(Claude模型生成回答速度较慢, 尤其是爱丽丝预设下初次对话需要较长时间, 请耐心等待)"
 
 gpt35_presets = {
     "aris": "爱丽丝 (默认)",
@@ -224,6 +230,11 @@ custom_template_parse_failed = "模版解析失败, 请严格确保格式正确"
 github_contributing = "🙋‍♀️ 为爱丽丝添加更多预设!"
 
 bard_presets = {
+    "default": "官方原版",
+}
+
+claude_presets = {
+    "aris": "爱丽丝 (和谐模式)",
     "default": "官方原版",
 }
 

@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from scripts import gvars, strings, util
+from scripts import gvars, strings, util, prompts
 from async_claude_client import ClaudeAiClient
 from pyrogram import Client
 
@@ -26,6 +26,12 @@ async def process_message_claude(
             ).init()
             new_chat = await chatdata.claude_chatbot.create_new_chat()
             chatdata.claude_uuid = new_chat["uuid"]
+
+            if model_args.get("preset") == "aris":
+                async for _ in chatdata.claude_chatbot.ask_stream(
+                    prompts.aris_preset_template_claude, chatdata.claude_uuid
+                ):
+                    pass
         except Exception as e:
             logging.error(
                 f"Error happened when creating claude_chatbot in chat {chatdata.chat_id}: {e}"
@@ -39,8 +45,8 @@ async def process_message_claude(
         chatdata.claude_clear_task.cancel()
         chatdata.claude_clear_task = None
 
-    input_text = model_input.get("text")
-    if input_text.startswith("爱丽丝"):
+    input_text = model_input.get("text") or "Hi"  # Claude does not accept empty string
+    if model_args.get("preset") != "aris" and input_text.startswith("爱丽丝"):
         input_text = input_text.replace("爱丽丝", "Claude", 1)
 
     chatdata.concurrent_lock.add("claude")
@@ -50,6 +56,11 @@ async def process_message_claude(
             input_text, chatdata.claude_uuid
         ):
             response += text
+
+        if response == "":
+            return {
+                "text": f"{strings.api_error}\n\nError Message:\n`{strings.claude_api_limit_reached}"
+            }
     except Exception as e:
         logging.error(
             f"Error happened when calling claude_chatbot.ask_stream in chat {chatdata.chat_id}: {e}"

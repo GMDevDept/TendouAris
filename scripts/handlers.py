@@ -277,15 +277,24 @@ async def model_selection_callback_handler(client, query):
                     ),
                 )
         elif modelname == "claude":
-            chatdata = util.load_chat(
-                query.message.chat.id,
-                create_new=True,
-                is_group=await util.is_group(query.message.chat),
-            )
-            chatdata.set_model({"name": "claude", "args": None})
-
             await query.message.edit(
-                strings.model_changed + strings.models.get("model-claude")
+                strings.model_choose_preset,
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                strings.claude_presets.get("aris"),
+                                callback_data="claudepreset-aris",
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                strings.claude_presets.get("default"),
+                                callback_data="claudepreset-default",
+                            )
+                        ],
+                    ],
+                ),
             )
 
 
@@ -604,6 +613,23 @@ async def bard_preset_selection_callback_handler(client, query):
     )
 
 
+# Claude preset selection callback
+async def claude_preset_selection_callback_handler(client, query):
+    preset = query.data.replace("claudepreset-", "")
+    chatdata = util.load_chat(
+        query.message.chat.id,
+        create_new=True,
+        is_group=await util.is_group(query.message.chat),
+    )
+    chatdata.set_model({"name": "claude", "args": {"preset": preset}})
+
+    await query.message.edit(
+        strings.model_changed
+        + strings.models.get("model-claude")
+        + f" ({strings.claude_presets.get(preset).split(' (')[0]})"
+    )
+
+
 # Set OpenAI API key
 async def api_key_handler(client, message):
     api_key_input = re.sub(r"^/\S*\s*", "", message.text)
@@ -854,14 +880,23 @@ async def conversation_handler(client, message):
                 input_text = f'Context: "{context}";\n{input_text}'
 
         placeholder = None
-        if chatdata.model.get("name") == "bing" or chatdata.model.get("name") == "gpt4":
+        if (
+            chatdata.model.get("name") == "bing"
+            or chatdata.model.get("name") == "gpt4"
+            or (
+                chatdata.model.get("name") == "claude"
+                and chatdata.model.get("args").get("preset") != "default"
+            )
+        ):
             placeholder = await message.reply(
                 random.choice(strings.placeholder_before_output)
                 + (
                     chatdata.model.get("name") == "bing"
-                    and strings.placeholer_bing
+                    and strings.placeholder_bing
                     or chatdata.model.get("name") == "gpt4"
-                    and strings.placeholer_gpt4
+                    and strings.placeholder_gpt4
+                    or chatdata.model.get("name") == "claude"
+                    and strings.placeholder_claude
                 ),
                 disable_notification=True,
             )
