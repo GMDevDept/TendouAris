@@ -21,7 +21,7 @@ Aris is a telegram chatbot based on OpenAI API with customized character preset.
 | gpt-4 | ✅ | ✅ |
 | New Bing | ✅ | 🚫 |
 | Google Bard | ✅ | 🚫 |
-| Claude | ✅ | 🚫 |
+| Claude | ✅ | ✅ |
 
 ## Contributing
 
@@ -46,8 +46,9 @@ Alternatively, if you have experience in git, you can also fork this repo and su
     ```
 
 2. Rename .env.sample to .env and fill the values.
-3. (Optional) Export cookies from <https://bing.com/chat> and save it as `bing_cookies_fallback.json` under `\srv` directory. Check [EdgeGPT ducumentation](https://github.com/acheong08/EdgeGPT#authentication) for why and how to do this. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/bing_cookies_fallback.sample.json) is provided for format reference.
-4. Build docker container.
+3. (Optional) To enable new bing model, export cookies from <https://bing.com/chat> and save it as `bing_cookies_fallback.json` under `\srv` directory. Check [EdgeGPT ducumentation](https://github.com/acheong08/EdgeGPT#authentication) for why and how to do this. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/bing_cookies_fallback.sample.json) is provided for format reference.
+4. (Optional) to enable claude model, export cookies from <https://claude.ai> and save it as `claude_cookies.json` under `\srv` directory. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/claude_cookies.sample.json) is provided for format reference.
+5. Build docker container.
 
     ``` bash
     docker-compose up -d --build
