@@ -1,10 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.2.1**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.2.2**
 
 **▎Latest update**
-2023/09/20
+2023/10/03
 
 **▎Update log**
+v2.2.2
+- 现在设置API key时会同步刷新会话
 v2.2.1
 - 为Claude模型添加爱丽丝预设
 v2.2.0
