@@ -83,9 +83,16 @@ class ChatData:
         self.model = model
         self.save()
 
-    def set_api_key(self, api_key: str):
+    async def set_api_key(self, api_key: str):
         self.openai_api_key = api_key
         self.save()
+        if (
+            self.gpt35_chatbot is not None
+            or self.gpt4_chatbot is not None
+            or self.gpt35_history is not None
+            or self.gpt4_history is not None
+        ):
+            await self.reset()
 
     def set_gpt35_preset(self, preset: dict):
         self.gpt35_preset = preset
