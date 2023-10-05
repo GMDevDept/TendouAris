@@ -648,16 +648,7 @@ async def api_key_handler(client, message):
                 create_new=True,
                 is_group=await util.is_group(message.chat),
             )
-            chatdata.set_api_key(api_key_input)
-
-            if (
-                chatdata.gpt35_chatbot
-                or chatdata.gpt4_chatbot
-                or chatdata.gpt35_history
-                or chatdata.gpt4_history
-            ):
-                await chatdata.reset()
-
+            await chatdata.set_api_key(api_key_input)
             await message.reply(strings.api_key_set)
         except openai.error.OpenAIError as e:
             await message.reply(
