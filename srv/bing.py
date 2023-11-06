@@ -4,7 +4,7 @@ import re
 import asyncio
 import logging
 from scripts import gvars, strings, util
-from async_bing_client import Bing_Client, ConversationStyle
+from async_bing_client import ConversationStyle
 from pyrogram import Client
 
 
@@ -33,7 +33,7 @@ async def process_message_bing(
 
     if not chatdata.bing_chatbot:
         try:
-            chatdata.bing_chatbot = Bing_Client(cookie="srv/bing_cookies.json")
+            chatdata.bing_chatbot = await gvars.bing_client.create_chat()
         except Exception as e:
             logging.error(
                 f"Error happened when creating bing_chatbot in chat {chatdata.chat_id}: {e}"
@@ -53,11 +53,13 @@ async def process_message_bing(
 
     chatdata.concurrent_lock.add("bing")
     try:
-        response = await chatdata.bing_chatbot.ask(
-            prompt=input_text,
+        response = ""
+        async for text in gvars.bing_client.ask_stream(
+            input_text,
+            chat=chatdata.bing_chatbot,
             conversation_style=conversation_style,
-            simplify_response=True,
-        )
+        ):
+            response += text
     except Exception as e:
         logging.error(
             f"Error happened when calling bing_chatbot.ask in chat {chatdata.chat_id}: {e}"
@@ -68,19 +70,19 @@ async def process_message_bing(
     finally:
         chatdata.concurrent_lock.discard("bing")
 
-    output_text = response["text"].strip()
-    sources = response.get("sources_text").strip()
-    if sources and sources != output_text:
-        output_text = re.sub(r"\[\^(\d+)\^\]", r"[\1]", output_text)
-        sources = re.sub(r"\s(\[\d+\.)", r"\n\1", sources)
-        output_text = f"{output_text}\n\n{sources}"
+    output_text = response.strip()
+    output_photo = re.search(r"\nDrew images:  \n(.*?)\n\n", response, re.DOTALL)
+    if output_photo:
+        output_text = re.sub(
+            r"Drew images:  \n.*?\n\n", "", output_text, flags=re.DOTALL
+        )
+        output_photo_formatted = re.findall(r"https?://[^\s\)]+", output_photo.group(1))
 
     if gvars.bing_chatbot_close_delay > 0:
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.bing_chatbot_close_delay)
             if chatdata.bing_chatbot is not None:
-                await chatdata.bing_chatbot.close()
                 chatdata.bing_chatbot = None
                 await client.send_message(
                     chatdata.chat_id,
@@ -89,4 +91,4 @@ async def process_message_bing(
 
         chatdata.bing_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return {"text": output_text}
+    return {"text": output_text, "photo": output_photo_formatted}

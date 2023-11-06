@@ -46,8 +46,8 @@ Alternatively, if you have experience in git, you can also fork this repo and su
     ```
 
 2. Rename .env.sample to .env and fill the values.
-3. (Optional) To enable new bing model, export cookies from <https://bing.com/chat> and save it as `bing_cookies.json` under `\srv` directory. Check [EdgeGPT ducumentation](https://github.com/acheong08/EdgeGPT#authentication) for why and how to do this. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/bing_cookies.sample.json) is provided for format reference.
-4. (Optional) to enable claude model, export cookies from <https://claude.ai> and save it as `claude_cookies.json` under `\srv` directory. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/claude_cookies.sample.json) is provided for format reference.
+3. (Optional) To enable Bing model, export cookies from <https://bing.com/chat> and save it as `bing_cookies.json` under `\srv` directory. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/bing_cookies.sample.json) is provided for format reference.
+4. (Optional) To enable Claude model, export cookies from <https://claude.ai> and save it as `claude_cookies.json` under `\srv` directory. [Sample file](https://github.com/ToffeeNeko/TendouAris/tree/master/srv/claude_cookies.sample.json) is provided for format reference.
 5. Build docker container.
 
     ``` bash
@@ -60,5 +60,6 @@ Alternatively, if you have experience in git, you can also fork this repo and su
 - [Pyrogram](https://github.com/pyrogram/pyrogram): Elegant, modern and asynchronous Telegram MTProto API framework in Python for users and bots
 - [LangChain](https://github.com/hwchase17/langchain): ⚡ Building applications with LLMs through composability ⚡
 - [EdgeGPT](https://github.com/acheong08/EdgeGPT): Reverse engineered API of Microsoft's Bing Chat AI
-- [Bard](https://github.com/acheong08/Bard): Python SDK/API for reverse engineered Google Bard
+- [Async-Bing-Client](https://github.com/canxin121/Async-Bing-Client): async bing client for bing.com
 - [Async-Claude-Client](https://github.com/canxin121/Async-Claude-Client): Async client for claude.ai and claude bot of slack
+- [Bard](https://github.com/acheong08/Bard): Python SDK/API for reverse engineered Google Bard

@@ -1,5 +1,6 @@
 import os
 import redis
+from async_bing_client import Bing_Client
 
 # Load env variables
 bot_token = os.getenv("BOT_TOKEN")
@@ -31,3 +32,6 @@ db_chatdata = redis.Redis(host="arisdata", port=6379, db=0, decode_responses=Tru
 all_chats = {}  # {chat_id: ChatData}
 gpt35_addons = {}  # {preset_id: dict}
 gpt4_addons = {}  # {preset_id: dict}
+
+# Chatbot client
+bing_client = Bing_Client(cookie="srv/bing_cookies.json")

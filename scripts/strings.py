@@ -1,10 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.2.2**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.0**
 
 **▎Latest update**
-2023/10/03
+2023/11/06
 
 **▎Update log**
+v2.3.0
+- 替换依赖修复New Bing模型, 优化生成图片发送格式
 v2.2.2
 - 现在设置API key时会同步刷新会话
 v2.2.1
