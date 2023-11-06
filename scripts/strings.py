@@ -1,5 +1,5 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.0**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.1**
 
 **▎Latest update**
 2023/11/06
