@@ -1,11 +1,10 @@
 # https://github.com/acheong08/EdgeGPT
 
 import re
-import json
 import asyncio
 import logging
 from scripts import gvars, strings, util
-from EdgeGPT.EdgeGPT import Chatbot, ConversationStyle
+from async_bing_client import Bing_Client, ConversationStyle
 from pyrogram import Client
 
 
@@ -24,30 +23,24 @@ async def process_message_bing(
     style = model_args.get("style", "creative")
     match style:
         case "creative":
-            conversation_style = ConversationStyle.creative
+            conversation_style = ConversationStyle.Creative
         case "balanced":
-            conversation_style = ConversationStyle.balanced
+            conversation_style = ConversationStyle.Balanced
         case "precise":
-            conversation_style = ConversationStyle.precise
+            conversation_style = ConversationStyle.Precise
         case _:
             return {"text": f"Unknown style: {style}"}
 
     if not chatdata.bing_chatbot:
         try:
-            chatdata.bing_chatbot = await Chatbot.create()
-        except Exception:
-            try:
-                cookies = json.loads(
-                    open("srv/bing_cookies_fallback.json", encoding="utf-8").read()
-                )
-                chatdata.bing_chatbot = await Chatbot.create(cookies=cookies)
-            except Exception as e:
-                logging.error(
-                    f"Error happened when creating bing_chatbot in chat {chatdata.chat_id}: {e}"
-                )
-                return {
-                    "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {e}`"
-                }
+            chatdata.bing_chatbot = Bing_Client(cookie="srv/bing_cookies.json")
+        except Exception as e:
+            logging.error(
+                f"Error happened when creating bing_chatbot in chat {chatdata.chat_id}: {e}"
+            )
+            return {
+                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {e}`"
+            }
     elif "bing" in chatdata.concurrent_lock:
         return {"text": strings.concurrent_locked}
     elif chatdata.bing_clear_task is not None:

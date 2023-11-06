@@ -78,7 +78,6 @@ async def process_message_claude(
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.claude_chatbot_close_delay)
             if chatdata.claude_chatbot is not None:
-                await chatdata.claude_chatbot.close()
                 chatdata.claude_chatbot = None
                 await client.send_message(
                     chatdata.chat_id,

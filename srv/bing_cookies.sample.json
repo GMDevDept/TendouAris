@@ -1,0 +1,132 @@
+[
+    {
+        "name": "_EDGE_S",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "_EDGE_V",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "_HPVN",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "_SS",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "_U",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "_UR",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "ABDEF",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "ANON",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "GI_FRE_COOKIE",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "ipv6",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "KievRPSSecAuth",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "MicrosoftApplicationsTelemetryDeviceId",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "MSCC",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "MUID",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "MUIDB",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "NAP",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "PPLState",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "SnrOvr",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "SRCHD",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "SRCHHPGUSR",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "SRCHUID",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "SRCHUSR",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "SUID",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "USRLOC",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "WLID",
+        "value": "",
+        "domain": "www.bing.com"
+    },
+    {
+        "name": "WLS",
+        "value": "",
+        "domain": "www.bing.com"
+    }
+]

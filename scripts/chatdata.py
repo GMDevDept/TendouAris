@@ -3,8 +3,8 @@ import asyncio
 from pyrogram import Client
 from typing import Optional
 from asyncio import Task
-from EdgeGPT.EdgeGPT import Chatbot as BingChatbot
 from Bard import AsyncChatbot as BardChatbot
+from async_bing_client import Bing_Client
 from async_claude_client import ClaudeAiClient
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationSummaryBufferMemory
@@ -36,7 +36,7 @@ class ChatData:
         self.gpt4_chatbot: Optional[ConversationChain] = None
         self.gpt4_history: Optional[ConversationSummaryBufferMemory] = None
         self.gpt4_clear_task: Optional[Task] = None
-        self.bing_chatbot: Optional[BingChatbot] = None
+        self.bing_chatbot: Optional[Bing_Client] = None
         self.bing_clear_task: Optional[Task] = None
         self.bard_chatbot: Optional[BardChatbot] = None
         self.bard_clear_task: Optional[Task] = None
@@ -146,8 +146,6 @@ class ChatData:
         return model_output
 
     async def reset(self):
-        if self.bing_chatbot:
-            await self.bing_chatbot.close()
         self.gpt35_chatbot = None
         self.gpt35_history = None
         self.gpt35_clear_task = None
