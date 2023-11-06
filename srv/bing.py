@@ -65,7 +65,7 @@ async def process_message_bing(
             f"Error happened when calling bing_chatbot.ask in chat {chatdata.chat_id}: {e}"
         )
         return {
-            "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
+            "text": f"{strings.api_error}\n\nError Message:\n`{str(e)[:100]}`\n\n{strings.try_reset}"
         }
     finally:
         chatdata.concurrent_lock.discard("bing")
@@ -76,7 +76,7 @@ async def process_message_bing(
         output_text = re.sub(
             r"Drew images:  \n.*?\n\n", "", output_text, flags=re.DOTALL
         )
-        output_photo_formatted = re.findall(r"https?://[^\s\)]+", output_photo.group(1))
+        output_photo = re.findall(r"https?://[^\s\)]+", output_photo.group(1))
 
     if gvars.bing_chatbot_close_delay > 0:
 
@@ -91,4 +91,4 @@ async def process_message_bing(
 
         chatdata.bing_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return {"text": output_text, "photo": output_photo_formatted}
+    return {"text": output_text, "photo": output_photo}
