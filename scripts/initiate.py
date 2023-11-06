@@ -102,3 +102,8 @@ def setup_whitelist():
             # Append to db only, not using .save() here to avoid miscounting active chats
             chatdata = util.load_chat(chat_id, create_new=True, is_group=chat_id < 0)
             gvars.db_chatdata.set(chat_id, json.dumps(chatdata.persistent_data))
+
+
+# Initialte chatbot clients
+async def start_chatbot_clients():
+    await gvars.bing_client.init()
