@@ -59,7 +59,6 @@ Alternatively, if you have experience in git, you can also fork this repo and su
 
 - [Pyrogram](https://github.com/pyrogram/pyrogram): Elegant, modern and asynchronous Telegram MTProto API framework in Python for users and bots
 - [LangChain](https://github.com/hwchase17/langchain): ⚡ Building applications with LLMs through composability ⚡
-- [EdgeGPT](https://github.com/acheong08/EdgeGPT): Reverse engineered API of Microsoft's Bing Chat AI
 - [Async-Bing-Client](https://github.com/canxin121/Async-Bing-Client): async bing client for bing.com
 - [Async-Claude-Client](https://github.com/canxin121/Async-Claude-Client): Async client for claude.ai and claude bot of slack
 - [Bard](https://github.com/acheong08/Bard): Python SDK/API for reverse engineered Google Bard

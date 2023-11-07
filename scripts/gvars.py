@@ -1,6 +1,7 @@
 import os
 import redis
 from async_bing_client import Bing_Client
+from async_claude_client import ClaudeAiClient
 
 # Load env variables
 bot_token = os.getenv("BOT_TOKEN")
@@ -33,5 +34,13 @@ all_chats = {}  # {chat_id: ChatData}
 gpt35_addons = {}  # {preset_id: dict}
 gpt4_addons = {}  # {preset_id: dict}
 
-# Chatbot client
-bing_client = Bing_Client(cookie="srv/bing_cookies.json")
+# Chatbot clients
+try:
+    bing_client = Bing_Client(cookie="srv/bing_cookies.json")
+except Exception:
+    pass
+
+try:
+    claude_client = ClaudeAiClient(cookie="srv/claude_cookies.json")
+except Exception:
+    pass

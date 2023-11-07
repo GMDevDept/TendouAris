@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+import logging
 import importlib
 from scripts import gvars, util
 from pyrogram import Client, errors
@@ -106,4 +107,16 @@ def setup_whitelist():
 
 # Initialte chatbot clients
 async def start_chatbot_clients():
-    await gvars.bing_client.init()
+    try:
+        await gvars.bing_client.init()
+    except Exception:
+        logging.error(
+            "Error happened when initiating Bing client. Is cookie file valid?"
+        )
+
+    try:
+        await gvars.claude_client.init()
+    except Exception:
+        logging.error(
+            "Error happened when initiating Claude client. Is cookie file valid?"
+        )

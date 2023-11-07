@@ -234,31 +234,34 @@ async def model_selection_callback_handler(client, query):
                     f"{strings.no_auth}\n\n{strings.api_key_required}"
                 )
         elif modelname == "bing":
-            await query.message.edit(
-                strings.bing_choose_style,
-                reply_markup=InlineKeyboardMarkup(
-                    [
+            if hasattr(gvars, "bing_client"):
+                await query.message.edit(
+                    strings.bing_choose_style,
+                    reply_markup=InlineKeyboardMarkup(
                         [
-                            InlineKeyboardButton(
-                                "creative",
-                                callback_data="bingstyle-creative",
-                            )
-                        ],
-                        [
-                            InlineKeyboardButton(
-                                "balanced",
-                                callback_data="bingstyle-balanced",
-                            )
-                        ],
-                        [
-                            InlineKeyboardButton(
-                                "precise",
-                                callback_data="bingstyle-precise",
-                            )
-                        ],
-                    ]
-                ),
-            )
+                            [
+                                InlineKeyboardButton(
+                                    "creative",
+                                    callback_data="bingstyle-creative",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    "balanced",
+                                    callback_data="bingstyle-balanced",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    "precise",
+                                    callback_data="bingstyle-precise",
+                                )
+                            ],
+                        ]
+                    ),
+                )
+            else:
+                await query.message.edit(strings.bing_cookie_unavailable)
         elif modelname == "bard":
             if not gvars.bard_1psid or not gvars.bard_1psidts:
                 await query.message.edit(strings.bard_cookie_unavailable)
@@ -277,25 +280,28 @@ async def model_selection_callback_handler(client, query):
                     ),
                 )
         elif modelname == "claude":
-            await query.message.edit(
-                strings.model_choose_preset,
-                reply_markup=InlineKeyboardMarkup(
-                    [
+            if hasattr(gvars, "claude_client"):
+                await query.message.edit(
+                    strings.model_choose_preset,
+                    reply_markup=InlineKeyboardMarkup(
                         [
-                            InlineKeyboardButton(
-                                strings.claude_presets.get("aris"),
-                                callback_data="claudepreset-aris",
-                            )
+                            [
+                                InlineKeyboardButton(
+                                    strings.claude_presets.get("aris"),
+                                    callback_data="claudepreset-aris",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    strings.claude_presets.get("default"),
+                                    callback_data="claudepreset-default",
+                                )
+                            ],
                         ],
-                        [
-                            InlineKeyboardButton(
-                                strings.claude_presets.get("default"),
-                                callback_data="claudepreset-default",
-                            )
-                        ],
-                    ],
-                ),
-            )
+                    ),
+                )
+            else:
+                await query.message.edit(strings.claude_cookie_unavailable)
 
 
 # GPT-3.5 preset selection callback

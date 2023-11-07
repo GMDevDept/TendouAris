@@ -1,5 +1,5 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.1**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.2**
 
 **▎Latest update**
 2023/11/06
@@ -154,11 +154,15 @@ concurrent_locked = "老师请稍等, 爱丽丝还在思考您的上一个问题
 
 bing_chatbot_creation_failed = "Bing chatbot creation failed"
 
-bard_cookie_unavailable = "Cookies required by Bard model is not set in .env"
+bing_cookie_unavailable = "Cookie file required by Bing model is not provided"
+
+bard_cookie_unavailable = "Cookies required by Bard model are not set in .env"
 
 bard_session_creation_failed = "Bard chatbot creation failed"
 
 claude_chatbot_creation_failed = "Claude chatbot creation failed"
+
+claude_cookie_unavailable = "Cookie file required by Claude model is not provided"
 
 claude_api_limit_reached = "Claude API usage limit reached, please wait a few hours"
 
