@@ -960,9 +960,12 @@ async def conversation_handler(client, message):
                             batch.insert(0, media_group[i - 1])
                         await message.reply_media_group(batch, quote=True)
 
-            # Max caption length limit set by Telegram
+            # Max caption length limit = 1024
             if not valid_media or len(text) >= 1024:
-                await message.reply(text, quote=True)
+                # Max text message length limit = 4096
+                for i in range(0, len(text), 4096):
+                    text_chunk = text[i : i + 4096]
+                    await message.reply(text_chunk, quote=True)
 
             chatdata.last_reply = text
         except RPCError as e:
