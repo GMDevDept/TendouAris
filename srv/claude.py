@@ -3,7 +3,6 @@
 import asyncio
 import logging
 from scripts import gvars, strings, util, prompts
-from async_claude_client import ClaudeAiClient
 from pyrogram import Client
 
 
@@ -19,16 +18,13 @@ async def process_message_claude(
             "text": f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
         }
 
-    if not chatdata.claude_chatbot:
+    if not chatdata.claude_uuid:
         try:
-            chatdata.claude_chatbot = await ClaudeAiClient(
-                cookie="srv/claude_cookies.json"
-            ).init()
-            new_chat = await chatdata.claude_chatbot.create_new_chat()
+            new_chat = await gvars.claude_client.create_new_chat()
             chatdata.claude_uuid = new_chat["uuid"]
 
             if model_args.get("preset") == "aris":
-                async for _ in chatdata.claude_chatbot.ask_stream(
+                async for _ in gvars.claude_client.ask_stream(
                     prompts.aris_preset_template_claude, chatdata.claude_uuid
                 ):
                     pass
@@ -52,7 +48,7 @@ async def process_message_claude(
     chatdata.concurrent_lock.add("claude")
     try:
         response = ""
-        async for text in chatdata.claude_chatbot.ask_stream(
+        async for text in gvars.claude_client.ask_stream(
             input_text, chatdata.claude_uuid
         ):
             response += text
@@ -77,8 +73,8 @@ async def process_message_claude(
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.claude_chatbot_close_delay)
-            if chatdata.claude_chatbot is not None:
-                chatdata.claude_chatbot = None
+            if chatdata.claude_uuid is not None:
+                chatdata.claude_uuid = None
                 await client.send_message(
                     chatdata.chat_id,
                     strings.model_reset_due_to_inactivity.format("Claude"),

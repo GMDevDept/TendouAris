@@ -5,7 +5,6 @@ from typing import Optional
 from asyncio import Task
 from Bard import AsyncChatbot as BardChatbot
 from async_bing_client import Bing_Client
-from async_claude_client import ClaudeAiClient
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationSummaryBufferMemory
 from scripts import gvars, strings
@@ -40,7 +39,6 @@ class ChatData:
         self.bing_clear_task: Optional[Task] = None
         self.bard_chatbot: Optional[BardChatbot] = None
         self.bard_clear_task: Optional[Task] = None
-        self.claude_chatbot: Optional[ClaudeAiClient] = None
         self.claude_uuid: Optional[str] = None
         self.claude_clear_task: Optional[Task] = None
         self.last_reply: Optional[str] = None
@@ -156,7 +154,6 @@ class ChatData:
         self.bing_clear_task = None
         self.bard_chatbot = None
         self.bard_clear_task = None
-        self.claude_chatbot = None
         self.claude_uuid = None
         self.claude_clear_task = None
         self.last_reply = None
