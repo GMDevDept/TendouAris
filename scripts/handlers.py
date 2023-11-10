@@ -977,3 +977,87 @@ async def conversation_handler(client, message):
                 f"{strings.internal_error}\n\nError message:\n`{e}`\n\n{strings.feedback}",
                 quote=False,
             )
+
+
+# Generate image
+async def draw_handler(client, message):
+    prompt_input = re.sub(r"^/\S*\s*", "", message.text)
+    if not prompt_input:
+        await message.reply(strings.draw_prompt_invalid)
+    elif not hasattr(gvars, "bing_client"):
+        await message.reply(strings.bing_cookie_unavailable)
+    elif not util.access_scope_filter(gvars.scope_bing, message.chat.id):
+        await message.reply(
+            f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
+        )
+    else:
+        try:
+            placeholder = await message.reply(
+                random.choice(strings.placeholder_before_output),
+                disable_notification=True,
+            )
+
+            response = await gvars.bing_client.draw(prompt_input)
+            await placeholder.delete()
+
+            photos = [photo.url for photo in response]
+
+            valid_media = []
+            if photos:
+                text = strings.draw_success
+                fallback_text = "\n\n"
+                for url in photos:
+                    try:
+                        await client.invoke(
+                            UploadMedia(
+                                peer=await client.resolve_peer(message.chat.id),
+                                media=InputMediaPhotoExternal(url=url),
+                            )
+                        )
+                        valid_media.append(url)
+                    except RPCError:
+                        fallback_text += f"[Invalid Media]({url})\n"
+                    except Exception as e:
+                        logging.error(f"Error occurred during processing media: {e}")
+                        fallback_text += f"[Invalid Media]({url})\n"
+
+                text += fallback_text.rstrip()
+
+            if valid_media:
+                if len(valid_media) == 1:
+                    await message.reply_photo(
+                        valid_media[0], quote=True, caption=len(text) < 1024 and text
+                    )
+                else:
+                    media_group = [
+                        InputMediaPhoto(
+                            url,
+                            caption=i == len(valid_media) - 1
+                            and len(text) < 1024
+                            and text,
+                        )
+                        for i, url in enumerate(valid_media)
+                    ]
+
+                    # media group length limit: 2-10
+                    for i in range(0, len(media_group), 10):
+                        batch = media_group[i : i + 10]
+                        if len(batch) == 1:
+                            batch.insert(0, media_group[i - 1])
+                        await message.reply_media_group(batch, quote=True)
+
+            # Max caption length limit = 1024
+            if not valid_media or len(text) >= 1024:
+                # Max text message length limit = 4096
+                for i in range(0, len(text), 4096):
+                    text_chunk = text[i : i + 4096]
+                    await message.reply(text_chunk, quote=True)
+        except RPCError as e:
+            logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
+            await message.reply(f"{strings.rpc_error}\n\nError message:\n`{e}`")
+        except Exception as e:
+            logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
+            await message.reply(
+                f"{strings.internal_error}\n\nError message:\n`{e}`\n\n{strings.feedback}",
+                quote=False,
+            )

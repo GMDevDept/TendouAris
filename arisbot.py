@@ -154,6 +154,12 @@ async def conversation_handler(client, message):
     await handlers.conversation_handler(client, message)
 
 
+# Generate image
+@client.on_message(filters.command("draw") & filters.text)
+async def draw_handler(client, message):
+    await handlers.draw_handler(client, message)
+
+
 async def main():
     setup_whitelist()
     load_preset_addons()

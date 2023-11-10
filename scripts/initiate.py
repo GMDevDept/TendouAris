@@ -17,6 +17,7 @@ from pyrogram.types import (
 async def set_bot_commands(client: Client):
     commands_common = [
         BotCommand("aris", "パンパカパーン！"),
+        BotCommand("draw", "图像生成"),
         BotCommand("reset", "重置对话历史"),
         BotCommand("apikey", "为当前会话添加API key"),
         BotCommand("help", "爱丽丝食用指南"),
@@ -26,6 +27,7 @@ async def set_bot_commands(client: Client):
 
     commands_private = [
         BotCommand("aris", "パンパカパーン！"),
+        BotCommand("draw", "图像生成"),
         BotCommand("model", "选择语言模型"),
         BotCommand("reset", "重置对话历史"),
         BotCommand("apikey", "为当前会话添加API key"),
@@ -39,6 +41,7 @@ async def set_bot_commands(client: Client):
 
     commands_group_admin = [
         BotCommand("aris", "パンパカパーン！"),
+        BotCommand("draw", "图像生成"),
         BotCommand("model", "选择语言模型"),
         BotCommand("reset", "重置对话历史"),
         BotCommand("apikey", "为当前会话添加API key"),
@@ -53,6 +56,7 @@ async def set_bot_commands(client: Client):
 
     commands_manager = [
         BotCommand("aris", "パンパカパーン！"),
+        BotCommand("draw", "图像生成"),
         BotCommand("model", "选择语言模型"),
         BotCommand("reset", "重置对话历史"),
         BotCommand("apikey", "为当前会话添加API key"),
