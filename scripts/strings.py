@@ -1,10 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.4**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.5**
 
 **▎Latest update**
-2023/11/09
+2023/11/16
 
 **▎Update log**
+v2.3.5
+- 更新GPT4模型至 `gpt-4-1106-preview`
 v2.3.4
 - 新增 /draw 指令, 可以直接调用Bing模型生成图片
 v2.3.3

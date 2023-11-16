@@ -377,7 +377,7 @@ async def process_message_gpt4(
     if chatdata.gpt4_chatbot is None or chatdata.gpt4_history is None:
         preset = model_args.get("preset", "default")
         conversation_model = ChatOpenAI(
-            model="gpt-4", temperature=0.7, openai_api_key=api_key
+            model="gpt-4-1106-preview", temperature=0.7, openai_api_key=api_key
         )
         summary_model = ChatOpenAI(
             model="gpt-3.5-turbo-16k", temperature=0.3, openai_api_key=api_key
