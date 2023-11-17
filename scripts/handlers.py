@@ -18,6 +18,7 @@ from pyrogram.types import (
 from pyrogram.errors import RPCError
 from pyrogram.raw.functions.messages import UploadMedia
 from pyrogram.raw.types import InputMediaPhotoExternal
+from async_bing_client.type import Apology
 
 
 # Global access filter
@@ -991,20 +992,22 @@ async def draw_handler(client, message):
             f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
         )
     else:
+        placeholder = await message.reply(
+            random.choice(strings.placeholder_before_output),
+            disable_notification=True,
+        )
         try:
-            placeholder = await message.reply(
-                random.choice(strings.placeholder_before_output),
-                disable_notification=True,
-            )
-
-            response = await gvars.bing_client.draw(prompt_input)
-            await placeholder.delete()
-
-            photos = [photo.url for photo in response]
+            response = await gvars.bing_client.draw(prompt_input)  # draw -> List[Image] | Apology
+            text: str = None
+            photos: list = None
+            if isinstance(response, Apology):
+                text = response.content
+            elif isinstance(response, list):
+                text = strings.draw_success
+                photos = [photo.url for photo in response]
 
             valid_media = []
             if photos:
-                text = strings.draw_success
                 fallback_text = "\n\n"
                 for url in photos:
                     try:
@@ -1061,3 +1064,5 @@ async def draw_handler(client, message):
                 f"{strings.internal_error}\n\nError message:\n`{e}`\n\n{strings.feedback}",
                 quote=False,
             )
+        finally:
+            await placeholder.delete()
