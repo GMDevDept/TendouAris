@@ -997,14 +997,24 @@ async def draw_handler(client, message):
             disable_notification=True,
         )
         try:
-            response = await gvars.bing_client.draw(prompt_input)  # draw -> List[Image] | Apology
-            text: str = None
-            photos: list = None
+            response = await gvars.bing_client.draw(
+                prompt_input
+            )  # draw -> List[Image] | Apology
             if isinstance(response, Apology):
-                text = response.content
+                await message.reply(
+                    f"{strings.api_error}\n\nError Message:\n`{response.content}`",
+                    quote=True,
+                )
+                return
             elif isinstance(response, list):
                 text = strings.draw_success
                 photos = [photo.url for photo in response]
+            else:  # should not happen
+                await message.reply(
+                    f"{strings.internal_error}\n\n{strings.feedback}",
+                    quote=False,
+                )
+                return
 
             valid_media = []
             if photos:
