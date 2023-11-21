@@ -4,6 +4,7 @@ import re
 import asyncio
 import logging
 from scripts import gvars, strings, util
+from scripts.types import ModelOutput, Photo
 from Bard import AsyncChatbot
 from pyrogram import Client
 
@@ -13,12 +14,12 @@ async def process_message_bard(
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,
-) -> dict:
+) -> ModelOutput:
     access_check = util.access_scope_filter(gvars.scope_bard, chatdata.chat_id)
     if not access_check:
-        return {
-            "text": f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
-        }
+        return ModelOutput(
+            text=f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
+        )
 
     preset = model_args.get("preset", "default")
 
@@ -31,11 +32,11 @@ async def process_message_bard(
             logging.error(
                 f"Error happened when creating bard_chatbot in chat {chatdata.chat_id}: {e}"
             )
-            return {
-                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bard_session_creation_failed}: {e}`"
-            }
+            return ModelOutput(
+                text=f"{strings.api_error}\n\nError Message:\n`{strings.bard_session_creation_failed}: {e}`"
+            )
     elif "bard" in chatdata.concurrent_lock:
-        return {"text": strings.concurrent_locked}
+        return ModelOutput(text=strings.concurrent_locked)
     elif chatdata.bard_clear_task is not None:
         chatdata.bard_clear_task.cancel()
         chatdata.bard_clear_task = None
@@ -52,16 +53,17 @@ async def process_message_bard(
         logging.error(
             f"Error happened when calling bard_chatbot.ask in chat {chatdata.chat_id}: {e}"
         )
-        return {
-            "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
-        }
+        return ModelOutput(
+            text=f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
+        )
     finally:
         chatdata.concurrent_lock.discard("bard")
 
     output_text = response["content"]
-    output_photo = response["images"]
-    if output_photo:
+    output_photos = response["images"]
+    if output_photos:
         output_text = re.sub(r"\n\[.*\]", "", output_text)
+        output_photos = [Photo(url=url) for url in output_photos]
 
     if gvars.bard_chatbot_close_delay > 0:
 
@@ -76,7 +78,4 @@ async def process_message_bard(
 
         chatdata.bard_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return {
-        "text": output_text,
-        "photo": output_photo,
-    }
+    return ModelOutput(text=output_text, photos=output_photos)

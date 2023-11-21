@@ -8,6 +8,7 @@ from async_bing_client import Bing_Client
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationSummaryBufferMemory
 from scripts import gvars, strings
+from scripts.types import ModelOutput
 from srv.gpt import process_message_gpt35, process_message_gpt4
 from srv.bing import process_message_bing
 from srv.bard import process_message_bard
@@ -100,11 +101,8 @@ class ChatData:
         self.gpt4_preset = preset
         self.save()
 
-    async def process_message(
-        self, client: Client, model_input: dict
-    ) -> Optional[dict]:
+    async def process_message(self, client: Client, model_input: dict) -> ModelOutput:
         model_name, model_args = self.model["name"], self.model["args"]
-        model_output = None
         match model_name:
             case "gpt35":
                 model_output = await process_message_gpt35(
@@ -198,9 +196,7 @@ class GroupChatData(ChatData):
         self.model_select_admin_only = enable
         self.save()
 
-    async def process_message(
-        self, client: Client, model_input: dict
-    ) -> Optional[dict]:
+    async def process_message(self, client: Client, model_input: dict) -> ModelOutput:
         if not self.flood_control_enabled:
             return await super().process_message(client, model_input)
         else:

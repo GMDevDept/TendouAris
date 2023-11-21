@@ -7,6 +7,7 @@ import traceback
 from typing import Union
 from scripts import gvars, strings, util
 from scripts.chatdata import ChatData, GroupChatData
+from scripts.types import ModelOutput
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -909,11 +910,11 @@ async def conversation_handler(client, message):
             )
 
         try:
-            model_output = await chatdata.process_message(
+            model_output: ModelOutput = await chatdata.process_message(
                 client=client, model_input={"sender_id": sender_id, "text": input_text}
             )
-            text = model_output.get("text")
-            photos = model_output.get("photo")  # list of urls
+            text: str = model_output.text
+            photos: list[str] | None = model_output.photos and [photo.url for photo in model_output.photos]
 
             if placeholder is not None:
                 await placeholder.delete()

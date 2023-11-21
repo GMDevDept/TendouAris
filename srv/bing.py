@@ -6,6 +6,7 @@ import logging
 from scripts import gvars, strings, util
 from async_bing_client import ConversationStyle
 from pyrogram import Client
+from scripts.types import ModelOutput, Photo
 
 
 async def process_message_bing(
@@ -13,12 +14,12 @@ async def process_message_bing(
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,
-) -> dict:
+) -> ModelOutput:
     access_check = util.access_scope_filter(gvars.scope_bing, chatdata.chat_id)
     if not access_check:
-        return {
-            "text": f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
-        }
+        return ModelOutput(
+            text=f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
+        )
 
     style = model_args.get("style", "creative")
     match style:
@@ -29,7 +30,7 @@ async def process_message_bing(
         case "precise":
             conversation_style = ConversationStyle.Precise
         case _:
-            return {"text": f"Unknown style: {style}"}
+            return ModelOutput(text=f"Unknown style: {style}")
 
     if not chatdata.bing_chatbot:
         try:
@@ -38,11 +39,11 @@ async def process_message_bing(
             logging.error(
                 f"Error happened when creating bing_chatbot in chat {chatdata.chat_id}: {e}"
             )
-            return {
-                "text": f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {e}`"
-            }
+            return ModelOutput(
+                text=f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {e}`"
+            )
     elif "bing" in chatdata.concurrent_lock:
-        return {"text": strings.concurrent_locked}
+        return ModelOutput(text=strings.concurrent_locked)
     elif chatdata.bing_clear_task is not None:
         chatdata.bing_clear_task.cancel()
         chatdata.bing_clear_task = None
@@ -64,19 +65,22 @@ async def process_message_bing(
         logging.error(
             f"Error happened when calling bing_chatbot.ask in chat {chatdata.chat_id}: {e}"
         )
-        return {
-            "text": f"{strings.api_error}\n\nError Message:\n`{str(e)[:100]}`\n\n{strings.try_reset}"
-        }
+        return ModelOutput(
+            text=f"{strings.api_error}\n\nError Message:\n`{str(e)[:100]}`\n\n{strings.try_reset}"
+        )
     finally:
         chatdata.concurrent_lock.discard("bing")
 
     output_text = response.strip()
-    output_photo = re.search(r"\nDrew images:  \n(.*?)\n\n", response, re.DOTALL)
-    if output_photo:
+    output_photos = re.search(r"\nDrew images:  \n(.*?)\n\n", response, re.DOTALL)
+    if output_photos:
         output_text = re.sub(
             r"Drew images:  \n.*?\n\n", "", output_text, flags=re.DOTALL
         )
-        output_photo = re.findall(r"https?://[^\s\)]+", output_photo.group(1))
+        output_photos = [
+            Photo(url=i)
+            for i in re.findall(r"https?://[^\s\)]+", output_photos.group(1))
+        ]
 
     if gvars.bing_chatbot_close_delay > 0:
 
@@ -91,4 +95,4 @@ async def process_message_bing(
 
         chatdata.bing_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return {"text": output_text, "photo": output_photo}
+    return ModelOutput(text=output_text, photos=output_photos)
