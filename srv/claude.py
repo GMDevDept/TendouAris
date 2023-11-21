@@ -3,6 +3,7 @@
 import asyncio
 import logging
 from scripts import gvars, strings, util, prompts
+from scripts.types import ModelOutput
 from pyrogram import Client
 
 
@@ -11,12 +12,12 @@ async def process_message_claude(
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,
-) -> dict:
+) -> ModelOutput:
     access_check = util.access_scope_filter(gvars.scope_claude, chatdata.chat_id)
     if not access_check:
-        return {
-            "text": f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
-        }
+        return ModelOutput(
+            text=f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
+        )
 
     if not chatdata.claude_uuid:
         try:
@@ -32,11 +33,11 @@ async def process_message_claude(
             logging.error(
                 f"Error happened when creating claude_chatbot in chat {chatdata.chat_id}: {e}"
             )
-            return {
-                "text": f"{strings.api_error}\n\nError Message:\n`{strings.claude_chatbot_creation_failed}: {e}`"
-            }
+            return ModelOutput(
+                text=f"{strings.api_error}\n\nError Message:\n`{strings.claude_chatbot_creation_failed}: {e}`"
+            )
     elif "claude" in chatdata.concurrent_lock:
-        return {"text": strings.concurrent_locked}
+        return ModelOutput(text=strings.concurrent_locked)
     elif chatdata.claude_clear_task is not None:
         chatdata.claude_clear_task.cancel()
         chatdata.claude_clear_task = None
@@ -54,16 +55,16 @@ async def process_message_claude(
             response += text
 
         if response == "":
-            return {
-                "text": f"{strings.api_error}\n\nError Message:\n`{strings.claude_api_limit_reached}"
-            }
+            return ModelOutput(
+                text=f"{strings.api_error}\n\nError Message:\n`{strings.claude_api_limit_reached}"
+            )
     except Exception as e:
         logging.error(
             f"Error happened when calling claude_chatbot.ask_stream in chat {chatdata.chat_id}: {e}"
         )
-        return {
-            "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
-        }
+        return ModelOutput(
+            text=f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
+        )
     finally:
         chatdata.concurrent_lock.discard("claude")
 
@@ -82,4 +83,4 @@ async def process_message_claude(
 
         chatdata.claude_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return {"text": output_text}
+    return ModelOutput(text=output_text)

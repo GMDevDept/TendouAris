@@ -7,6 +7,7 @@ from langchain.memory import ConversationSummaryBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
 from scripts import gvars, strings, util, prompts
+from scripts.types import ModelOutput
 
 
 async def process_message_gpt35(
@@ -14,12 +15,12 @@ async def process_message_gpt35(
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,
-) -> dict:
+) -> ModelOutput:
     access_check = util.access_scope_filter(gvars.scope_gpt35, chatdata.chat_id)
     if not access_check:
-        return {
-            "text": f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
-        }
+        return ModelOutput(
+            text=f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
+        )
 
     api_key = (
         chatdata.openai_api_key
@@ -30,7 +31,7 @@ async def process_message_gpt35(
         and util.load_chat(model_input.get("sender_id")).openai_api_key
     )
     if not api_key:
-        return {"text": f"{strings.no_auth}\n\n{strings.api_key_required}"}
+        return ModelOutput(text=f"{strings.no_auth}\n\n{strings.api_key_required}")
 
     # Chatbot should be reset when handling preset changing (gpt35_preset_selection_callback_handler)
     if chatdata.gpt35_chatbot is None or chatdata.gpt35_history is None:
@@ -58,9 +59,9 @@ async def process_message_gpt35(
                         chatdata, conversation_model, summary_model, custom_preset
                     )
                 except (TypeError, AttributeError, LookupError):
-                    return {
-                        "text": f"{strings.internal_error}\n\nError message: `{strings.custom_preset_outdated}`"
-                    }
+                    return ModelOutput(
+                        text=f"{strings.internal_error}\n\nError message: `{strings.custom_preset_outdated}`"
+                    )
             case "addon":
                 preset_id = model_args.get("id")
                 addon_preset = gvars.gpt35_addons.get(preset_id)
@@ -72,15 +73,15 @@ async def process_message_gpt35(
                     logging.error(
                         f"Error happened when loading gpt35 addon: {e}\nPreset id:{preset_id}"
                     )
-                    return {
-                        "text": f"{strings.internal_error}\n\nError message: `{strings.addon_preset_invalid}\n{preset_id}: {e}`\n\n{strings.feedback}"
-                    }
+                    return ModelOutput(
+                        text=f"{strings.internal_error}\n\nError message: `{strings.addon_preset_invalid}\n{preset_id}: {e}`\n\n{strings.feedback}"
+                    )
             case _:
-                return {
-                    "text": f"{strings.internal_error}\n\nError message: `Invalid preset for gpt35 model: {preset}`"
-                }
+                return ModelOutput(
+                    text=f"{strings.internal_error}\n\nError message: `Invalid preset for gpt35 model: {preset}`"
+                )
     elif "gpt35" in chatdata.concurrent_lock:
-        return {"text": strings.concurrent_locked}
+        return ModelOutput(text=strings.concurrent_locked)
     elif chatdata.gpt35_clear_task is not None:
         chatdata.gpt35_clear_task.cancel()
         chatdata.gpt35_clear_task = None
@@ -124,9 +125,9 @@ async def process_message_gpt35(
         logging.error(
             f"Error happened when calling gpt35_chatbot.apredict in chat {chatdata.chat_id}: {e}"
         )
-        return {
-            "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
-        }
+        return ModelOutput(
+            text=f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
+        )
     finally:
         chatdata.concurrent_lock.discard("gpt35")
 
@@ -154,7 +155,7 @@ async def process_message_gpt35(
 
         chatdata.gpt35_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return {"text": response}
+    return ModelOutput(text=response)
 
 
 def create_gpt35_default_chatbot(
@@ -326,9 +327,9 @@ async def fallback_response_handler(
                 logging.error(
                     f"Error happened when calling backup_chatbot.apredict in chat {chatdata.chat_id}: {e}"
                 )
-                return {
-                    "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
-                }
+                return ModelOutput(
+                    text=f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
+                )
             finally:
                 chatdata.concurrent_lock.discard(chatdata.model["name"])
 
@@ -358,9 +359,9 @@ async def process_message_gpt4(
 ) -> dict:
     access_check = util.access_scope_filter(gvars.scope_gpt4, chatdata.chat_id)
     if not access_check:
-        return {
-            "text": f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
-        }
+        return ModelOutput(
+            text=f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
+        )
 
     api_key = (
         chatdata.openai_api_key
@@ -371,7 +372,7 @@ async def process_message_gpt4(
         and util.load_chat(model_input.get("sender_id")).openai_api_key
     )
     if not api_key:
-        return {"text": f"{strings.no_auth}\n\n{strings.api_key_required}"}
+        return ModelOutput(text=f"{strings.no_auth}\n\n{strings.api_key_required}")
 
     # Chatbot should be reset when handling preset changing (gpt4_preset_selection_callback_handler)
     if chatdata.gpt4_chatbot is None or chatdata.gpt4_history is None:
@@ -395,9 +396,9 @@ async def process_message_gpt4(
                         chatdata, conversation_model, summary_model, custom_preset
                     )
                 except (TypeError, AttributeError, LookupError):
-                    return {
-                        "text": f"{strings.internal_error}\n\nError message: `{strings.custom_preset_outdated}`"
-                    }
+                    return ModelOutput(
+                        text=f"{strings.internal_error}\n\nError message: `{strings.custom_preset_outdated}`"
+                    )
             case "addon":
                 preset_id = model_args.get("id")
                 addon_preset = gvars.gpt4_addons.get(preset_id)
@@ -409,15 +410,15 @@ async def process_message_gpt4(
                     logging.error(
                         f"Error happened when loading gpt4 addon: {e}\nPreset id:{preset_id}"
                     )
-                    return {
-                        "text": f"{strings.internal_error}\n\nError message: `{strings.addon_preset_invalid}\n{preset_id}: {e}`\n\n{strings.feedback}"
-                    }
+                    return ModelOutput(
+                        text=f"{strings.internal_error}\n\nError message: `{strings.addon_preset_invalid}\n{preset_id}: {e}`\n\n{strings.feedback}"
+                    )
             case _:
-                return {
-                    "text": f"{strings.internal_error}\n\nError message: `Invalid preset for gpt4 model: {preset}`"
-                }
+                return ModelOutput(
+                    text=f"{strings.internal_error}\n\nError message: `Invalid preset for gpt4 model: {preset}`"
+                )
     elif "gpt4" in chatdata.concurrent_lock:
-        return {"text": strings.concurrent_locked}
+        return ModelOutput(text=strings.concurrent_locked)
     elif chatdata.gpt4_clear_task is not None:
         chatdata.gpt4_clear_task.cancel()
         chatdata.gpt4_clear_task = None
@@ -460,9 +461,9 @@ async def process_message_gpt4(
         logging.error(
             f"Error happened when calling gpt4_chatbot.apredict in chat {chatdata.chat_id}: {e}"
         )
-        return {
-            "text": f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
-        }
+        return ModelOutput(
+            text=f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.api_key_common_errors}"
+        )
     finally:
         chatdata.concurrent_lock.discard("gpt4")
 
@@ -490,7 +491,7 @@ async def process_message_gpt4(
 
         chatdata.gpt4_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return {"text": response}
+    return ModelOutput(text=response)
 
 
 def create_gpt4_default_chatbot(
