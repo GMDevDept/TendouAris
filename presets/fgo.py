@@ -1,5 +1,5 @@
 # Assign a list of compatible models that this preset can be used with, now only support "gpt35" or "gpt4" or both
-compatible_models = ["gpt35", "gpt4"]
+compatible_models = ["gpt35"]
 
 # Unique preset id, must be same as the file name, no spaces, no special characters, cannot be same with other presets
 id = "fgo"
@@ -8,7 +8,7 @@ id = "fgo"
 display_name = "FGO 4P"
 
 # Description for this preset, which will be shown in the bot preset selection menu
-description = "阿尔托莉雅, 紫式部, 源赖光\n\n(推荐使用GPT4)"
+description = "阿尔托莉雅, 紫式部, 源赖光"
 
 # The full system prompt for your preset, character settings should be included, length should be less than 4000 characters, support base64 encoded string
 prompt = """
