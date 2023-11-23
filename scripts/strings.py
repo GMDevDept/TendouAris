@@ -1,10 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.8**
+**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.9**
 
 **▎Latest update**
 2023/11/22
 
 **▎Update log**
+v2.3.9
+- 为GPT4模型添加爱丽丝预设
 v2.3.5
 - 更新GPT4模型至 `gpt-4-1106-preview`
 v2.3.4
