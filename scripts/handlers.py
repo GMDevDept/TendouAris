@@ -934,7 +934,7 @@ async def conversation_handler(client, message):
                     except RPCError:
                         fallback_text += f"[Invalid Media]({url})\n"
                     except Exception as e:
-                        logging.error(f"Error occurred during processing media: {str(e)[:100]}")
+                        logging.error(f"Error occurred during processing media: {e}")
                         fallback_text += f"[Invalid Media]({url})\n"
 
                 text += fallback_text.rstrip()
@@ -1032,7 +1032,7 @@ async def draw_handler(client, message):
                     except RPCError:
                         fallback_text += f"[Invalid Media]({url})\n"
                     except Exception as e:
-                        logging.error(f"Error occurred during processing media: {str(e)[:100]}")
+                        logging.error(f"Error occurred during processing media: {e}")
                         fallback_text += f"[Invalid Media]({url})\n"
 
                 text += fallback_text.rstrip()
