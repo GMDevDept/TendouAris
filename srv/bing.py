@@ -40,7 +40,7 @@ async def process_message_bing(
                 f"Error happened when creating bing_chatbot in chat {chatdata.chat_id}: {e}"
             )
             return ModelOutput(
-                text=f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {e}`"
+                text=f"{strings.api_error}\n\nError Message:\n`{strings.bing_chatbot_creation_failed}: {str(e)[:100]}`"
             )
     elif "bing" in chatdata.concurrent_lock:
         return ModelOutput(text=strings.concurrent_locked)

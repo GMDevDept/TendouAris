@@ -33,7 +33,7 @@ async def process_message_bard(
                 f"Error happened when creating bard_chatbot in chat {chatdata.chat_id}: {e}"
             )
             return ModelOutput(
-                text=f"{strings.api_error}\n\nError Message:\n`{strings.bard_session_creation_failed}: {e}`"
+                text=f"{strings.api_error}\n\nError Message:\n`{strings.bard_session_creation_failed}: {str(e)[:100]}`"
             )
     elif "bard" in chatdata.concurrent_lock:
         return ModelOutput(text=strings.concurrent_locked)
@@ -54,7 +54,7 @@ async def process_message_bard(
             f"Error happened when calling bard_chatbot.ask in chat {chatdata.chat_id}: {e}"
         )
         return ModelOutput(
-            text=f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
+            text=f"{strings.api_error}\n\nError Message:\n`{str(e)[:100]}`\n\n{strings.try_reset}"
         )
     finally:
         chatdata.concurrent_lock.discard("bard")

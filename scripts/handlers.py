@@ -934,7 +934,7 @@ async def conversation_handler(client, message):
                     except RPCError:
                         fallback_text += f"[Invalid Media]({url})\n"
                     except Exception as e:
-                        logging.error(f"Error occurred during processing media: {e}")
+                        logging.error(f"Error occurred during processing media: {str(e)[:100]}")
                         fallback_text += f"[Invalid Media]({url})\n"
 
                 text += fallback_text.rstrip()
@@ -972,11 +972,11 @@ async def conversation_handler(client, message):
             chatdata.last_reply = text
         except RPCError as e:
             logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
-            await message.reply(f"{strings.rpc_error}\n\nError message:\n`{e}`")
+            await message.reply(f"{strings.rpc_error}\n\nError message:\n`{str(e)[:100]}`")
         except Exception as e:
             logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
             await message.reply(
-                f"{strings.internal_error}\n\nError message:\n`{e}`\n\n{strings.feedback}",
+                f"{strings.internal_error}\n\nError message:\n`{str(e)[:100]}`\n\n{strings.feedback}",
                 quote=False,
             )
 
@@ -1032,7 +1032,7 @@ async def draw_handler(client, message):
                     except RPCError:
                         fallback_text += f"[Invalid Media]({url})\n"
                     except Exception as e:
-                        logging.error(f"Error occurred during processing media: {e}")
+                        logging.error(f"Error occurred during processing media: {str(e)[:100]}")
                         fallback_text += f"[Invalid Media]({url})\n"
 
                 text += fallback_text.rstrip()
@@ -1068,11 +1068,11 @@ async def draw_handler(client, message):
                     await message.reply(text_chunk, quote=True)
         except RPCError as e:
             logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
-            await message.reply(f"{strings.rpc_error}\n\nError message:\n`{e}`")
+            await message.reply(f"{strings.rpc_error}\n\nError message:\n`{str(e)[:100]}`")
         except Exception as e:
             logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
             await message.reply(
-                f"{strings.internal_error}\n\nError message:\n`{e}`\n\n{strings.feedback}",
+                f"{strings.internal_error}\n\nError message:\n`{str(e)[:100]}`\n\n{strings.feedback}",
                 quote=False,
             )
         finally:
