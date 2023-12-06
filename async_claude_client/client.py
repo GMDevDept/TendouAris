@@ -24,8 +24,9 @@ from .util import (
     get_content_type,
     build_request,
     run_in_new_thread,
+    retry,
+    run_sync,
 )
-from ..util import retry, run_sync
 
 loop = asyncio.new_event_loop()
 
@@ -144,7 +145,7 @@ class ClaudeAiClient:
         self, question: str, chat_id: str = None, attachment: str | Path = None
     ):
         """发送消息并且异步生成器式的获取返回消息"""
-        from ..util import retry
+        from .util import retry
 
         bytes_queue = asyncio.Queue()
 
@@ -190,7 +191,7 @@ class ClaudeAiClient:
                     raise Exception(f"Error occured: {data_str}")
                 else:
                     logger.warning(f"Unkonwn JsonDecodeError:{data}")
-            except Exception as e:
+            except Exception:
                 retry -= 1
                 await asyncio.sleep(2)
 
