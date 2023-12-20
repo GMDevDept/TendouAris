@@ -209,11 +209,11 @@ class GroupChatData(ChatData):
                 and self.flood_control_record[sender_id]["count"]
                 >= gvars.flood_control_count
             ):
-                return {
-                    "text": strings.flood_control_activated.format(
+                return ModelOutput(
+                    text=strings.flood_control_activated.format(
                         gvars.flood_control_count, gvars.flood_control_interval
                     )
-                }
+                )
 
             model_output = await super().process_message(client, model_input)
 
