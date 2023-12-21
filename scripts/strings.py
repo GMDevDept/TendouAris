@@ -1,5 +1,5 @@
 version = """
-**▎[TendouArisBot](https://github.com/ToffeeNeko/TendouAris) v2.3.11**
+**▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.3.11**
 
 **▎Latest update**
 2023/12/20
@@ -54,7 +54,7 @@ A: 私聊中输入的API key只会被用于你自己的帐号, 群聊中输入�
 /help - 爱丽丝食用指南
 /version - 查看版本及更新信息
 /setting - 当前群聊设置 (仅群组内可用)
-\n**▎开源项目地址:** [GitHub](https://github.com/ToffeeNeko/TendouAris)
+\n**▎开源项目地址:** [GitHub](https://github.com/HanaokaYuzu/TendouAris)
 **▎Telegram Bot:** [TendouArisBot](https://t.me/TendouArisBot)
 """
 
@@ -109,7 +109,7 @@ internal_error = "抱歉老师, 爱丽丝遭遇bug了!😫"
 
 rpc_error = "抱歉老师, 爱丽丝与Telegram的连接丢失了!😵‍💫"
 
-feedback = "👉 你可以选择[前往GitHub反馈](https://github.com/ToffeeNeko/TendouAris/issues)"
+feedback = "👉 你可以选择[前往GitHub反馈](https://github.com/HanaokaYuzu/TendouAris/issues)"
 
 try_reset = "👉 你可以选择尝试使用 /reset 指令重置当前会话"
 
@@ -157,8 +157,8 @@ choose_model = """
 2. GPT3.5和GPT4支持自定义预设/角色扮演/内容解锁, 详见 `/model - gpt3.5/gpt4 - 自定义专属预设`
 4. 使用GPT4模型需要你自己的API key支持GPT4, 与是否开了ChatGPT的premium无关, 需加入waitlist并等待通过
 3. 优化了GPT3.5和GPT4会话历史处理机制, 减少了token消耗, 现在基本不会出现token溢出上限的情况了
-5. 爱丽丝的GitHub repo现在支持通过模版快捷添加预设模块, 欢迎[通过issue或pull request为爱丽丝添加预设](https://github.com/ToffeeNeko/TendouAris#contributing)
-6. New Bing和Google Bard目前对所有人开放, **不支持**角色扮演与内容解锁, 后续视服务器压力可能会限制使用, 有需要请[搭建自己的机器人](https://github.com/ToffeeNeko/TendouAris#deployment)
+5. 爱丽丝的GitHub repo现在支持通过模版快捷添加预设模块, 欢迎[通过issue或pull request为爱丽丝添加预设](https://github.com/HanaokaYuzu/TendouAris#contributing)
+6. New Bing和Google Bard目前对所有人开放, **不支持**角色扮演与内容解锁, 后续视服务器压力可能会限制使用, 有需要请[搭建自己的机器人](https://github.com/HanaokaYuzu/TendouAris#deployment)
 """
 
 model_choose_preset = "请选择希望爱丽丝使用的模型预设:"

@@ -157,7 +157,7 @@ async def model_selection_callback_handler(client, query):
                             [
                                 InlineKeyboardButton(
                                     strings.github_contributing,
-                                    url="https://github.com/ToffeeNeko/TendouAris#contributing",
+                                    url="https://github.com/HanaokaYuzu/TendouAris#contributing",
                                 )
                             ],
                         ]
@@ -217,7 +217,7 @@ async def model_selection_callback_handler(client, query):
                                 [
                                     InlineKeyboardButton(
                                         strings.github_contributing,
-                                        url="https://github.com/ToffeeNeko/TendouAris#contributing",
+                                        url="https://github.com/HanaokaYuzu/TendouAris#contributing",
                                     )
                                 ],
                             ]
