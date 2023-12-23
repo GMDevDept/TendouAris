@@ -38,7 +38,7 @@ class Notice(BaseModel):
 class Image(BaseModel):
     name: str = "image.png"
     url: str
-    base64: Optional[str]
+    base64: Optional[str] = None
     type: str = "Image"
 
     def __str__(self):
@@ -61,7 +61,7 @@ class Response(BaseModel):
 class SourceAttribution(BaseModel):
     display_name: str = 'Source'
     see_more_url: str
-    image: Optional[Image]
+    image: Optional[Image] = None
     type: str = "SourceAttribution"
 
     def __str__(self):

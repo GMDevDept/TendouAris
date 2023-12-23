@@ -174,7 +174,7 @@ def process_cookie(cookie: str | Path | list[dict]):
     for cookie_dict in cookie_json:
         morsel = http.cookies.Morsel()
         morsel.set(cookie_dict["name"], cookie_dict["value"], cookie_dict["value"])
-        morsel["domain"] = cookie_dict["domain"]
+        morsel["domain"] = "www.bing.com"
         cookie_jar.update_cookies(
             http.cookies.SimpleCookie({cookie_dict["name"]: morsel})
         )

@@ -166,7 +166,7 @@ class ClaudeAiClient:
         finished = False
         while not finished:
             if retry <= 0:
-                logger.warning("Faield to get answer from claude. Timed out.")
+                logger.warning("Failed to get answer from claude. Timed out.")
                 break
             try:
                 data = bytes_queue.get_nowait()
