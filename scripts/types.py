@@ -8,4 +8,4 @@ class Photo(BaseModel):
 
 class ModelOutput(BaseModel):
     text: str
-    photos: Optional[list[Photo]]
+    photos: Optional[list[Photo]] = None

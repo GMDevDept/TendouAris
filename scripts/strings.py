@@ -2,7 +2,7 @@ version = """
 **▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.3.11**
 
 **▎Latest update**
-2023/12/20
+2023/12/23
 
 **▎Update log**
 v2.3.9
