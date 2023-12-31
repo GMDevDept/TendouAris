@@ -76,6 +76,12 @@ async def model_selection_handler(client, message):
                 [
                     [
                         InlineKeyboardButton(
+                            strings.models.get("model-gemini"),
+                            callback_data="model-gemini",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
                             strings.models.get("model-gpt35"),
                             callback_data="model-gpt35",
                         )
@@ -116,7 +122,30 @@ async def model_selection_callback_handler(client, query):
             f"{strings.no_auth}\n\nError message: `{strings.globally_disabled}`"
         )
     else:
-        if modelname == "gpt35":
+        if modelname == "gemini":
+            if gvars.google_api_key is not None:
+                await query.message.edit(
+                    strings.model_choose_preset,
+                    reply_markup=InlineKeyboardMarkup(
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    strings.gemini_presets.get("aris"),
+                                    callback_data="geminipreset-aris",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    strings.gemini_presets.get("default"),
+                                    callback_data="geminipreset-default",
+                                )
+                            ],
+                        ]
+                    ),
+                )
+            else:
+                await query.message.edit(strings.google_api_key_unavailable)
+        elif modelname == "gpt35":
             chatdata = util.load_chat(query.message.chat.id)
             if chatdata and (
                 chatdata.openai_api_key or chatdata.chat_id in gvars.whitelist
@@ -306,6 +335,23 @@ async def model_selection_callback_handler(client, query):
                 await query.message.edit(strings.claude_cookie_unavailable)
 
 
+# Gemini Pro preset selection callback
+async def gemini_preset_selection_callback_handler(client, query):
+    preset = query.data.replace("geminipreset-", "")
+    chatdata = util.load_chat(
+        query.message.chat.id,
+        create_new=True,
+        is_group=await util.is_group(query.message.chat),
+    )
+    chatdata.set_model({"name": "gemini", "args": {"preset": preset}})
+
+    await query.message.edit(
+        strings.model_changed
+        + strings.models.get("model-gemini")
+        + f" ({strings.gemini_presets.get(preset).split(' (')[0]})"
+    )
+
+
 # GPT-3.5 preset selection callback
 async def gpt35_preset_selection_callback_handler(client, query):
     preset = query.data.replace("gpt35preset-", "")
@@ -313,17 +359,6 @@ async def gpt35_preset_selection_callback_handler(client, query):
 
     match preset:
         case "default" | "aris":
-            if chatdata.gpt35_history is not None and not (
-                chatdata.model["name"] == "gpt35"
-                and chatdata.model["args"].get("preset") == preset
-            ):
-                chatdata.gpt35_chatbot = None
-                chatdata.gpt35_history = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_preset_change.format("GPT3.5"),
-                )
-
             chatdata.set_model({"name": "gpt35", "args": {"preset": preset}})
 
             await query.message.edit(
@@ -360,17 +395,6 @@ async def gpt35_preset_selection_callback_handler(client, query):
             if not chatdata.gpt35_preset:
                 await query.message.edit(strings.custom_preset_unavailable)
             else:
-                if chatdata.gpt35_history is not None and not (
-                    chatdata.model["name"] == "gpt35"
-                    and chatdata.model["args"].get("preset") == "custom"
-                ):
-                    chatdata.gpt35_chatbot = None
-                    chatdata.gpt35_history = None
-                    await client.send_message(
-                        chatdata.chat_id,
-                        strings.model_reset_due_to_preset_change.format("GPT3.5"),
-                    )
-
                 chatdata.set_model({"name": "gpt35", "args": {"preset": "custom"}})
 
                 await query.message.edit(
@@ -380,17 +404,6 @@ async def gpt35_preset_selection_callback_handler(client, query):
                 )
         case _:
             assert preset.startswith("addon-"), f"Invalid callback: {query.data}"
-            if chatdata.gpt35_history is not None and not (
-                chatdata.model["name"] == "gpt35"
-                and chatdata.model["args"].get("preset") == preset
-            ):
-                chatdata.gpt35_chatbot = None
-                chatdata.gpt35_history = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_preset_change.format("GPT3.5"),
-                )
-
             preset_id = preset.replace("addon-", "")
             chatdata.set_model(
                 {
@@ -413,17 +426,6 @@ async def gpt4_preset_selection_callback_handler(client, query):
 
     match preset:
         case "default":
-            if chatdata.gpt4_history is not None and not (
-                chatdata.model["name"] == "gpt4"
-                and chatdata.model["args"].get("preset") == preset
-            ):
-                chatdata.gpt4_chatbot = None
-                chatdata.gpt4_history = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_preset_change.format("GPT4"),
-                )
-
             chatdata.set_model({"name": "gpt4", "args": {"preset": preset}})
 
             await query.message.edit(
@@ -460,17 +462,6 @@ async def gpt4_preset_selection_callback_handler(client, query):
             if not chatdata.gpt4_preset:
                 await query.message.edit(strings.custom_preset_unavailable)
             else:
-                if chatdata.gpt4_history is not None and not (
-                    chatdata.model["name"] == "gpt4"
-                    and chatdata.model["args"].get("preset") == "custom"
-                ):
-                    chatdata.gpt4_chatbot = None
-                    chatdata.gpt4_history = None
-                    await client.send_message(
-                        chatdata.chat_id,
-                        strings.model_reset_due_to_preset_change.format("GPT4"),
-                    )
-
                 chatdata.set_model({"name": "gpt4", "args": {"preset": "custom"}})
 
                 await query.message.edit(
@@ -480,17 +471,6 @@ async def gpt4_preset_selection_callback_handler(client, query):
                 )
         case _:
             assert preset.startswith("addon-"), f"Invalid callback: {query.data}"
-            if chatdata.gpt4_history is not None and not (
-                chatdata.model["name"] == "gpt4"
-                and chatdata.model["args"].get("preset") == preset
-            ):
-                chatdata.gpt4_chatbot = None
-                chatdata.gpt4_history = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_preset_change.format("GPT4"),
-                )
-
             preset_id = preset.replace("addon-", "")
             chatdata.set_model(
                 {
@@ -550,14 +530,6 @@ async def custom_preset_handler(client, message):
             ).group(1)
 
             if model_name == "GPT3.5":
-                if chatdata.gpt35_history is not None:
-                    chatdata.gpt35_chatbot = None
-                    chatdata.gpt35_history = None
-                    await client.send_message(
-                        chatdata.chat_id,
-                        strings.model_reset_due_to_preset_change.format("GPT3.5"),
-                    )
-
                 chatdata.set_gpt35_preset(template_dict)
                 chatdata.set_model({"name": "gpt35", "args": {"preset": "custom"}})
 
@@ -568,14 +540,6 @@ async def custom_preset_handler(client, message):
                     + f" ({strings.gpt35_presets.get('custom').split(' (')[0]})"
                 )
             elif model_name == "GPT4":
-                if chatdata.gpt4_history is not None:
-                    chatdata.gpt4_chatbot = None
-                    chatdata.gpt4_history = None
-                    await client.send_message(
-                        chatdata.chat_id,
-                        strings.model_reset_due_to_preset_change.format("GPT4"),
-                    )
-
                 chatdata.set_gpt4_preset(template_dict)
                 chatdata.set_model({"name": "gpt4", "args": {"preset": "custom"}})
 
@@ -672,7 +636,7 @@ async def reset_handler(client, message):
     if not chatdata:
         await message.reply(strings.chatdata_unavailable)
     else:
-        await chatdata.reset()
+        chatdata.reset()
         await message.reply(strings.history_cleared)
 
 
@@ -790,6 +754,12 @@ async def manage_mode_handler(client, message):
                 ],
                 [
                     InlineKeyboardButton(
+                        strings.manage_mode_options.get("scope-gemini"),
+                        callback_data="manage-scope-gemini",
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
                         strings.manage_mode_options.get("scope-gpt35"),
                         callback_data="manage-scope-gpt35",
                     )
@@ -825,7 +795,7 @@ async def manage_mode_handler(client, message):
 
 # Manage mode callback
 async def manage_mode_callback_handler(client, query):
-    if re.match(r"^manage-scope-(global|gpt35|gpt4|bing|bard|claude)$", query.data):
+    if re.match(r"^manage-scope-(global|gemini|gpt35|gpt4|bing|bard|claude)$", query.data):
         await query.message.edit(
             strings.manage_mode_choose_scope,
             reply_markup=InlineKeyboardMarkup(
@@ -852,11 +822,11 @@ async def manage_mode_callback_handler(client, query):
             ),
         )
     elif re.match(
-        r"^manage-scope-(global|gpt35|gpt4|bing|bard|claude)-(all|whitelist|manager)$",
+        r"^manage-scope-(global|gemini|gpt35|gpt4|bing|bard|claude)-(all|whitelist|manager)$",
         query.data,
     ):
         match = re.match(
-            r"^manage-scope-(global|gpt35|gpt4|bing|bard|claude)-(all|whitelist|manager)$",
+            r"^manage-scope-(global|gemini|gpt35|gpt4|bing|bard|claude)-(all|whitelist|manager)$",
             query.data,
         )
         model = match.group(1)
@@ -869,116 +839,122 @@ async def manage_mode_callback_handler(client, query):
 
 # Conversation
 async def conversation_handler(client, message):
-    chatdata = util.load_chat(message.chat.id)
-    if not chatdata:
-        await message.reply(f"{strings.no_auth}\n\n{strings.api_key_required}")
-    else:
-        raw_text = await util.get_raw_text(message)
-        input_text = re.sub(r"^/\S*\s*", "", raw_text)
-        sender_id = (
-            message.from_user
-            and message.from_user.id
-            or message.sender_chat
-            and message.sender_chat.id
+    chatdata = util.load_chat(
+        message.chat.id,
+        create_new=True,
+        is_group=await util.is_group(message.chat),
+    )
+    raw_text = await util.get_raw_text(message)
+    input_text = re.sub(r"^/\S*\s*", "", raw_text)
+    sender_id = (
+        message.from_user
+        and message.from_user.id
+        or message.sender_chat
+        and message.sender_chat.id
+    )
+
+    if message.reply_to_message:
+        context = await util.get_raw_text(message.reply_to_message)
+        if context and chatdata.last_reply != context:
+            input_text = f'Context: "{context}";\n{input_text}'
+
+    placeholder = None
+    if (
+        chatdata.model.get("name") == "bing"
+        or chatdata.model.get("name") == "gpt4"
+        or (
+            chatdata.model.get("name") == "claude"
+            and chatdata.model.get("args").get("preset") != "default"
+        )
+    ):
+        placeholder = await message.reply(
+            random.choice(strings.placeholder_before_output)
+            + (
+                chatdata.model.get("name") == "bing"
+                and strings.placeholder_bing
+                or chatdata.model.get("name") == "gpt4"
+                and strings.placeholder_gpt4
+                or chatdata.model.get("name") == "claude"
+                and strings.placeholder_claude
+                or ""
+            ),
+            disable_notification=True,
         )
 
-        if message.reply_to_message:
-            context = await util.get_raw_text(message.reply_to_message)
-            if context and chatdata.last_reply != context:
-                input_text = f'Context: "{context}";\n{input_text}'
+    try:
+        model_output: ModelOutput = await chatdata.process_message(
+            client=client, model_input={"sender_id": sender_id, "text": input_text}
+        )
+        text: str = model_output.text
+        photos: list[str] | None = model_output.photos and [
+            photo.url for photo in model_output.photos
+        ]
 
-        placeholder = None
-        if (
-            chatdata.model.get("name") == "bing"
-            or chatdata.model.get("name") == "gpt4"
-            or (
-                chatdata.model.get("name") == "claude"
-                and chatdata.model.get("args").get("preset") != "default"
-            )
-        ):
-            placeholder = await message.reply(
-                random.choice(strings.placeholder_before_output)
-                + (
-                    chatdata.model.get("name") == "bing"
-                    and strings.placeholder_bing
-                    or chatdata.model.get("name") == "gpt4"
-                    and strings.placeholder_gpt4
-                    or chatdata.model.get("name") == "claude"
-                    and strings.placeholder_claude
-                ),
-                disable_notification=True,
-            )
+        if placeholder is not None:
+            await placeholder.delete()
 
-        try:
-            model_output: ModelOutput = await chatdata.process_message(
-                client=client, model_input={"sender_id": sender_id, "text": input_text}
-            )
-            text: str = model_output.text
-            photos: list[str] | None = model_output.photos and [photo.url for photo in model_output.photos]
-
-            if placeholder is not None:
-                await placeholder.delete()
-
-            valid_media = []
-            if photos:
-                fallback_text = "\n\n"
-                for url in photos:
-                    try:
-                        await client.invoke(
-                            UploadMedia(
-                                peer=await client.resolve_peer(chatdata.chat_id),
-                                media=InputMediaPhotoExternal(url=url),
-                            )
+        valid_media = []
+        if photos:
+            fallback_text = "\n\n"
+            for url in photos:
+                try:
+                    await client.invoke(
+                        UploadMedia(
+                            peer=await client.resolve_peer(chatdata.chat_id),
+                            media=InputMediaPhotoExternal(url=url),
                         )
-                        valid_media.append(url)
-                    except RPCError:
-                        fallback_text += f"[Invalid Media]({url})\n"
-                    except Exception as e:
-                        logging.error(f"Error occurred during processing media: {e}")
-                        fallback_text += f"[Invalid Media]({url})\n"
-
-                text += fallback_text.rstrip()
-
-            if valid_media:
-                if len(valid_media) == 1:
-                    await message.reply_photo(
-                        valid_media[0], quote=True, caption=len(text) < 1024 and text
                     )
-                else:
-                    media_group = [
-                        InputMediaPhoto(
-                            url,
-                            caption=i == len(valid_media) - 1
-                            and len(text) < 1024
-                            and text,
-                        )
-                        for i, url in enumerate(valid_media)
-                    ]
+                    valid_media.append(url)
+                except RPCError:
+                    fallback_text += f"[Invalid Media]({url})\n"
+                except Exception as e:
+                    logging.error(f"Error occurred during processing media: {e}")
+                    fallback_text += f"[Invalid Media]({url})\n"
 
-                    # media group length limit: 2-10
-                    for i in range(0, len(media_group), 10):
-                        batch = media_group[i : i + 10]
-                        if len(batch) == 1:
-                            batch.insert(0, media_group[i - 1])
-                        await message.reply_media_group(batch, quote=True)
+            text += fallback_text.rstrip()
 
-            # Max caption length limit = 1024
-            if not valid_media or len(text) >= 1024:
-                # Max text message length limit = 4096
-                for i in range(0, len(text), 4096):
-                    text_chunk = text[i : i + 4096]
-                    await message.reply(text_chunk, quote=True)
+        if valid_media:
+            if len(valid_media) == 1:
+                await message.reply_photo(
+                    valid_media[0], quote=True, caption=len(text) < 1024 and text
+                )
+            else:
+                media_group = [
+                    InputMediaPhoto(
+                        url,
+                        caption=i == len(valid_media) - 1
+                        and len(text) < 1024
+                        and text,
+                    )
+                    for i, url in enumerate(valid_media)
+                ]
 
-            chatdata.last_reply = text
-        except RPCError as e:
-            logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
-            await message.reply(f"{strings.rpc_error}\n\nError message:\n`{str(e)[:100]}`")
-        except Exception as e:
-            logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
-            await message.reply(
-                f"{strings.internal_error}\n\nError message:\n`{str(e)[:100]}`\n\n{strings.feedback}",
-                quote=False,
-            )
+                # media group length limit: 2-10
+                for i in range(0, len(media_group), 10):
+                    batch = media_group[i : i + 10]
+                    if len(batch) == 1:
+                        batch.insert(0, media_group[i - 1])
+                    await message.reply_media_group(batch, quote=True)
+
+        # Max caption length limit = 1024
+        if not valid_media or len(text) >= 1024:
+            # Max text message length limit = 4096
+            for i in range(0, len(text), 4096):
+                text_chunk = text[i : i + 4096]
+                await message.reply(text_chunk, quote=True)
+
+        chatdata.last_reply = text
+    except RPCError as e:
+        logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
+        await message.reply(
+            f"{strings.rpc_error}\n\nError message:\n`{str(e)[:100]}`"
+        )
+    except Exception as e:
+        logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
+        await message.reply(
+            f"{strings.internal_error}\n\nError message:\n`{str(e)[:100]}`\n\n{strings.feedback}",
+            quote=False,
+        )
 
 
 # Generate image
@@ -1068,7 +1044,9 @@ async def draw_handler(client, message):
                     await message.reply(text_chunk, quote=True)
         except RPCError as e:
             logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
-            await message.reply(f"{strings.rpc_error}\n\nError message:\n`{str(e)[:100]}`")
+            await message.reply(
+                f"{strings.rpc_error}\n\nError message:\n`{str(e)[:100]}`"
+            )
         except Exception as e:
             logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
             await message.reply(

@@ -64,6 +64,12 @@ async def model_selection_callback_handler(client, query):
     await handlers.model_selection_callback_handler(client, query)
 
 
+# Gemini Pro preset selection callback
+@client.on_callback_query(filters.regex(r"^geminipreset-"))
+async def gemini_preset_selection_callback_handler(client, query):
+    await handlers.gemini_preset_selection_callback_handler(client, query)
+
+
 # GPT-3.5 preset selection callback
 @client.on_callback_query(filters.regex(r"^gpt35preset-"))
 async def gpt35_preset_selection_callback_handler(client, query):
