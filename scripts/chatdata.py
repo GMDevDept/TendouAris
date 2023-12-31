@@ -25,7 +25,7 @@ class ChatData:
     def __init__(
         self,
         chat_id: int,
-        model: dict = {"name": "gpt35", "args": {"preset": "aris"}},
+        model: dict = {"name": "gemini", "args": {"preset": "aris"}},
         **kwargs,
     ):
         self.chat_id: int = chat_id
@@ -92,14 +92,19 @@ class ChatData:
     async def set_api_key(self, api_key: str):
         self.openai_api_key = api_key
         self.save()
+
         self.gpt35_chatbot = None
         self.gpt35_history = None
-        self.gpt35_clear_task.cancel()
-        self.gpt35_clear_task = None
         self.gpt4_chatbot = None
         self.gpt4_history = None
-        self.gpt4_clear_task.cancel()
-        self.gpt4_clear_task = None
+
+        if self.gpt35_clear_task:
+            self.gpt35_clear_task.cancel()
+            self.gpt35_clear_task = None
+
+        if self.gpt4_clear_task:
+            self.gpt4_clear_task.cancel()
+            self.gpt4_clear_task = None
 
     def set_gpt35_preset(self, preset: dict):
         self.gpt35_preset = preset
@@ -158,27 +163,39 @@ class ChatData:
 
     def reset(self):
         self.gemini_session = None
-        self.gemini_clear_task.cancel()
-        self.gemini_clear_task = None
         self.gpt35_chatbot = None
         self.gpt35_history = None
-        self.gpt35_clear_task.cancel()
-        self.gpt35_clear_task = None
         self.gpt4_chatbot = None
         self.gpt4_history = None
-        self.gpt4_clear_task.cancel()
-        self.gpt4_clear_task = None
         self.bing_chatbot = None
-        self.bing_clear_task.cancel()
-        self.bing_clear_task = None
         self.bard_chatbot = None
-        self.bard_clear_task.cancel()
-        self.bard_clear_task = None
         self.claude_uuid = None
-        self.claude_clear_task.cancel()
-        self.claude_clear_task = None
         self.last_reply = None
         self.concurrent_lock.clear()
+
+        if self.gemini_clear_task:
+            self.gemini_clear_task.cancel()
+            self.gemini_clear_task = None
+
+        if self.gpt35_clear_task:
+            self.gpt35_clear_task.cancel()
+            self.gpt35_clear_task = None
+
+        if self.gpt4_clear_task:
+            self.gpt4_clear_task.cancel()
+            self.gpt4_clear_task = None
+
+        if self.bing_clear_task:
+            self.bing_clear_task.cancel()
+            self.bing_clear_task = None
+
+        if self.bard_clear_task:
+            self.bard_clear_task.cancel()
+            self.bard_clear_task = None
+
+        if self.claude_clear_task:
+            self.claude_clear_task.cancel()
+            self.claude_clear_task = None
 
 
 class GroupChatData(ChatData):

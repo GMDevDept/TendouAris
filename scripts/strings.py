@@ -2,7 +2,7 @@ version = """
 **▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.4.0**
 
 **▎Latest update**
-2023/12/30
+2024/01/01
 
 **▎Update log**
 v2.4.0
@@ -11,7 +11,7 @@ v2.4.0
 
 manual = """
 **{} Sensei, 欢迎您成为勇者爱丽丝的伙伴!**😆
-爱丽丝将默认使用Gemini Pro语言模型, 您也可以使用 /model 指令选择爱丽丝使用的模型哦~😉
+\n爱丽丝将默认使用Gemini Pro语言模型, 您也可以使用 /model 指令选择其他模型哦~😉
 \n**▎如何与爱丽丝对话:**
 1. 私聊时, 直接发送文字即可, 也可以使用 /aris 指令 + 你的输入内容进行对话
 2. 在群聊中, 可以使用 /aris 指令或**回复**爱丽丝发送的消息来与她对话。**当爱丽丝为群聊的管理员时**, 她还可以自动识别以“爱丽丝”开头的消息并进行回复
@@ -27,8 +27,6 @@ Q: 爱丽丝和官方原版语言模型有什么不同?
 A: 除了角色设定外, 爱丽丝还通过预设prompt解除了一部分模型的内容输出限制, 可以和她聊更多原模型无法回答的话题
 Q: 爱丽丝忘记了自己的身份/拒绝回答问题/复读自己是语言模型怎么办?
 A: 尝试使用 /reset 指令重置对话
-Q: OpenAI API key是什么? 怎么获取?
-A: API key是爱丽丝实现对话功能所必需的, 可以在 `https://platform.openai.com/account/api-keys` 页面获取。不知道如何注册OpenAI账号请自行谷歌
 Q: 输入的API key安全吗?
 A: 私聊中输入的API key只会被用于你自己的帐号, 群聊中输入的API key也只会被用于当前群聊, 实在不放心欢迎自建
 \n**▎爱丽丝指令集:**
@@ -130,7 +128,7 @@ text_filters = [
 ]
 
 models = {
-    "model-gemini": "Gemini Pro",
+    "model-gemini": "Gemini Pro (默认)",
     "model-gpt35": "GPT3.5 Turbo",
     "model-gpt4": "GPT4",
     "model-bing": "New Bing",
@@ -141,12 +139,10 @@ models = {
 choose_model = """
 请选择希望爱丽丝使用的语言模型:
 \n注意事项:
-1. 使用GPT模型需要添加自己的OpenAI API key, 请使用 /apikey 命令设置
-2. GPT3.5和GPT4支持自定义预设/角色扮演/内容解锁, 详见 `/model - gpt3.5/gpt4 - 自定义专属预设`
-4. 使用GPT4模型需要你自己的API key支持GPT4, 与是否开了ChatGPT的premium无关, 需加入waitlist并等待通过
-3. 优化了GPT3.5和GPT4会话历史处理机制, 减少了token消耗, 现在基本不会出现token溢出上限的情况了
-5. 爱丽丝的GitHub repo现在支持通过模版快捷添加预设模块, 欢迎[通过issue或pull request为爱丽丝添加预设](https://github.com/HanaokaYuzu/TendouAris#contributing)
-6. New Bing和Google Bard目前对所有人开放, **不支持**角色扮演与内容解锁, 后续视服务器压力可能会限制使用, 有需要请[搭建自己的机器人](https://github.com/HanaokaYuzu/TendouAris#deployment)
+1. Gemini和GPT支持自定义预设/角色扮演/内容解锁, 详见 `/model - 选择模型 - 自定义专属预设`
+2. 使用GPT模型需要添加自己的OpenAI API key, 请使用 /apikey 命令设置
+3. 使用GPT4模型需要你自己的API key支持GPT4, 与是否开了ChatGPT的premium无关, 需加入waitlist并等待通过
+4. 爱丽丝的GitHub repo现在支持通过模版快捷添加预设模块, 欢迎[通过issue或pull request为爱丽丝添加预设](https://github.com/HanaokaYuzu/TendouAris#contributing)
 """
 
 model_choose_preset = "请选择希望爱丽丝使用的模型预设:"

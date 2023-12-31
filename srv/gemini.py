@@ -1,7 +1,6 @@
 # https://ai.google.dev/tutorials/python_quickstart
 
 import asyncio
-import logging
 
 from loguru import logger
 from pyrogram import Client
@@ -25,10 +24,31 @@ async def process_message_gemini(
 
     if not chatdata.gemini_session:
         try:
-            new_chat = await gvars.gemini_client.start_chat(history=[])
+            new_chat = gvars.gemini_client.start_chat(history=[])
+
+            if model_args.get("preset") == "aris":
+                new_chat.history = [
+                    glm.Content(
+                        parts=[glm.Part(text=prompts.aris_prompt_gemini)],
+                        role="user",
+                    ),
+                    glm.Content(
+                        parts=[glm.Part(text=prompts.gemini_initial_response)],
+                        role="model",
+                    ),
+                    glm.Content(
+                        parts=[glm.Part(text=prompts.initial_prompts["input"])],
+                        role="user",
+                    ),
+                    glm.Content(
+                        parts=[glm.Part(text=prompts.initial_prompts["output"])],
+                        role="model",
+                    ),
+                ]
+
             chatdata.gemini_session = new_chat
         except Exception as e:
-            logging.error(
+            logger.error(
                 f"Error happened when creating gemini chat session in chat {chatdata.chat_id}: {e}"
             )
             return ModelOutput(
@@ -48,7 +68,7 @@ async def process_message_gemini(
     try:
         response = await chatdata.gemini_session.send_message_async(input_text)
     except Exception as e:
-        logging.error(
+        logger.error(
             f"Error happened when calling gemini_chatbot.send_message_async in chat {chatdata.chat_id}: {e}"
         )
         return ModelOutput(
@@ -59,7 +79,7 @@ async def process_message_gemini(
 
     output_text = response.text.strip()
 
-    if gvars.gemini_chatbot_close_delay > 0:
+    if chatdata.is_group and gvars.gemini_chatbot_close_delay > 0:
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.gemini_chatbot_close_delay)
