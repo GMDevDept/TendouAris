@@ -1,43 +1,30 @@
 version = """
-**▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.3.11**
+**▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.4.0**
 
 **▎Latest update**
-2023/12/23
+2023/12/30
 
 **▎Update log**
-v2.3.9
-- 为GPT4模型添加爱丽丝预设
-v2.3.5
-- 更新GPT4模型至 `gpt-4-1106-preview`
-v2.3.4
-- 新增 /draw 指令, 可以直接调用Bing模型生成图片
-v2.3.3
-- 修复消息过长时无法发送的问题
-v2.3.0
-- 替换依赖修复New Bing模型, 优化生成图片发送格式
-v2.2.2
-- 现在设置API key时会同步刷新会话
-v2.2.1
-- 为Claude模型添加爱丽丝预设
-v2.2.0
-- 新增Claude模型支持
+v2.4.0
+新增Google Gemini模型支持, 预设Gemini Pro模型为默认语言模型, 不再需要用户提供API key
 """
 
 manual = """
 **{} Sensei, 欢迎您成为勇者爱丽丝的伙伴!**😆
-在出发冒险之前, 记得请先使用 /apikey 指令设置爱丽丝的OpenAI API key哦~😉
+爱丽丝将默认使用Gemini Pro语言模型, 您也可以使用 /model 指令选择爱丽丝使用的模型哦~😉
 \n**▎如何与爱丽丝对话:**
 1. 私聊时, 直接发送文字即可, 也可以使用 /aris 指令 + 你的输入内容进行对话
 2. 在群聊中, 可以使用 /aris 指令或**回复**爱丽丝发送的消息来与她对话。**当爱丽丝为群聊的管理员时**, 她还可以自动识别以“爱丽丝”开头的消息并进行回复
 \n**▎通过 /model 指令选择语言模型, 目前支持的模型包括:**
-1. GPT3.5 Turbo (默认)
-2. GPT4
-3. New Bing
-4. Google Bard
-5. Claude
+1. Gemini Pro (默认)
+2. New Bing
+3. Google Bard
+4. Claude
+5. GPT3.5 Turbo (需API key)
+6. GPT4 (需API key)
 \n**▎FAQ:**
-Q: 爱丽丝和普通的ChatGPT有什么不同?
-A: 除了角色设定外, 爱丽丝还通过预设prompt解除了一部分ChatGPT的内容输出限制, 可以和她聊更多ChatGPT无法回答的话题
+Q: 爱丽丝和官方原版语言模型有什么不同?
+A: 除了角色设定外, 爱丽丝还通过预设prompt解除了一部分模型的内容输出限制, 可以和她聊更多原模型无法回答的话题
 Q: 爱丽丝忘记了自己的身份/拒绝回答问题/复读自己是语言模型怎么办?
 A: 尝试使用 /reset 指令重置对话
 Q: OpenAI API key是什么? 怎么获取?
@@ -143,6 +130,7 @@ text_filters = [
 ]
 
 models = {
+    "model-gemini": "Gemini Pro",
     "model-gpt35": "GPT3.5 Turbo",
     "model-gpt4": "GPT4",
     "model-bing": "New Bing",
@@ -198,13 +186,13 @@ placeholder_gpt4 = "\n\n(GPT4模型生成回答速度较慢, 请耐心等待)"
 placeholder_claude = "\n\n(Claude模型生成回答速度较慢, 尤其是爱丽丝预设下初次对话需要较长时间, 请耐心等待)"
 
 gpt35_presets = {
-    "aris": "爱丽丝 (默认)",
-    "default": "官方原版 (无角色设定)",
+    "aris": "爱丽丝",
+    "default": "官方原版",
     "custom": "✨ 自定义专属预设",
 }
 
 gpt4_presets = {
-    "default": "官方原版 (无角色设定)",
+    "default": "官方原版",
     "custom": "✨ 自定义专属预设",
 }
 
@@ -284,6 +272,7 @@ manage_mode_menu = "请选择需要设置的选项:"
 
 manage_mode_options = {
     "scope-global": "设置bot允许使用范围(全部功能)",
+    "scope-gemini": "设置Gemini Pro模型允许使用范围",
     "scope-gpt35": "设置GPT3.5 Turbo模型允许使用范围",
     "scope-gpt4": "设置GPT4模型允许使用范围",
     "scope-bing": "设置New Bing模型允许使用范围",
@@ -297,4 +286,11 @@ manage_mode_scopes = {
     "all": "所有人",
     "whitelist": "仅白名单",
     "manager": "仅Manager",
+}
+
+google_api_key_unavailable = "API key required by Gemini model are not set in .env"
+
+gemini_presets = {
+    "aris": "爱丽丝 (默认)",
+    "default": "官方原版",
 }

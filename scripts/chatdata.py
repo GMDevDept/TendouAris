@@ -1,14 +1,18 @@
 import json
 import asyncio
-from pyrogram import Client
-from typing import Optional
 from asyncio import Task
+from typing import Optional
+
+from pyrogram import Client
 from Bard import AsyncChatbot as BardChatbot
 from async_bing_client import Bing_Client
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationSummaryBufferMemory
+from google.generativeai import ChatSession
+
 from scripts import gvars, strings
 from scripts.types import ModelOutput
+from srv.gemini import process_message_gemini
 from srv.gpt import process_message_gpt35, process_message_gpt4
 from srv.bing import process_message_bing
 from srv.bard import process_message_bard
@@ -28,6 +32,8 @@ class ChatData:
         self.is_group: Optional[bool] = None
         self.model: dict = model  # {"name": str, "args": dict}
         self.openai_api_key: Optional[str] = kwargs.get("openai_api_key")
+        self.gemini_session: Optional[ChatSession] = None
+        self.gemini_clear_task: Optional[Task] = None
         self.gpt35_preset: Optional[dict] = kwargs.get("gpt35_preset")
         self.gpt35_chatbot: Optional[ConversationChain] = None
         self.gpt35_history: Optional[ConversationSummaryBufferMemory] = None
@@ -81,17 +87,19 @@ class ChatData:
     def set_model(self, model: dict):
         self.model = model
         self.save()
+        self.reset()
 
     async def set_api_key(self, api_key: str):
         self.openai_api_key = api_key
         self.save()
-        if (
-            self.gpt35_chatbot is not None
-            or self.gpt4_chatbot is not None
-            or self.gpt35_history is not None
-            or self.gpt4_history is not None
-        ):
-            await self.reset()
+        self.gpt35_chatbot = None
+        self.gpt35_history = None
+        self.gpt35_clear_task.cancel()
+        self.gpt35_clear_task = None
+        self.gpt4_chatbot = None
+        self.gpt4_history = None
+        self.gpt4_clear_task.cancel()
+        self.gpt4_clear_task = None
 
     def set_gpt35_preset(self, preset: dict):
         self.gpt35_preset = preset
@@ -104,6 +112,13 @@ class ChatData:
     async def process_message(self, client: Client, model_input: dict) -> ModelOutput:
         model_name, model_args = self.model["name"], self.model["args"]
         match model_name:
+            case "gemini":
+                model_output = await process_message_gemini(
+                    client=client,
+                    chatdata=self,
+                    model_args=model_args,
+                    model_input=model_input,
+                )
             case "gpt35":
                 model_output = await process_message_gpt35(
                     client=client,
@@ -141,18 +156,26 @@ class ChatData:
                 )
         return model_output
 
-    async def reset(self):
+    def reset(self):
+        self.gemini_session = None
+        self.gemini_clear_task.cancel()
+        self.gemini_clear_task = None
         self.gpt35_chatbot = None
         self.gpt35_history = None
+        self.gpt35_clear_task.cancel()
         self.gpt35_clear_task = None
         self.gpt4_chatbot = None
         self.gpt4_history = None
+        self.gpt4_clear_task.cancel()
         self.gpt4_clear_task = None
         self.bing_chatbot = None
+        self.bing_clear_task.cancel()
         self.bing_clear_task = None
         self.bard_chatbot = None
+        self.bard_clear_task.cancel()
         self.bard_clear_task = None
         self.claude_uuid = None
+        self.claude_clear_task.cancel()
         self.claude_clear_task = None
         self.last_reply = None
         self.concurrent_lock.clear()

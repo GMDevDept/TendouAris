@@ -10,3 +10,4 @@ pillow==10.1.0
 curl_cffi==0.5.10
 loguru==0.7.2
 pydantic==2.5.3
+google-generativeai==0.3.2

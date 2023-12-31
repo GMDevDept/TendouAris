@@ -17,6 +17,7 @@ Aris is a telegram chatbot based on OpenAI API with customized character preset.
 
 | Model Name | Support | Custom Prompt | Image Output |
 |:---:|:---:|:---:|:---:|
+| Gemini Pro | ✅ | ✅ | 🚫 |
 | gpt-3.5-turbo | ✅ | ✅ | 🚫 |
 | gpt-4 | ✅ | ✅ | 🚫 |
 | New Bing | ✅ | 🚫 | ✅ |
