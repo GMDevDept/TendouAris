@@ -347,7 +347,7 @@ async def gemini_preset_selection_callback_handler(client, query):
 
     await query.message.edit(
         strings.model_changed
-        + strings.models.get("model-gemini")
+        + strings.models.get("model-gemini").split(' (')[0]
         + f" ({strings.gemini_presets.get(preset).split(' (')[0]})"
     )
 
