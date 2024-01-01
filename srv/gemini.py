@@ -150,12 +150,7 @@ async def process_message_gemini(
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.gemini_chatbot_close_delay)
-            if chatdata.gemini_session is not None:
-                chatdata.gemini_session = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_inactivity.format("gemini"),
-                )
+            chatdata.gemini_session = None
 
         chatdata.gemini_clear_task = asyncio.create_task(scheduled_auto_close())
 

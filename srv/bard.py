@@ -69,12 +69,7 @@ async def process_message_bard(
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.bard_chatbot_close_delay)
-            if chatdata.bard_chatbot is not None:
-                chatdata.bard_chatbot = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_inactivity.format("Bard"),
-                )
+            chatdata.bard_chatbot = None
 
         chatdata.bard_clear_task = asyncio.create_task(scheduled_auto_close())
 
