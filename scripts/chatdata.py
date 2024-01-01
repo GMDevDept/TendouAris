@@ -32,6 +32,7 @@ class ChatData:
         self.is_group: Optional[bool] = None
         self.model: dict = model  # {"name": str, "args": dict}
         self.openai_api_key: Optional[str] = kwargs.get("openai_api_key")
+        self.gemini_preset: Optional[dict] = kwargs.get("gemini_preset")
         self.gemini_session: Optional[ChatSession] = None
         self.gemini_clear_task: Optional[Task] = None
         self.gpt35_preset: Optional[dict] = kwargs.get("gpt35_preset")
@@ -58,6 +59,7 @@ class ChatData:
             "is_group": self.is_group,
             "model": self.model,
             "openai_api_key": self.openai_api_key,
+            "gemini_preset": self.gemini_preset,
             "gpt35_preset": self.gpt35_preset,
             "gpt4_preset": self.gpt4_preset,
         }
@@ -105,6 +107,10 @@ class ChatData:
         if self.gpt4_clear_task:
             self.gpt4_clear_task.cancel()
             self.gpt4_clear_task = None
+
+    def set_gemini_preset(self, preset: dict):
+        self.gemini_preset = preset
+        self.save()
 
     def set_gpt35_preset(self, preset: dict):
         self.gpt35_preset = preset

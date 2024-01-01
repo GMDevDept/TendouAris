@@ -22,7 +22,7 @@ Aris is a telegram chatbot based on OpenAI API with customized character preset.
 | gpt-4 | ✅ | ✅ | 🚫 |
 | New Bing | ✅ | 🚫 | ✅ |
 | Google Bard | ✅ | 🚫 | ✅ |
-| Claude | ✅ | ✅ | 🚫 |
+| Claude | ✅ | 🚫 | 🚫 |
 
 Note: Bard cannot generate picture by prompt, it can only send pictures fetched from Google search.
 

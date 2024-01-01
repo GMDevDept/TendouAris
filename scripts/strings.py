@@ -1,10 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.4.0**
+**▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.4.1**
 
 **▎Latest update**
 2024/01/01
 
 **▎Update log**
+v2.4.1
+Gemini模型现在支持自定义预设
 v2.4.0
 新增Google Gemini模型支持, 预设Gemini Pro模型为默认语言模型, 不再需要用户提供API key
 """
@@ -205,6 +207,8 @@ custom_preset_outdated = "Custom preset invalid, probably caused by template upd
 
 addon_preset_invalid = "Preset template invalid"
 
+gemini_preset_placeholder = "[Gemini Model Custom Preset]"
+
 gpt35_preset_placeholder = "[GPT3.5 Model Custom Preset]"
 
 gpt4_preset_placeholder = "[GPT4 Model Custom Preset]"
@@ -214,12 +218,12 @@ custom_preset_template = """
 \n模版:
 ```
 {
-    "prompt": "你叫爱丽丝, 就读于千年科技学园, 我是你的老师",
-    "ai_prefix": "爱丽丝",
-    "ai_self": "",
+    "prompt": "你叫妃咲, 就读于山海经学园, 我是你的老师",
+    "ai_prefix": "妃咲",
+    "ai_self": "妾身",
     "human_prefix": "老师",
-    "sample_input": "你好爱丽丝",
-    "sample_output": "老师好, 爱丽丝很高兴见到老师(露出微笑)",
+    "sample_input": "你好妃会长",
+    "sample_output": "老师来找妾身有什么事吗? (抬眼看向你)",
     "unlock_required": true,
     "keyword_filter": true
 }
@@ -232,6 +236,21 @@ custom_preset_template = """
 5. sample_input, sample_output: (选填) 对话风格示范, 用于引导AI使用特定的自称、语气、格式、口癖等, 引号必须保留, 留空则不会进行引导
 6. unlock_required: 只能放true或者false, 如果设为true, 加载你的系统设定时会额外加一段prompt尝试解锁OpenAI的内容限制, 可能会破坏你的人设, 且不保证有效; 如果你的prompt自带解锁功能的话建议设为false
 7. keyword_filter: 只能放true或者false, 如果设为true, 当模型输出文本中包含常见违规提示词时会自动消除本条对话记忆; 如果打算进行角色扮演则建议设为true
+"""
+
+custom_preset_template_gemini = """
+请按照以下格式输入自定义预设，复制下方**包括大括号在内**的模版内容, 编辑完成后**回复(直接点发送不会生效)**这条消息, 注意只编辑后半段引号中的部分
+\n模版:
+```
+{
+    "prompt": "你叫妃咲, 就读于山海经学园, 我是你的老师",
+    "sample_input": "你好妃会长",
+    "sample_output": "老师来找妾身有什么事吗? (抬眼看向你)",
+}
+```
+\n注释:
+1. prompt: 全部系统设定, 角色人设尽量详细完整, 全文长度不能超过Telegram单条消息长度上限
+2. **sample_input/sample_output (重要)**: 用于解锁内容限制及引导AI使用特定的称呼、语气、格式、口癖等进行对话。 Gemini内容限制宽松, 只要在`sample_output`中按你理想的人设为AI做一次回复示范, 之后的对话内容就不会再被限制。此外AI的语气、格式会很大程度的受你提供的`sample_output`影响, **要想模型效果好, 请务必用心编写回复示范**
 """
 
 custom_template_parse_failed = "模版解析失败, 请严格确保格式正确"
@@ -289,4 +308,5 @@ google_api_key_unavailable = "API key required by Gemini model are not set in .e
 gemini_presets = {
     "aris": "爱丽丝 (默认)",
     "default": "官方原版",
+    "custom": "✨ 自定义专属预设",
 }

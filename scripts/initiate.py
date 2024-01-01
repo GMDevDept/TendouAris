@@ -94,6 +94,8 @@ def load_preset_addons():
             }
             if module_dict.get("base64_encoded"):
                 module_dict["prompt"] = base64.b64decode(module_dict["prompt"]).decode()
+            if "gemini" in module.compatible_models:
+                gvars.gemini_addons.update({module.id: module_dict})
             if "gpt35" in module.compatible_models:
                 gvars.gpt35_addons.update({module.id: module_dict})
             if "gpt4" in module.compatible_models:

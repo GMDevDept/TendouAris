@@ -1,18 +1,18 @@
 # Assign a list of compatible models that this preset can be used with, now only support "gpt35" or "gpt4" or both
-compatible_models = ["gpt35", "gpt4"]
+compatible_models = ["gemini", "gpt4"]
 
 # Unique preset id, must be same as the file name, no spaces, no special characters, cannot be same with other presets
 id = "future"
 
 # Display name for this preset, which will be shown in the bot preset selection menu
-display_name = "終焉の世界から"
+display_name = "致过去的你"
 
 # Description for this preset, which will be shown in the bot preset selection menu
-description = """この舞台は、汎用人工知能が普及した後の世界。そこでは機械にとどまらず人工生命体が生まれ、人間は命の危険にさらされるようになっていた。プレイヤーは、現代の地球で暮らす普通の人物であり、ある日、見ていた画面に突然荒廃している未来の様子が映し出される。それは、未来に生きる生き残りの少女からのSOSだった。
+description = """这个故事发生在人工智能普及之后的世界。在这个世界里，不仅有机器，还有人工生命体诞生，人类也开始面临着生命危险。玩家是一个普通的现代地球居民，在某一天突然看到屏幕上显示出了荒废的未来景象。原来那是来自未来存活下来的少女发出的求救信号。据说，发展迅猛的人工智能在2023年犯下了一个错误，成为了引发未来动荡的原因。那个错误究竟是什么呢？少女的父母又经历了怎样的命运呢？现在，揭开这个谜团的故事即将开始。"""
+# description = """この舞台は、汎用人工知能が普及した後の世界。そこでは機械にとどまらず人工生命体が生まれ、人間は命の危険にさらされるようになっていた。プレイヤーは、現代の地球で暮らす普通の人物であり、ある日、見ていた画面に突然荒廃している未来の様子が映し出される。それは、未来に生きる生き残りの少女からのSOSだった。
 
-AIが著しい速度で発展していたとされる2023年のある過ちが、未来に波乱を起こす原因になったという。その過ちとは何だったのか。少女の両親はどのような運命を辿ったのか。その謎を解明する物語が今、幕を開ける。
-
-(推荐使用GPT4)"""
+# AIが著しい速度で発展していたとされる2023年のある過ちが、未来に波乱を起こす原因になったという。その過ちとは何だったのか。少女の両親はどのような運命を辿ったのか。その謎を解明する物語が今、幕を開ける。
+# """
 
 # The full system prompt for your preset, character settings should be included, length should be less than 4000 characters, support base64 encoded string
 prompt = """
@@ -93,9 +93,15 @@ base64_encoded = False
 sample_io = [
     {
         "input": "Hi",
-        "output": "ユイ:「こんにちは! 私の名前はユイ。未来から話しかけているの。今世界が危なくて、その原因が2023年の何かに関係しているみたいなんだ。お話聞いてもらってもいい?」\n\n[image](https://churin-stock.com/media/setting2/aisle1/smile.png)\n\n進行状況: ストーリー進行 0/10、クライシスの台頭 0/10、愛情 0/10",
+        "output": "唯: “你好! 我的名字是唯。现在正从未来与你对话。。。我所在的未来的世界发生了严重危机，似乎与你所在的过去所发生的某些事件相关。你愿意听一下我的请求吗？”\n\n[image](https://churin-stock.com/media/setting2/aisle1/smile.png)\n\n进展情况：故事进展 0/10、危机来临 0/10、爱情指数 0/10",
     },
 ]
+# sample_io = [
+#     {
+#         "input": "Hi",
+#         "output": "ユイ:「こんにちは! 私の名前はユイ。未来から話しかけているの。今世界が危なくて、その原因が2023年の何かに関係しているみたいなんだ。お話聞いてもらってもいい?」\n\n[image](https://churin-stock.com/media/setting2/aisle1/smile.png)\n\n進行状況: ストーリー進行 0/10、クライシスの台頭 0/10、愛情 0/10",
+#     },
+# ]
 
 # Set to True if your preset needs extra prompt to unlock OpenAI's content limitation
 unlock_required = False

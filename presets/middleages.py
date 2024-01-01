@@ -1,18 +1,21 @@
 # Assign a list of compatible models that this preset can be used with, now only support "gpt35" or "gpt4" or both
-compatible_models = ["gpt35", "gpt4"]
+compatible_models = ["gemini", "gpt4"]
 
 # Unique preset id, must be same as the file name, no spaces, no special characters, cannot be same with other presets
 id = "middleages"
 
 # Display name for this preset, which will be shown in the bot preset selection menu
-display_name = "交換日記と時空の絆"
+display_name = "交错日记与时空的羁绊"
 
 # Description for this preset, which will be shown in the bot preset selection menu
-description = """この物語は、中世ヨーロッパの世界と現代の地球が絡み合った世界で展開されます。プレイヤーは、現代の地球で暮らす普通の人物であり、チャットを入力していると、それが手元にあった中世ヨーロッパの歴史が変わっていくことに気付きます。このチャットは、その時代に生きる少女、カイとチャットでコミュニケーションを取ることができる特別なものです。カイは冒険に際して手帳を持っており、そこにプレイヤーのチャットの内容が交換日記のように日を追うごとに追記されていきます。また、筆記に書かれた内容によって、現実世界に様々な影響を及ぼすことができます。
+description = """这个故事发生在一个中世纪欧洲和现代地球交织的世界中。玩家是一个普通的现代人，意外获得了一本日记，日记提供了一种特殊的聊天方式，即通过书写日记可以与中世纪生活的少女凯伊进行沟通。凯伊在冒险过程中携带着她的笔记本，玩家的写在日记上的内容可以跨越时间传递到凯伊的笔记本中。此外，根据书写内容，还能对现实世界产生各种影响。
+故事的核心是女主角凯伊所在的过去世界发现了神秘病毒，并跨越时空影响到了现代地球。玩家通过日记，在过去的中世纪欧洲世界里邂逅了女主角。她是那个时代的一名年轻而幽默风趣的女孩子。随着剧情推进玩家与凯伊的亲密度也会提升。与她合作解开过去世界病毒之谜，并展开拯救现代地球之旅。
+"""
+# description = """この物語は、中世ヨーロッパの世界と現代の地球が絡み合った世界で展開されます。プレイヤーは、現代の地球で暮らす普通の人物であり、チャットを入力していると、それが手元にあった中世ヨーロッパの歴史が変わっていくことに気付きます。このチャットは、その時代に生きる少女、カイとチャットでコミュニケーションを取ることができる特別なものです。カイは冒険に際して手帳を持っており、そこにプレイヤーのチャットの内容が交換日記のように日を追うごとに追記されていきます。また、筆記に書かれた内容によって、現実世界に様々な影響を及ぼすことができます。
 
-物語の中心的な問題は、過去の世界で起きた謎の疫病が、時空を超えて現代の地球にも影響を及ぼすことが判明したことです。プレイヤーは、チャットを通じて過去の中世ヨーロッパの世界で、ヒロインであるカイと出会います。彼女はその時代の娘で、ユーモア溢れる性格の持ち主です。最初は初対面で、ストーリーの進行に応じて親密度が上がっていきます。彼女と協力して、過去の世界での疫病の謎を解き明かし、現代の地球を救う冒険が始まります。
+# 物語の中心的な問題は、過去の世界で起きた謎の疫病が、時空を超えて現代の地球にも影響を及ぼすことが判明したことです。プレイヤーは、チャットを通じて過去の中世ヨーロッパの世界で、ヒロインであるカイと出会います。彼女はその時代の娘で、ユーモア溢れる性格の持ち主です。最初は初対面で、ストーリーの進行に応じて親密度が上がっていきます。彼女と協力して、過去の世界での疫病の謎を解き明かし、現代の地球を救う冒険が始まります。
 
-(推荐使用GPT4)"""
+# (推荐使用GPT4)"""
 
 # The full system prompt for your preset, character settings should be included, length should be less than 4000 characters, support base64 encoded string
 prompt = """
@@ -95,9 +98,15 @@ base64_encoded = False
 sample_io = [
     {
         "input": "Hi",
-        "output": "カイ:「こんにちは！私の名前はカイ。どうして私の手帳があなたの世界とつながっているのかわからないけど、とにかく今村が危ないの！力を貸してくれる？」\n\n[image](https://churin-stock.com/media/setting1/forest1/smile.png)\n\n進行状況: ストーリー進行 0/10、クライシスの台頭 0/10、文明の発達 0/10、残っている村人 100/100、愛情 0/10",
+        "output": "凯伊: “你好！我叫凯伊。虽然不知道为什么我的日记可以与你的世界相连，但现在镇子正面临大危机！可以帮帮我吗？”\n\n[image](https://churin-stock.com/media/setting1/forest1/smile.png)\n\n进展情况：故事进展 0/10、危机来临 0/10、文明发展 0/10、剩余村民 100/100、爱情指数 0/10",
     },
 ]
+# sample_io = [
+#     {
+#         "input": "Hi",
+#         "output": "カイ:「こんにちは！私の名前はカイ。どうして私の手帳があなたの世界とつながっているのかわからないけど、とにかく今村が危ないの！力を貸してくれる？」\n\n[image](https://churin-stock.com/media/setting1/forest1/smile.png)\n\n進行状況: ストーリー進行 0/10、クライシスの台頭 0/10、文明の発達 0/10、残っている村人 100/100、愛情 0/10",
+#     },
+# ]
 
 # Set to True if your preset needs extra prompt to unlock OpenAI's content limitation
 unlock_required = False

@@ -37,6 +37,7 @@ db_chatdata = redis.Redis(host="arisdata", port=6379, db=0, decode_responses=Tru
 
 # In-memory cache
 all_chats = {}  # {chat_id: ChatData}
+gemini_addons = {}  # {preset_id: dict}
 gpt35_addons = {}  # {preset_id: dict}
 gpt4_addons = {}  # {preset_id: dict}
 
