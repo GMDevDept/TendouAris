@@ -82,17 +82,6 @@ async def model_selection_handler(client, message):
                     ],
                     [
                         InlineKeyboardButton(
-                            strings.models.get("model-gpt35"),
-                            callback_data="model-gpt35",
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            strings.models.get("model-gpt4"), callback_data="model-gpt4"
-                        )
-                    ],
-                    [
-                        InlineKeyboardButton(
                             strings.models.get("model-bing"), callback_data="model-bing"
                         )
                     ],
@@ -105,6 +94,17 @@ async def model_selection_handler(client, message):
                         InlineKeyboardButton(
                             strings.models.get("model-claude"),
                             callback_data="model-claude",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            strings.models.get("model-gpt35"),
+                            callback_data="model-gpt35",
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            strings.models.get("model-gpt4"), callback_data="model-gpt4"
                         )
                     ],
                 ]
@@ -136,8 +136,31 @@ async def model_selection_callback_handler(client, query):
                             ],
                             [
                                 InlineKeyboardButton(
+                                    strings.gpt35_presets.get("custom"),
+                                    callback_data="geminipreset-custom",
+                                )
+                            ],
+                        ]
+                        + [
+                            [
+                                InlineKeyboardButton(
+                                    preset.get("display_name"),
+                                    callback_data="geminipreset-addon-" + id,
+                                )
+                            ]
+                            for id, preset in gvars.gemini_addons.items()
+                        ]
+                        + [
+                            [
+                                InlineKeyboardButton(
                                     strings.gemini_presets.get("default"),
                                     callback_data="geminipreset-default",
+                                )
+                            ],
+                            [
+                                InlineKeyboardButton(
+                                    strings.github_contributing,
+                                    url="https://github.com/HanaokaYuzu/TendouAris#contributing",
                                 )
                             ],
                         ]
@@ -343,13 +366,68 @@ async def gemini_preset_selection_callback_handler(client, query):
         create_new=True,
         is_group=await util.is_group(query.message.chat),
     )
-    chatdata.set_model({"name": "gemini", "args": {"preset": preset}})
 
-    await query.message.edit(
-        strings.model_changed
-        + strings.models.get("model-gemini").split(' (')[0]
-        + f" ({strings.gemini_presets.get(preset).split(' (')[0]})"
-    )
+    match preset:
+        case "default" | "aris":
+            chatdata.set_model({"name": "gemini", "args": {"preset": preset}})
+
+            await query.message.edit(
+                strings.model_changed
+                + strings.models.get("model-gemini").split(" (")[0]
+                + f" ({strings.gemini_presets.get(preset).split(' (')[0]})"
+            )
+        case "custom":
+            await query.message.edit(
+                strings.manage_custom_preset,
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                strings.custom_preset_options.get("new"),
+                                callback_data="geminipreset-custom-new",
+                            )
+                        ],
+                        [
+                            InlineKeyboardButton(
+                                strings.custom_preset_options.get("continue"),
+                                callback_data="geminipreset-custom-continue",
+                            )
+                        ],
+                    ]
+                ),
+            )
+        case "custom-new":
+            await query.message.edit(
+                strings.gemini_preset_placeholder
+                + strings.custom_preset_template_gemini,
+                reply_markup=ForceReply(selective=True),
+            )
+        case "custom-continue":
+            if not chatdata.gemini_preset:
+                await query.message.edit(strings.custom_preset_unavailable)
+            else:
+                chatdata.set_model({"name": "gemini", "args": {"preset": "custom"}})
+
+                await query.message.edit(
+                    strings.model_changed
+                    + strings.models.get("model-gemini").split(" (")[0]
+                    + f" ({strings.gemini_presets.get('custom').split(' (')[0]})\n\n`{json.dumps(chatdata.gemini_preset, indent=4, ensure_ascii=False)}`"
+                )
+        case _:
+            assert preset.startswith("addon-"), f"Invalid callback: {query.data}"
+            preset_id = preset.replace("addon-", "")
+            chatdata.set_model(
+                {
+                    "name": "gemini",
+                    "args": {"preset": "addon", "id": preset_id},
+                }
+            )
+
+            await query.message.edit(
+                strings.model_changed
+                + strings.models.get("model-gemini").split(" (")[0]
+                + f" ({gvars.gemini_addons.get(preset_id).get('display_name')})\n\n{gvars.gemini_addons.get(preset_id).get('description')}"
+            )
 
 
 # GPT-3.5 preset selection callback
@@ -492,21 +570,58 @@ async def custom_preset_handler(client, message):
     if not chatdata:
         await message.reply(strings.chatdata_unavailable)
     else:
-        template_dict = None
         try:
-            template_json = re.match(r".*?({.*}).*", message.text, re.DOTALL).group(1)
-            template_dict = json.loads(template_json)
-            assert len(template_dict) == 8, "Invalid template length"
-            assert (
-                isinstance(template_dict["prompt"], str)
-                and isinstance(template_dict["ai_prefix"], str)
-                and isinstance(template_dict["ai_self"], str)
-                and isinstance(template_dict["human_prefix"], str)
-                and isinstance(template_dict["sample_input"], str)
-                and isinstance(template_dict["sample_output"], str)
-                and isinstance(template_dict["unlock_required"], bool)
-                and isinstance(template_dict["keyword_filter"], bool)
-            ), "Wrong value type(s)"
+            template_dict = None
+            # Already validated in filters.custom_preset_filter
+            model_name = re.match(
+                r"^\s*\[(\S*)\sModel Custom Preset\]", message.reply_to_message.text
+            ).group(1)
+
+            match model_name:
+                case "Gemini":
+                    prompt = re.search(
+                        r'"prompt":\s?"(.*?)"(?=,?\s*"sample_input":)',
+                        message.text,
+                        re.DOTALL,
+                    ).group(1)
+                    sample_input = re.search(
+                        r'"sample_input":\s?"(.*?)"(?=,?\s*"sample_output":)',
+                        message.text,
+                        re.DOTALL,
+                    ).group(1)
+                    sample_output = re.search(
+                        r'"sample_output":\s?"(.*?)"',
+                        message.text,
+                        re.DOTALL,
+                    ).group(1)
+
+                    assert (
+                        prompt and sample_input and sample_output
+                    ), "Template values must be unempty, please follow the instructions and try again"
+
+                    template_dict = {
+                        "prompt": prompt,
+                        "sample_input": sample_input,
+                        "sample_output": sample_output,
+                    }
+                case "GPT3.5" | "GPT4":
+                    template_json = re.match(
+                        r".*?({.*}).*", message.text, re.DOTALL
+                    ).group(1)
+                    template_dict = json.loads(template_json)
+                    assert (
+                        len(template_dict) == 8
+                    ), "Invalid template length, please follow the instructions and try again"
+                    assert (
+                        isinstance(template_dict["prompt"], str)
+                        and isinstance(template_dict["ai_prefix"], str)
+                        and isinstance(template_dict["ai_self"], str)
+                        and isinstance(template_dict["human_prefix"], str)
+                        and isinstance(template_dict["sample_input"], str)
+                        and isinstance(template_dict["sample_output"], str)
+                        and isinstance(template_dict["unlock_required"], bool)
+                        and isinstance(template_dict["keyword_filter"], bool)
+                    ), "Invalid value type(s), please follow the instructions and try again"
         except (
             TypeError,
             AttributeError,
@@ -522,13 +637,24 @@ async def custom_preset_handler(client, message):
             await message.reply(
                 f"{strings.custom_template_parse_failed}\n\nError message: `{e}`"
             )
+        except Exception as e:
+            template_dict = None
+            await message.reply(
+                f"{strings.internal_error}\n\nError message:\n`{str(e)[:100]}`\n\n{strings.feedback}",
+                quote=False,
+            )
 
         if template_dict:
-            # Already validated in filters.custom_preset_filter
-            model_name = re.match(
-                r"^\s*\[(\S*)\sModel Custom Preset\]", message.reply_to_message.text
-            ).group(1)
+            if model_name == "Gemini":
+                chatdata.set_gemini_preset(template_dict)
+                chatdata.set_model({"name": "gemini", "args": {"preset": "custom"}})
 
+                await message.reply_to_message.delete()
+                await message.reply(
+                    strings.model_changed
+                    + strings.models.get("model-gemini").split(" (")[0]
+                    + f" ({strings.gemini_presets.get('custom').split(' (')[0]})"
+                )
             if model_name == "GPT3.5":
                 chatdata.set_gpt35_preset(template_dict)
                 chatdata.set_model({"name": "gpt35", "args": {"preset": "custom"}})
@@ -795,7 +921,9 @@ async def manage_mode_handler(client, message):
 
 # Manage mode callback
 async def manage_mode_callback_handler(client, query):
-    if re.match(r"^manage-scope-(global|gemini|gpt35|gpt4|bing|bard|claude)$", query.data):
+    if re.match(
+        r"^manage-scope-(global|gemini|gpt35|gpt4|bing|bard|claude)$", query.data
+    ):
         await query.message.edit(
             strings.manage_mode_choose_scope,
             reply_markup=InlineKeyboardMarkup(
@@ -922,9 +1050,7 @@ async def conversation_handler(client, message):
                 media_group = [
                     InputMediaPhoto(
                         url,
-                        caption=i == len(valid_media) - 1
-                        and len(text) < 1024
-                        and text,
+                        caption=i == len(valid_media) - 1 and len(text) < 1024 and text,
                     )
                     for i, url in enumerate(valid_media)
                 ]
@@ -946,9 +1072,7 @@ async def conversation_handler(client, message):
         chatdata.last_reply = text
     except RPCError as e:
         logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
-        await message.reply(
-            f"{strings.rpc_error}\n\nError message:\n`{str(e)[:100]}`"
-        )
+        await message.reply(f"{strings.rpc_error}\n\nError message:\n`{str(e)[:100]}`")
     except Exception as e:
         logging.error(f"{e}: " + "".join(traceback.format_tb(e.__traceback__)))
         await message.reply(

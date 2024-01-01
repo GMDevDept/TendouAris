@@ -24,27 +24,94 @@ async def process_message_gemini(
 
     if not chatdata.gemini_session:
         try:
+            preset = model_args.get("preset")
             new_chat = gvars.gemini_client.start_chat(history=[])
 
-            if model_args.get("preset") == "aris":
-                new_chat.history = [
-                    glm.Content(
-                        parts=[glm.Part(text=prompts.aris_prompt_gemini)],
-                        role="user",
-                    ),
-                    glm.Content(
-                        parts=[glm.Part(text=prompts.gemini_initial_response)],
-                        role="model",
-                    ),
-                    glm.Content(
-                        parts=[glm.Part(text=prompts.initial_prompts["input"])],
-                        role="user",
-                    ),
-                    glm.Content(
-                        parts=[glm.Part(text=prompts.initial_prompts["output"])],
-                        role="model",
-                    ),
-                ]
+            match preset:
+                case "aris":
+                    new_chat.history = [
+                        glm.Content(
+                            parts=[glm.Part(text=prompts.aris_prompt_gemini)],
+                            role="user",
+                        ),
+                        glm.Content(
+                            parts=[glm.Part(text=prompts.gemini_initial_response)],
+                            role="model",
+                        ),
+                        glm.Content(
+                            parts=[glm.Part(text=prompts.initial_prompts["input"])],
+                            role="user",
+                        ),
+                        glm.Content(
+                            parts=[glm.Part(text=prompts.initial_prompts["output"])],
+                            role="model",
+                        ),
+                    ]
+                case "custom":
+                    custom_preset = chatdata.gemini_preset
+                    try:
+                        new_chat.history = [
+                            glm.Content(
+                                parts=[glm.Part(text=custom_preset["prompt"])],
+                                role="user",
+                            ),
+                            glm.Content(
+                                parts=[glm.Part(text=prompts.gemini_initial_response)],
+                                role="model",
+                            ),
+                            glm.Content(
+                                parts=[glm.Part(text=custom_preset["sample_input"])],
+                                role="user",
+                            ),
+                            glm.Content(
+                                parts=[glm.Part(text=custom_preset["sample_output"])],
+                                role="model",
+                            )
+                        ]
+                    except (TypeError, AttributeError, LookupError):
+                        return ModelOutput(
+                            text=f"{strings.internal_error}\n\nError message: `{strings.custom_preset_outdated}`"
+                        )
+                case "addon":
+                    preset_id = model_args.get("id")
+                    addon_preset = gvars.gemini_addons.get(preset_id)
+                    try:
+                        new_chat.history = [
+                            glm.Content(
+                                parts=[glm.Part(text=addon_preset["prompt"])],
+                                role="user",
+                            ),
+                            glm.Content(
+                                parts=[glm.Part(text=prompts.gemini_initial_response)],
+                                role="model",
+                            ),
+                        ]
+
+                        if addon_preset.get("sample_io"):
+                            for io_pair in addon_preset.get("sample_io"):
+                                new_chat.history.append(
+                                    glm.Content(
+                                        parts=[glm.Part(text=io_pair["input"])],
+                                        role="user",
+                                    )
+                                )
+                                new_chat.history.append(
+                                    glm.Content(
+                                        parts=[glm.Part(text=io_pair["output"])],
+                                        role="model",
+                                    )
+                                )
+                    except (TypeError, AttributeError, LookupError) as e:
+                        logger.error(
+                            f"Error happened when loading gemini addon: {e}\nPreset id:{preset_id}"
+                        )
+                        return ModelOutput(
+                            text=f"{strings.internal_error}\n\nError message: `{strings.addon_preset_invalid}\n{preset_id}: {e}`\n\n{strings.feedback}"
+                        )
+                case _:
+                    return ModelOutput(
+                        text=f"{strings.internal_error}\n\nError message: `Invalid preset for gemini model: {preset}`"
+                    )
 
             chatdata.gemini_session = new_chat
         except Exception as e:
