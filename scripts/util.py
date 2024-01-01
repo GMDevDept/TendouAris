@@ -16,9 +16,12 @@ def load_chat(
         return ChatData.load(data)
     elif create_new:
         if is_group:
-            return GroupChatData(chat_id)
+            chatdata = GroupChatData(chat_id)
         else:
-            return ChatData(chat_id)
+            chatdata = ChatData(chat_id)
+
+        chatdata.save()
+        return chatdata
     else:
         return None
 

@@ -310,3 +310,7 @@ gemini_presets = {
     "default": "官方原版",
     "custom": "✨ 自定义专属预设",
 }
+
+gemini_stop_error = "老师的提示词似乎存在问题……心急吃不了热豆腐，您可以尝试一步步引导爱丽丝哦~😘"
+
+gemini_stopped_with_other_reason = "You prompt was blocked by Google, please revise it and try again"
