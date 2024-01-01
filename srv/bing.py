@@ -86,12 +86,7 @@ async def process_message_bing(
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.bing_chatbot_close_delay)
-            if chatdata.bing_chatbot is not None:
-                chatdata.bing_chatbot = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_inactivity.format("Bing"),
-                )
+            chatdata.bing_chatbot = None
 
         chatdata.bing_clear_task = asyncio.create_task(scheduled_auto_close())
 

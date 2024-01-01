@@ -145,13 +145,8 @@ async def process_message_gpt35(
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.gpt35_chatbot_close_delay)
-            if chatdata.gpt35_history is not None:
-                chatdata.gpt35_chatbot = None
-                chatdata.gpt35_history = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_inactivity.format("GPT3.5"),
-                )
+            chatdata.gpt35_chatbot = None
+            chatdata.gpt35_history = None
 
         chatdata.gpt35_clear_task = asyncio.create_task(scheduled_auto_close())
 
@@ -481,13 +476,8 @@ async def process_message_gpt4(
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.gpt4_chatbot_close_delay)
-            if chatdata.gpt4_history is not None:
-                chatdata.gpt4_chatbot = None
-                chatdata.gpt4_history = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_inactivity.format("GPT4"),
-                )
+            chatdata.gpt4_chatbot = None
+            chatdata.gpt4_history = None
 
         chatdata.gpt4_clear_task = asyncio.create_task(scheduled_auto_close())
 

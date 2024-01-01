@@ -74,12 +74,7 @@ async def process_message_claude(
 
         async def scheduled_auto_close():
             await asyncio.sleep(gvars.claude_chatbot_close_delay)
-            if chatdata.claude_uuid is not None:
-                chatdata.claude_uuid = None
-                await client.send_message(
-                    chatdata.chat_id,
-                    strings.model_reset_due_to_inactivity.format("Claude"),
-                )
+            chatdata.claude_uuid = None
 
         chatdata.claude_clear_task = asyncio.create_task(scheduled_auto_close())
 
