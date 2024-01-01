@@ -5,6 +5,7 @@ import asyncio
 from loguru import logger
 from pyrogram import Client
 from google.ai import generativelanguage as glm
+from google.generativeai.types.generation_types import StopCandidateException
 
 from scripts import gvars, strings, util, prompts
 from scripts.types import ModelOutput
@@ -28,6 +29,8 @@ async def process_message_gemini(
             new_chat = gvars.gemini_client.start_chat(history=[])
 
             match preset:
+                case "default":
+                    pass
                 case "aris":
                     new_chat.history = [
                         glm.Content(
@@ -128,12 +131,14 @@ async def process_message_gemini(
         chatdata.gemini_clear_task = None
 
     input_text = model_input.get("text") or "Hi"  # Gemini does not accept empty string
-    if model_args.get("preset") != "aris" and input_text.startswith("爱丽丝"):
+    if model_args.get("preset") == "default" and input_text.startswith("爱丽丝"):
         input_text = input_text.replace("爱丽丝", "Gemini", 1)
 
     chatdata.concurrent_lock.add("gemini")
     try:
         response = await chatdata.gemini_session.send_message_async(input_text)
+    except StopCandidateException:
+        return ModelOutput(text=f"{strings.gemini_stop_error}\n\nError Message:\n`{strings.gemini_stopped_with_other_reason}`")
     except Exception as e:
         logger.error(
             f"Error happened when calling gemini_chatbot.send_message_async in chat {chatdata.chat_id}: {e}"
