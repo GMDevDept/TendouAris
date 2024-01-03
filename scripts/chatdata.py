@@ -125,42 +125,36 @@ class ChatData:
         match model_name:
             case "gemini":
                 model_output = await process_message_gemini(
-                    client=client,
                     chatdata=self,
                     model_args=model_args,
                     model_input=model_input,
                 )
             case "gpt35":
                 model_output = await process_message_gpt35(
-                    client=client,
                     chatdata=self,
                     model_args=model_args,
                     model_input=model_input,
                 )
             case "gpt4":
                 model_output = await process_message_gpt4(
-                    client=client,
                     chatdata=self,
                     model_args=model_args,
                     model_input=model_input,
                 )
             case "bing":
                 model_output = await process_message_bing(
-                    client=client,
                     chatdata=self,
                     model_args=model_args,
                     model_input=model_input,
                 )
             case "bard":
                 model_output = await process_message_bard(
-                    client=client,
                     chatdata=self,
                     model_args=model_args,
                     model_input=model_input,
                 )
             case "claude":
                 model_output = await process_message_claude(
-                    client=client,
                     chatdata=self,
                     model_args=model_args,
                     model_input=model_input,

@@ -6,11 +6,9 @@ import logging
 from scripts import gvars, strings, util
 from scripts.types import ModelOutput, Photo
 from Bard import AsyncChatbot
-from pyrogram import Client
 
 
 async def process_message_bard(
-    client: Client,
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,

@@ -92,6 +92,8 @@ model_reset_due_to_preset_change = "由于预设更新, 爱丽丝已经将`{}`�
 
 api_error = "抱歉老师, 爱丽丝暂时无法完成API请求🥲"
 
+google_api_error = "抱歉老师, 请求Google API时发生未知错误🥲请等待一段时间后再次重试"
+
 internal_error = "抱歉老师, 爱丽丝遭遇bug了!😫"
 
 rpc_error = "抱歉老师, 爱丽丝与Telegram的连接丢失了!😵‍💫"

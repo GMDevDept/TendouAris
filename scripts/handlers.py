@@ -655,7 +655,7 @@ async def custom_preset_handler(client, message):
                     + strings.models.get("model-gemini").split(" (")[0]
                     + f" ({strings.gemini_presets.get('custom').split(' (')[0]})"
                 )
-            if model_name == "GPT3.5":
+            elif model_name == "GPT3.5":
                 chatdata.set_gpt35_preset(template_dict)
                 chatdata.set_model({"name": "gpt35", "args": {"preset": "custom"}})
 
