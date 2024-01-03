@@ -1,7 +1,6 @@
 import re
 import logging
 import asyncio
-from pyrogram import Client
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain.chains import ConversationChain
@@ -11,7 +10,6 @@ from scripts.types import ModelOutput
 
 
 async def process_message_gpt35(
-    client: Client,
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,
@@ -347,7 +345,6 @@ async def fallback_response_handler(
 
 
 async def process_message_gpt4(
-    client: Client,
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,

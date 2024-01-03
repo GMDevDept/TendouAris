@@ -4,11 +4,9 @@ import asyncio
 import logging
 from scripts import gvars, strings, util, prompts
 from scripts.types import ModelOutput
-from pyrogram import Client
 
 
 async def process_message_claude(
-    client: Client,
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,

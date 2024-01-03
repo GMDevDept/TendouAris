@@ -5,12 +5,10 @@ import asyncio
 import logging
 from scripts import gvars, strings, util
 from async_bing_client import ConversationStyle
-from pyrogram import Client
 from scripts.types import ModelOutput, Photo
 
 
 async def process_message_bing(
-    client: Client,
     chatdata,  # ChatData
     model_args: dict,
     model_input: dict,
