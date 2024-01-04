@@ -147,23 +147,37 @@ async def process_message_gemini(
 
     chatdata.concurrent_lock.add("gemini")
     try:
-        response = await chatdata.gemini_session.send_message_async(input_text)
-    # Exception str: stop/block_reason: OTHER
-    except (StopCandidateException, BlockedPromptException):
-        return ModelOutput(
-            text=f"{strings.gemini_stop_error}\n\nError Message:\n`{strings.gemini_stopped_with_other_reason}`"
-        )
-    except GoogleAPIError as e:
-        return ModelOutput(
-            text=f"{strings.google_api_error}\n\nError Message:\n`{e}`"
-        )
-    except Exception as e:
-        logger.error(
-            f"Error happened when calling gemini_chatbot.send_message_async in chat {chatdata.chat_id}: {e}"
-        )
-        return ModelOutput(
-            text=f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
-        )
+        retry = 0
+        while True:
+            try:
+                response = await chatdata.gemini_session.send_message_async(input_text)
+                break  # break the loop if the try block succeeded
+            # Exception str: stop/block_reason: OTHER
+            except (StopCandidateException, BlockedPromptException):
+                if retry < 5:
+                    retry += 1
+                    await asyncio.sleep(1)
+                    continue
+                else:
+                    return ModelOutput(
+                        text=f"{strings.gemini_stop_error}\n\nError Message:\n`{strings.gemini_stopped_with_other_reason}`"
+                    )
+            except GoogleAPIError as e:
+                if retry < 5:
+                    retry += 1
+                    await asyncio.sleep(1)
+                    continue
+                else:
+                    return ModelOutput(
+                        text=f"{strings.google_api_error}\n\nError Message:\n`{e}`"
+                    )
+            except Exception as e:
+                logger.error(
+                    f"Error happened when calling gemini_chatbot.send_message_async in chat {chatdata.chat_id}: {e}"
+                )
+                return ModelOutput(
+                    text=f"{strings.api_error}\n\nError Message:\n`{e}`\n\n{strings.try_reset}"
+                )
     finally:
         chatdata.concurrent_lock.discard("gemini")
 

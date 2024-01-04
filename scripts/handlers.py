@@ -580,17 +580,17 @@ async def custom_preset_handler(client, message):
             match model_name:
                 case "Gemini":
                     prompt = re.search(
-                        r'"prompt":\s?"(.*?)"(?=,?\s*"sample_input":)',
+                        r'"prompt":\s?"(.*?)"(?=,\s*"sample_input":)',
                         message.text,
                         re.DOTALL,
                     ).group(1)
                     sample_input = re.search(
-                        r'"sample_input":\s?"(.*?)"(?=,?\s*"sample_output":)',
+                        r'"sample_input":\s?"(.*?)"(?=,\s*"sample_output":)',
                         message.text,
                         re.DOTALL,
                     ).group(1)
                     sample_output = re.search(
-                        r'"sample_output":\s?"(.*?)"',
+                        r'"sample_output":\s?"(.*)"',
                         message.text,
                         re.DOTALL,
                     ).group(1)
