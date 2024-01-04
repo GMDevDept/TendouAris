@@ -204,9 +204,7 @@ class GroupChatData(ChatData):
     def __init__(self, chat_id: int, **kwargs):
         super().__init__(chat_id, **kwargs)
         self.is_group = True
-        self.flood_control_enabled: bool = (
-            kwargs.get("flood_control_enabled") is not False  # default to be True
-        )
+        self.flood_control_enabled: bool = kwargs.get("flood_control_enabled") is True  # default to be False
         self.flood_control_record: Optional[dict] = None
         self.model_select_admin_only: bool = (
             kwargs.get("model_select_admin_only") is not False  # default to be True

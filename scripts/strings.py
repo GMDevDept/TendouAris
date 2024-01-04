@@ -1,10 +1,12 @@
 version = """
-**▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.4.1**
+**▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.4.2**
 
 **▎Latest update**
-2024/01/01
+2024/01/03
 
 **▎Update log**
+v2.4.2
+Gemini模型现在请求Google API出错时会自动重试
 v2.4.1
 Gemini模型现在支持自定义预设
 v2.4.0
@@ -315,4 +317,4 @@ gemini_presets = {
 
 gemini_stop_error = "老师的提示词似乎存在问题……心急吃不了热豆腐，您可以尝试一步步引导爱丽丝哦~😘"
 
-gemini_stopped_with_other_reason = "You prompt was blocked by Google, please revise it and try again"
+gemini_stopped_with_other_reason = "Your prompt was blocked by Google, please revise it and try again"
