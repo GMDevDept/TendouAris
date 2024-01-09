@@ -1,10 +1,13 @@
 <p align="center">
     <img src="resources/tendouaris.png" alt="Aris" width="500">
-    <p align="center"></p>
+    <p/>
     <p align="center">
         <b><i>“ようこそ先生。アリスは先生を待っていました。”</i></b>
     </p>
-    <p align="center"></p>
+    <p align="center">
+        <b>English</b> | <a href="resources/README_CN.md">简体中文</a>
+    </p>
+    <p/>
 </p>
 
 # TendouAris
@@ -13,7 +16,7 @@
 
 ## Introduction
 
-Aris is a telegram chatbot based on OpenAI API with customized character preset. In the future will add support for more language models.
+Aris is a telegram chatbot which supports popular LLMs and customized character presets. In the future will add support for more language models.
 
 | Model Name | Support | Custom Prompt | Image Output |
 |:---:|:---:|:---:|:---:|
@@ -48,7 +51,7 @@ Alternatively, if you have experience in git, you can also fork this repo and su
     cd TendouAris
     ```
 
-2. Rename .env.sample to .env and fill the values.
+2. Rename `.env.sample` to `.env` and fill the values.
 3. (Optional) To enable Bing model, export cookies from <https://bing.com/chat> and save it as `bing_cookies.json` under `\srv` directory. [Sample file](https://github.com/HanaokaYuzu/TendouAris/tree/master/srv/bing_cookies.sample.json) is provided for format reference.
 4. (Optional) To enable Claude model, export cookies from <https://claude.ai> and save it as `claude_cookies.json` under `\srv` directory. [Sample file](https://github.com/HanaokaYuzu/TendouAris/tree/master/srv/claude_cookies.sample.json) is provided for format reference.
 5. Build docker container.
