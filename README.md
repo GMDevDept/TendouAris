@@ -5,14 +5,15 @@
         <b><i>“ようこそ先生。アリスは先生を待っていました。”</i></b>
     </p>
     <p align="center">
-        <b>English</b> | <a href="resources/README_CN.md">简体中文</a>
+        <b>English</b> | <a href="README.cn.md">简体中文</a>
     </p>
     <p/>
 </p>
 
 # TendouAris
 
-[![Telegram bot](https://img.shields.io/badge/bot-%40TendouArisBot-229ed9?logo=telegram&style=for-the-badge)](https://t.me/TendouArisBot)
+[![Telegram bot](https://img.shields.io/badge/bot-%40TendouArisBot-229ED9?logo=telegram&style=for-the-badge)](https://t.me/TendouArisBot)
+[![Telegram group](https://img.shields.io/badge/discussion-%40GMDevDept-181A1B?logo=telegram&style=for-the-badge)](https://t.me/GMDevDept)
 
 ## Introduction
 
