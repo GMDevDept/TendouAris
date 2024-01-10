@@ -1,11 +1,11 @@
 <p align="center">
-    <img src="tendouaris.png" alt="Aris" width="500">
+    <img src="resources/tendouaris.png" alt="Aris" width="500">
     <p/>
     <p align="center">
         <b><i>“欢迎老师。爱丽丝在等着老师。”</i></b>
     </p>
     <p align="center">
-        <a href="../README.md">English</a> | <b>简体中文</b>
+        <a href="README.md">English</a> | <b>简体中文</b>
     </p>
     <p/>
 </p>
@@ -13,6 +13,7 @@
 # 天童爱丽丝
 
 [![Telegram bot](https://img.shields.io/badge/bot-%40TendouArisBot-229ed9?logo=telegram&style=for-the-badge)](https://t.me/TendouArisBot)
+[![Telegram group](https://img.shields.io/badge/discussion-%40GMDevDept-181A1B?logo=telegram&style=for-the-badge)](https://t.me/GMDevDept)
 
 ## 介绍
 
