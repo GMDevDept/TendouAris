@@ -3,13 +3,13 @@
 import asyncio
 import logging
 from scripts import gvars, strings, util, prompts
-from scripts.types import ModelOutput
+from scripts.types import ModelInput, ModelOutput
 
 
 async def process_message_claude(
     chatdata,  # ChatData
     model_args: dict,
-    model_input: dict,
+    model_input: ModelInput,
 ) -> ModelOutput:
     access_check = util.access_scope_filter(gvars.scope_claude, chatdata.chat_id)
     if not access_check:
@@ -40,7 +40,7 @@ async def process_message_claude(
         chatdata.claude_clear_task.cancel()
         chatdata.claude_clear_task = None
 
-    input_text = model_input.get("text") or "Hi"  # Claude does not accept empty string
+    input_text = model_input.text
     if model_args.get("preset") != "aris" and input_text.startswith("爱丽丝"):
         input_text = input_text.replace("爱丽丝", "Claude", 1)
 

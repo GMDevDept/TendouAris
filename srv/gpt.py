@@ -6,13 +6,13 @@ from langchain.memory import ConversationSummaryBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
 from scripts import gvars, strings, util, prompts
-from scripts.types import ModelOutput
+from scripts.types import ModelInput, ModelOutput
 
 
 async def process_message_gpt35(
     chatdata,  # ChatData
     model_args: dict,
-    model_input: dict,
+    model_input: ModelInput,
 ) -> ModelOutput:
     access_check = util.access_scope_filter(gvars.scope_gpt35, chatdata.chat_id)
     if not access_check:
@@ -24,9 +24,9 @@ async def process_message_gpt35(
         chatdata.openai_api_key
         or chatdata.chat_id in gvars.whitelist
         and gvars.openai_api_key
-        or model_input.get("sender_id")
-        and util.load_chat(model_input.get("sender_id"))
-        and util.load_chat(model_input.get("sender_id")).openai_api_key
+        or model_input.sender_id
+        and util.load_chat(model_input.sender_id)
+        and util.load_chat(model_input.sender_id).openai_api_key
     )
     if not api_key:
         return ModelOutput(text=f"{strings.no_auth}\n\n{strings.api_key_required}")
@@ -84,7 +84,7 @@ async def process_message_gpt35(
         chatdata.gpt35_clear_task.cancel()
         chatdata.gpt35_clear_task = None
 
-    input_text = model_input.get("text") or "Hi"  # Prevent self generated conversations
+    input_text = model_input.text
     if model_args.get("preset") != "aris" and input_text.startswith("爱丽丝"):
         if model_args.get("preset") == "custom" and chatdata.gpt35_preset.get(
             "ai_prefix"
@@ -100,6 +100,7 @@ async def process_message_gpt35(
             )
         else:
             input_text = re.sub(r"^爱丽丝[，。！？；：,.!?;:]*\s*", "", input_text)
+    input_text = input_text or "Hi"  # Prevent self generated conversations
 
     backup_moving_summary_buffer, backup_chat_memory = None, None
     if chatdata.gpt35_history is not None and (
@@ -347,7 +348,7 @@ async def fallback_response_handler(
 async def process_message_gpt4(
     chatdata,  # ChatData
     model_args: dict,
-    model_input: dict,
+    model_input: ModelInput,
 ) -> dict:
     access_check = util.access_scope_filter(gvars.scope_gpt4, chatdata.chat_id)
     if not access_check:
@@ -359,9 +360,9 @@ async def process_message_gpt4(
         chatdata.openai_api_key
         or chatdata.chat_id in gvars.manager
         and gvars.openai_api_key
-        or model_input.get("sender_id")
-        and util.load_chat(model_input.get("sender_id"))
-        and util.load_chat(model_input.get("sender_id")).openai_api_key
+        or model_input.sender_id
+        and util.load_chat(model_input.sender_id)
+        and util.load_chat(model_input.sender_id).openai_api_key
     )
     if not api_key:
         return ModelOutput(text=f"{strings.no_auth}\n\n{strings.api_key_required}")
@@ -415,7 +416,7 @@ async def process_message_gpt4(
         chatdata.gpt4_clear_task.cancel()
         chatdata.gpt4_clear_task = None
 
-    input_text = model_input.get("text") or "Hi"  # Prevent self generated conversations
+    input_text = model_input.text
     if input_text.startswith("爱丽丝"):
         if model_args.get("preset") == "custom" and chatdata.gpt4_preset.get(
             "ai_prefix"
@@ -431,6 +432,7 @@ async def process_message_gpt4(
             )
         else:
             input_text = re.sub(r"^爱丽丝[，。！？；：,.!?;:]*\s*", "", input_text)
+    input_text = input_text or "Hi"  # Prevent self generated conversations
 
     backup_moving_summary_buffer, backup_chat_memory = None, None
     if chatdata.gpt4_history is not None and (
