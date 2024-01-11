@@ -3,7 +3,6 @@ import asyncio
 from asyncio import Task
 from typing import Optional
 
-from pyrogram import Client
 from Bard import AsyncChatbot as BardChatbot
 from async_bing_client import Bing_Client
 from langchain.chains import ConversationChain
@@ -11,7 +10,7 @@ from langchain.memory import ConversationSummaryBufferMemory
 from google.generativeai import ChatSession
 
 from scripts import gvars, strings
-from scripts.types import ModelOutput
+from scripts.types import ModelInput, ModelOutput
 from srv.gemini import process_message_gemini
 from srv.gpt import process_message_gpt35, process_message_gpt4
 from srv.bing import process_message_bing
@@ -120,7 +119,7 @@ class ChatData:
         self.gpt4_preset = preset
         self.save()
 
-    async def process_message(self, client: Client, model_input: dict) -> ModelOutput:
+    async def process_message(self, model_input: ModelInput) -> ModelOutput:
         model_name, model_args = self.model["name"], self.model["args"]
         match model_name:
             case "gemini":
@@ -234,14 +233,14 @@ class GroupChatData(ChatData):
         self.model_select_admin_only = enable
         self.save()
 
-    async def process_message(self, client: Client, model_input: dict) -> ModelOutput:
+    async def process_message(self, model_input: ModelInput) -> ModelOutput:
         if not self.flood_control_enabled:
-            return await super().process_message(client, model_input)
+            return await super().process_message(model_input)
         else:
             if not self.flood_control_record:
                 self.flood_control_record = {}
 
-            sender_id = model_input.get("sender_id")
+            sender_id = model_input.sender_id
             if (
                 sender_id in self.flood_control_record
                 and self.flood_control_record[sender_id]["count"]
@@ -253,7 +252,7 @@ class GroupChatData(ChatData):
                     )
                 )
 
-            model_output = await super().process_message(client, model_input)
+            model_output = await super().process_message(model_input)
 
             async def clear_flood_control_counter():
                 await asyncio.sleep(gvars.flood_control_interval)

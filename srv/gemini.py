@@ -4,7 +4,7 @@ import re
 import asyncio
 
 from loguru import logger
-from google.ai import generativelanguage as glm
+from google.ai.generativelanguage import Part, Content
 from google.api_core.exceptions import GoogleAPIError
 from google.generativeai.types.generation_types import (
     StopCandidateException,
@@ -12,13 +12,13 @@ from google.generativeai.types.generation_types import (
 )
 
 from scripts import gvars, strings, util, prompts
-from scripts.types import ModelOutput
+from scripts.types import ModelInput, ModelOutput
 
 
 async def process_message_gemini(
     chatdata,  # ChatData
     model_args: dict,
-    model_input: dict,
+    model_input: ModelInput,
 ) -> ModelOutput:
     access_check = util.access_scope_filter(gvars.scope_gemini, chatdata.chat_id)
     if not access_check:
@@ -36,20 +36,20 @@ async def process_message_gemini(
                     pass
                 case "aris":
                     new_chat.history = [
-                        glm.Content(
-                            parts=[glm.Part(text=prompts.aris_prompt_gemini)],
+                        Content(
+                            parts=[Part(text=prompts.aris_prompt_gemini)],
                             role="user",
                         ),
-                        glm.Content(
-                            parts=[glm.Part(text=prompts.gemini_initial_response)],
+                        Content(
+                            parts=[Part(text=prompts.gemini_initial_response)],
                             role="model",
                         ),
-                        glm.Content(
-                            parts=[glm.Part(text=prompts.initial_prompts["input"])],
+                        Content(
+                            parts=[Part(text=prompts.initial_prompts["input"])],
                             role="user",
                         ),
-                        glm.Content(
-                            parts=[glm.Part(text=prompts.initial_prompts["output"])],
+                        Content(
+                            parts=[Part(text=prompts.initial_prompts["output"])],
                             role="model",
                         ),
                     ]
@@ -57,20 +57,20 @@ async def process_message_gemini(
                     custom_preset = chatdata.gemini_preset
                     try:
                         new_chat.history = [
-                            glm.Content(
-                                parts=[glm.Part(text=custom_preset["prompt"])],
+                            Content(
+                                parts=[Part(text=custom_preset["prompt"])],
                                 role="user",
                             ),
-                            glm.Content(
-                                parts=[glm.Part(text=prompts.gemini_initial_response)],
+                            Content(
+                                parts=[Part(text=prompts.gemini_initial_response)],
                                 role="model",
                             ),
-                            glm.Content(
-                                parts=[glm.Part(text=custom_preset["sample_input"])],
+                            Content(
+                                parts=[Part(text=custom_preset["sample_input"])],
                                 role="user",
                             ),
-                            glm.Content(
-                                parts=[glm.Part(text=custom_preset["sample_output"])],
+                            Content(
+                                parts=[Part(text=custom_preset["sample_output"])],
                                 role="model",
                             ),
                         ]
@@ -83,12 +83,12 @@ async def process_message_gemini(
                     addon_preset = gvars.gemini_addons.get(preset_id)
                     try:
                         new_chat.history = [
-                            glm.Content(
-                                parts=[glm.Part(text=addon_preset["prompt"])],
+                            Content(
+                                parts=[Part(text=addon_preset["prompt"])],
                                 role="user",
                             ),
-                            glm.Content(
-                                parts=[glm.Part(text=prompts.gemini_initial_response)],
+                            Content(
+                                parts=[Part(text=prompts.gemini_initial_response)],
                                 role="model",
                             ),
                         ]
@@ -96,14 +96,14 @@ async def process_message_gemini(
                         if addon_preset.get("sample_io"):
                             for io_pair in addon_preset.get("sample_io"):
                                 new_chat.history.append(
-                                    glm.Content(
-                                        parts=[glm.Part(text=io_pair["input"])],
+                                    Content(
+                                        parts=[Part(text=io_pair["input"])],
                                         role="user",
                                     )
                                 )
                                 new_chat.history.append(
-                                    glm.Content(
-                                        parts=[glm.Part(text=io_pair["output"])],
+                                    Content(
+                                        parts=[Part(text=io_pair["output"])],
                                         role="model",
                                     )
                                 )
@@ -133,7 +133,7 @@ async def process_message_gemini(
         chatdata.gemini_clear_task.cancel()
         chatdata.gemini_clear_task = None
 
-    input_text = model_input.get("text")
+    input_text = model_input.text
     if model_args.get("preset") != "aris" and input_text.startswith("爱丽丝"):
         if model_args.get("preset") == "addon" and gvars.gemini_addons.get(
             model_args.get("id")
@@ -156,7 +156,7 @@ async def process_message_gemini(
             except (StopCandidateException, BlockedPromptException):
                 if retry < 5:
                     retry += 1
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(0.2)
                     continue
                 else:
                     return ModelOutput(
@@ -165,7 +165,7 @@ async def process_message_gemini(
             except GoogleAPIError as e:
                 if retry < 5:
                     retry += 1
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(0.2)
                     continue
                 else:
                     return ModelOutput(

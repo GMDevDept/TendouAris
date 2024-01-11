@@ -5,13 +5,13 @@ import asyncio
 import logging
 from scripts import gvars, strings, util
 from async_bing_client import ConversationStyle
-from scripts.types import ModelOutput, Photo
+from scripts.types import ModelInput, ModelOutput, Image
 
 
 async def process_message_bing(
     chatdata,  # ChatData
     model_args: dict,
-    model_input: dict,
+    model_input: ModelInput,
 ) -> ModelOutput:
     access_check = util.access_scope_filter(gvars.scope_bing, chatdata.chat_id)
     if not access_check:
@@ -46,7 +46,7 @@ async def process_message_bing(
         chatdata.bing_clear_task.cancel()
         chatdata.bing_clear_task = None
 
-    input_text = model_input.get("text")
+    input_text = model_input.text
     if input_text.startswith("爱丽丝"):
         input_text = input_text.replace("爱丽丝", "Bing", 1)
 
@@ -70,14 +70,14 @@ async def process_message_bing(
         chatdata.concurrent_lock.discard("bing")
 
     output_text = response.strip()
-    output_photos = re.search(r"\nDrew images:  \n(.*?)\n\n", response, re.DOTALL)
-    if output_photos:
+    output_images = re.search(r"\nDrew images:  \n(.*?)\n\n", response, re.DOTALL)
+    if output_images:
         output_text = re.sub(
             r"Drew images:  \n.*?\n\n", "", output_text, flags=re.DOTALL
         )
-        output_photos = [
-            Photo(url=i)
-            for i in re.findall(r"https?://[^\s\)]+", output_photos.group(1))
+        output_images = [
+            Image(url=i)
+            for i in re.findall(r"https?://[^\s\)]+", output_images.group(1))
         ]
 
     if gvars.bing_chatbot_close_delay > 0:
@@ -88,4 +88,4 @@ async def process_message_bing(
 
         chatdata.bing_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return ModelOutput(text=output_text, photos=output_photos)
+    return ModelOutput(text=output_text, images=output_images)

@@ -7,7 +7,7 @@ import traceback
 from typing import Union
 from scripts import gvars, strings, util
 from scripts.chatdata import ChatData, GroupChatData
-from scripts.types import ModelOutput
+from scripts.types import ModelInput, ModelOutput
 from pyrogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -973,7 +973,7 @@ async def conversation_handler(client, message):
         is_group=await util.is_group(message.chat),
     )
     raw_text = await util.get_raw_text(message)
-    input_text = re.sub(r"^/\S*\s*", "", raw_text)
+    input_text = re.sub(r"^/\S*\s*", "", raw_text) or "爱丽丝"
     sender_id = (
         message.from_user
         and message.from_user.id
@@ -1011,20 +1011,22 @@ async def conversation_handler(client, message):
 
     try:
         model_output: ModelOutput = await chatdata.process_message(
-            client=client, model_input={"sender_id": sender_id, "text": input_text}
+            model_input=ModelInput(
+                text=input_text, sender_id=sender_id, message=message
+            )
         )
         text: str = model_output.text
-        photos: list[str] | None = model_output.photos and [
-            photo.url for photo in model_output.photos
+        images: list[str] | None = model_output.images and [
+            image.url for image in model_output.images
         ]
 
         if placeholder is not None:
             await placeholder.delete()
 
         valid_media = []
-        if photos:
+        if images:
             fallback_text = "\n\n"
-            for url in photos:
+            for url in images:
                 try:
                     await client.invoke(
                         UploadMedia(
@@ -1109,7 +1111,7 @@ async def draw_handler(client, message):
                 return
             elif isinstance(response, list):
                 text = strings.draw_success
-                photos = [photo.url for photo in response]
+                images = [image.url for image in response]
             else:  # should not happen
                 await message.reply(
                     f"{strings.internal_error}\n\n{strings.feedback}",
@@ -1118,9 +1120,9 @@ async def draw_handler(client, message):
                 return
 
             valid_media = []
-            if photos:
+            if images:
                 fallback_text = "\n\n"
-                for url in photos:
+                for url in images:
                     try:
                         await client.invoke(
                             UploadMedia(

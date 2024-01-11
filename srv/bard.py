@@ -4,14 +4,14 @@ import re
 import asyncio
 import logging
 from scripts import gvars, strings, util
-from scripts.types import ModelOutput, Photo
+from scripts.types import ModelInput, ModelOutput, Image
 from Bard import AsyncChatbot
 
 
 async def process_message_bard(
     chatdata,  # ChatData
     model_args: dict,
-    model_input: dict,
+    model_input: ModelInput,
 ) -> ModelOutput:
     access_check = util.access_scope_filter(gvars.scope_bard, chatdata.chat_id)
     if not access_check:
@@ -39,7 +39,7 @@ async def process_message_bard(
         chatdata.bard_clear_task.cancel()
         chatdata.bard_clear_task = None
 
-    input_text = model_input.get("text") or "Hi"  # Bard does not accept empty string
+    input_text = model_input.text
     if input_text.startswith("爱丽丝"):
         input_text = input_text.replace("爱丽丝", "Bard", 1)
 
@@ -58,10 +58,10 @@ async def process_message_bard(
         chatdata.concurrent_lock.discard("bard")
 
     output_text = response["content"]
-    output_photos = response["images"]
-    if output_photos:
+    output_images = response["images"]
+    if output_images:
         output_text = re.sub(r"\n\[.*\]", "", output_text)
-        output_photos = [Photo(url=url) for url in output_photos]
+        output_images = [Image(url=url) for url in output_images]
 
     if gvars.bard_chatbot_close_delay > 0:
 
@@ -71,4 +71,4 @@ async def process_message_bard(
 
         chatdata.bard_clear_task = asyncio.create_task(scheduled_auto_close())
 
-    return ModelOutput(text=output_text, photos=output_photos)
+    return ModelOutput(text=output_text, images=output_images)
