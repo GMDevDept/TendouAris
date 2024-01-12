@@ -1,10 +1,14 @@
-version = """
-**▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.4.2**
+version = "2.4.3"
+
+update_log = """
+**▎[TendouArisBot](https://github.com/HanaokaYuzu/TendouAris) v2.4.3**
 
 **▎Latest update**
-2024/01/03
+2024/01/11
 
 **▎Update log**
+v2.4.3
+添加更新内容提示，每次版本更新后，当用户第一次触发对话时会自动展示版本信息
 v2.4.2
 Gemini模型现在请求Google API出错时会自动重试
 v2.4.1
