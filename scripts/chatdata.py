@@ -30,6 +30,7 @@ class ChatData:
         self.chat_id: int = chat_id
         self.is_group: Optional[bool] = None
         self.model: dict = model  # {"name": str, "args": dict}
+        self.version: str = kwargs.get("version") or strings.version
         self.openai_api_key: Optional[str] = kwargs.get("openai_api_key")
         self.gemini_preset: Optional[dict] = kwargs.get("gemini_preset")
         self.gemini_session: Optional[ChatSession] = None
@@ -56,6 +57,7 @@ class ChatData:
         return {
             "chat_id": self.chat_id,
             "is_group": self.is_group,
+            "version": self.version,
             "model": self.model,
             "openai_api_key": self.openai_api_key,
             "gemini_preset": self.gemini_preset,
@@ -81,6 +83,9 @@ class ChatData:
 
         if chatdata.chat_id not in gvars.all_chats:
             ChatData.total += 1
+            if data.get("is_group"):
+                GroupChatData.total += 1
+
         gvars.all_chats.update({data["chat_id"]: chatdata})
 
         return chatdata
