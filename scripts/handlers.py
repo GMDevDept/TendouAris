@@ -48,7 +48,7 @@ async def help_handler(client, message):
 
 # Version info and update log
 async def version_handler(client, message):
-    await message.reply(strings.version)
+    await message.reply(strings.update_log)
 
 
 # Get current chat id
@@ -972,6 +972,12 @@ async def conversation_handler(client, message):
         create_new=True,
         is_group=await util.is_group(message.chat),
     )
+
+    # Check stored version info and send update log if necessary
+    if chatdata.version != strings.version:
+        await message.reply(strings.update_log)
+        chatdata.version = strings.version
+
     raw_text = await util.get_raw_text(message)
     input_text = re.sub(r"^/\S*\s*", "", raw_text) or "爱丽丝"
     sender_id = (
